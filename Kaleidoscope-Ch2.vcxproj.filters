@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\nekoko\Desktop\llvm-project\llvm\examples\Kaleidoscope\Chapter2\toy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\nekoko\Desktop\llvm-project\llvm\examples\Kaleidoscope\Chapter2\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C:\Users\nekoko\Desktop\llvm-project\llvm\resources\windows_version_resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9F801CC-D81F-3848-A70B-BD7CD23247ED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{D8F12E53-C407-3D18-BBF7-2CD81C04C058}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

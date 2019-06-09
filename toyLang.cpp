@@ -15,12 +15,13 @@ typedef struct {
   int ty;
   int val;
 }Token_t;
-typedef struct Node_int_t{
+typedef struct Node_t{
   int ty;
-  Node_int_t* lhs;
-  Node_int_t* rhs;
+  Node_t* lhs;
+  Node_t* rhs;
   int val;
-}Node_int_t;
+  double dval;
+}Node_t;
 
 // GLOBALS------------->
 std::string source;
@@ -117,8 +118,8 @@ int pos=0;
 
 //Useful Funcs
 
-Node_int_t* new_node_intliteral(int _val){
-  Node_int_t* node = new Node_int_t;
+Node_t* new_node_intliteral(int _val){
+  Node_t* node = new Node_t;
   node->ty = tok_num_int;
   node->val = _val;
   return node;
@@ -131,7 +132,7 @@ int consume(int ty){
   return 1;
 }
 
-Node_int_t* term(){
+Node_t* term(){
   if(consume('(')){
     //うーん. どうやってdoubleとintを混ぜれるのだ.
   }
@@ -139,11 +140,17 @@ Node_int_t* term(){
     return new_node_intliteral(tokens[pos++]);
   
   error("Unanticipated expression, Exit.");
+  return nullptr;
 }
 void parse(){
   
 }
 
+void gen(Node_t* node){
+  if(node->ty == tok_int){
+    
+  }
+}
 
 //Load source
 int load_source(){

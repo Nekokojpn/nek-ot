@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <cassert>
+#include <memory>
 #include <vector>
 #include <fstream>
 #include <cctype>
@@ -9,6 +9,18 @@
 
 // IFDEF
 //#define HIGH_DEBUGG
+
+//typedef
+typedef struct {
+  int ty;
+  int val;
+}Token_t;
+typedef struct Node_int_t{
+  int ty;
+  Node_int_t* lhs;
+  Node_int_t* rhs;
+  int val;
+}Node_int_t;
 
 // GLOBALS------------->
 std::string source;
@@ -94,6 +106,44 @@ int gettoken() {
   error("Unknown token '" + s + "', Exit.");
   return 1;
 }
+
+//LEXER<------------------------
+
+//Parser------------------------>
+
+//GLOBALS
+int pos=0;
+
+
+//Useful Funcs
+
+Node_int_t* new_node_intliteral(int _val){
+  Node_int_t* node = new Node_int_t;
+  node->ty = tok_num_int;
+  node->val = _val;
+  return node;
+}
+//次のトークンが期待するtyだったら読み進める.
+int consume(int ty){
+  if(tokens[pos] != ty)
+    return 0;
+  pos++;
+  return 1;
+}
+
+Node_int_t* term(){
+  if(consume('(')){
+    //うーん. どうやってdoubleとintを混ぜれるのだ.
+  }
+  if(tokens[pos] == tok_num_int)
+    return new_node_intliteral(tokens[pos++]);
+  
+  error("Unanticipated expression, Exit.");
+}
+void parse(){
+  
+}
+
 
 //Load source
 int load_source(){

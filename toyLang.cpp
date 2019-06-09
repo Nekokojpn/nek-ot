@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cassert>
 #include <vector>
 #include <fstream>
 #include <cctype>
@@ -7,7 +8,7 @@
 #include <cstdio>
 
 // IFDEF
-#define HIGH_DEBUGG
+//#define HIGH_DEBUGG
 
 // GLOBALS------------->
 std::string source;
@@ -16,6 +17,7 @@ std::string cs; // Current string EX. identiflier,number.
 int pc = 0;		//Program counter
 int line = 0;	//source line
 std::vector<int> tokens;
+std::vector<std::string> literals;
 
 // TOKENS--------------->
 enum {
@@ -34,8 +36,10 @@ enum {
 void error(std::string message) { std::cerr << message << std::endl; }
 void error_at(std::string message) {}
 
-void get_char() { cc = source[pc++]; std::cout<<"getchar cc="<<cc<<std::endl;}
+void get_char() { cc = source[pc++];}
 void undo_char(){pc--;}
+
+void addToliteral(){literals.push_back(cs);}
 //Compare
 bool compare_cs(const char* str) { return cs == str; };
 
@@ -50,19 +54,16 @@ int gettoken() {
 
   // if source[pc] is alpha char.
   if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
-    #ifdef HIGH_DEBUGG
-    std::cout<<"ALPHA!"<<std::endl;
-    #endif
     cs = cc;
     get_char();
     while (isalnum(cc)){
         cs+=cc;
         get_char();
     }
+
     undo_char();
-    #ifdef HIGH_DEBUGG
-    std::cout<<"cs="<<cs<<std::endl;
-    #endif
+    addToliteral();
+
     if (compare_cs("fn")) {
       return tok_fn;
 	} else if (compare_cs("int")) {
@@ -71,9 +72,6 @@ int gettoken() {
       return tok_eof;
   }
   } else if (isdigit(cc)) {//[0-9]+([0-9]|.)*[0-9]+
-    #ifdef HIGH_DEBUGG
-    std::cout<<"NUMBER!"<<std::endl;
-    #endif
     cs = cc;
     get_char();
     bool point = false;
@@ -83,17 +81,17 @@ int gettoken() {
       get_char();
     }
     undo_char();
-    #ifdef HIGH_DEBUGG
-    std::cout<<"csNUMBER="<<cs<<std::endl;
-    #endif
+    addToliteral();
     if(point){ //double.
       return tok_num_double;
     }
     else{ //int
       return tok_num_int;
     }
-  }else if(cc == EOF)return tok_eof;
-  error("Unknown token '" + std::to_string(cc) + "', Exit.");
+  }else if(cc == '\0')return tok_eof;
+  std::string s="";
+  s+=cc;
+  error("Unknown token '" + s + "', Exit.");
   return 1;
 }
 
@@ -114,15 +112,13 @@ int load_source(){
 int main() {
     if(load_source()==1)return 1;
     int tok = gettoken();
-    #ifdef HIGH_DEBUGG
-    std::cout<<"tok="<<tok<<std::endl;
-    #endif
     while(tok !=tok_eof){
         tokens.push_back(tok);
         tok = gettoken();
-        #ifdef HIGH_DEBUGG
-        std::cout<<"tok="<<tok<<std::endl;
-        #endif
+        
     }
-    //for(auto i : tokens)std::cout<<i<<std::endl;
+    int it = tokens.size();
+    for(int i = 0; i<it;i++){
+      std::cout<<"input:"<<literals[i]<<std::endl<<"enum=" << tokens[i]<<std::endl;
+    }
 }

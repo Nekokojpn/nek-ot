@@ -24,7 +24,7 @@
 //typedef
 typedef struct {
   int ty;
-  int val;
+  std::string val;
 }Token_t;
 typedef struct Node_t{
   int ty;
@@ -42,6 +42,7 @@ int pc = 0;		//Program counter
 int line = 0;	//source line
 std::vector<int> tokens;
 std::vector<std::string> literals;
+std::vector<Token_t> tytokens;
 
 // TOKENS--------------->
 enum {
@@ -51,6 +52,11 @@ enum {
 
   tok_num_int = 200,
   tok_num_double = 201,
+
+  tok_semi = 300,
+  tok_equal = 301,
+
+  tok_identifier = 500,
 
   tok_eof = -1
 };
@@ -75,7 +81,6 @@ int gettoken() {
   while (isspace(cc)) {
     get_char();
   }
-
   // if source[pc] is alpha char.
   if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
     cs = cc;
@@ -92,9 +97,9 @@ int gettoken() {
       return tok_fn;
 	} else if (compare_cs("int")) {
       return tok_int;
-	} else if (compare_cs("ENDOFFILE")){
-      return tok_eof;
-  }
+     } else {
+       return tok_identifiler;
+     }
   } else if (isdigit(cc)) {//[0-9]+([0-9]|.)*[0-9]+
     cs = cc;
     get_char();
@@ -112,10 +117,23 @@ int gettoken() {
     else{ //int
       return tok_num_int;
     }
-  }else if(cc == '\0')return tok_eof;
+  } else { //記号. 必ず1文字
+    std::string s = "";
+    s += cc;
+    literals.push_back(s);
+    if (cc == '\0')
+      return tok_eof;
+    if (cc == '=')
+      return tok_equal;
+    if (cc == ';')
+      return tok_semi;
+  }
+
+
   std::string s="";
   s+=cc;
-  error("Unknown token '" + s + "', Exit.");
+  error("Unknown token '" + s + "'"); 
+  literals.push_back(s);
   return 1;
 }
 
@@ -125,7 +143,7 @@ int gettoken() {
 
 //GLOBALS
 int pos=0;
-
+int curtok = 0;
 using namespace llvm;
 
 static LLVMContext TheContext;
@@ -143,11 +161,11 @@ Node_t* new_node_intliteral(int _val){
   return node;
 }
 //次のトークンが期待するtyだったら読み進める.
-int consume(int ty){
-  if(tokens[pos] != ty)
-    return 0;
-  pos++;
-  return 1;
+bool consume(int ty) {
+  if(tytokens[curtok+1].ty != ty)
+    return false;
+  curtok++;
+  return true;
 }
 
 Node_t* term(){
@@ -160,15 +178,20 @@ Node_t* term(){
   error("Unanticipated expression, Exit.");
   return nullptr;
 }
-void parse(){
-  
+
+void expr() {
+
 }
 
-void gen(Node_t* node){
-  if(node->ty == tok_int){
-    //llvm::IRBuilder
+//topofgen
+void fn_gen(){
+  if(tytokens[curtok].ty == tok_fn){
+    if (!consume(tok_identifier))
+      error("After fn must be an identifier");
+
   }
 }
+
 
 //Load source
 int load_source(){
@@ -184,6 +207,7 @@ int load_source(){
     return 0;
 }
 
+
 int main() {
     if(load_source()==1)return 1;
     int tok = gettoken();
@@ -193,7 +217,12 @@ int main() {
         
     }
     int it = tokens.size();
+    std::cout << "-----Token dump-----";
     for(int i = 0; i<it;i++){
+      Token_t t;
+      t.ty = tokens[i];
+      t.val = literals[i];
+      tytokens.push_back(t);
       std::cout<<"input:"<<literals[i]<<std::endl<<"enum=" << tokens[i]<<std::endl;
     }
 }

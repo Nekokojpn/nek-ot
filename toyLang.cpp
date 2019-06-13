@@ -208,7 +208,7 @@ Node_t *term() {
 }
 
 FunctionType* getTypebyToken(int token) {
-  if (token == tok_int)
+  if (token == tok_void)
     return FunctionType::get(Type::getVoidTy(TheContext), false);
   if (token == tok_int)
     return FunctionType::get(Type::getInt32Ty(TheContext),false);
@@ -218,25 +218,27 @@ void expr() {}
 
 class FuncAST {
   std::string name = "";
-  FunctionType* retty;
+  int retty = -1;
 public:
   void setName(std::string _name) { name = _name; }
   std::string &getName() { return name; }
-  void setRetTy(int _retty) { retty = getTypebyToken(_retty); }
-  FunctionType* getRetTy() { return retty; }
-  void codegen() {
+  void setRetTy(int _retty) { retty = _retty; }
+  int getRetTy() { return retty; }
+  Function* codegen() {
     if (name == "")
       error("Failed to parsing functy: fn name is missing.");
-    if (retty == nullptr)
+    if (retty == -1)
       error("Failed to parsing functy: ret value is missing.");
-
+    std::cout << "fn name=" << name << std::endl;
+    Function* fn = Function::Create(getTypebyToken(retty), Function::ExternalLinkage, name, TheModule.get());
+    return fn;
   }
 };
 
 // topofgen
-void fn_gen() { // fn <id>(){
+void gen() { // fn <id>(){
 
-  if (consume(tok_fn)) {
+  if (tytokens[curtok].ty == tok_fn) {
     FuncAST *func = new FuncAST;
     if (!consume(tok_identifier))
       error("After fn must be an identifier");
@@ -251,11 +253,16 @@ void fn_gen() { // fn <id>(){
       error("fn: " + func->getName() + " has no arrow.");
     if (tytokens[curtok].ty < 100 && tytokens[curtok].ty > 199 && tytokens[curtok].ty != tok_identifier)
       error("fn: " + func->getName() + " has no ret value1.");
+	curtok++;
     func->setRetTy(tytokens[curtok].ty);
-    curtok++;
+    
     if (!consume(tok_lb))
       error("fn: " + func->getName() + " has no parentheses.");
-    func->codegen();
+
+    Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
+    
+    
+    
   }
 }
 
@@ -297,11 +304,13 @@ int main() {
   t.ty = -1;
   tytokens.push_back(t);
   // Parser--->
-  TheModule = llvm::make_unique<Module>("source_test", TheContext);
+  TheModule = make_unique<Module>("top", TheContext);
   //テストとして.
+  curtok = 0;
   while (tytokens[curtok].ty != -1) {
-	fn_gen();
+	gen();
     curtok++;
   }
-  
+  std::cout << "-----LLVM IR-----" << std::endl;
+  TheModule->dump();
 }

@@ -85,6 +85,8 @@ int gettoken() {
       return tok_int;
     } else if (compare_cs("void")) {
       return tok_void;
+    } else if (compare_cs("ret")) {
+      return tok_ret;
     }
 
     else {
@@ -128,7 +130,6 @@ int gettoken() {
     if (cc == '-') {
       get_char();
       if (cc == '>') { // arrow
-        std::cout << "input:->" << std::endl;
         return tok_arrow;
       }
       undo_char();
@@ -175,6 +176,19 @@ bool consume(int ty) {
   return true;
 }
 
+int getnextty() { return tytokens[curtok + 1].ty; }
+
+int getcurty() { return tytokens[curtok].ty; }
+
+int getnext_num() { return std::atoi(tytokens[curtok + 1].val.c_str()); }
+std::string getnext_str() { return tytokens[curtok + 1].val; }
+
+int getcur_num() { return std::atoi(tytokens[curtok].val.c_str()); }
+std::string getcur_str() { return tytokens[curtok].val; }
+
+void cout_cur() { std::cout << tytokens[curtok].val; }
+void cout_cur_n() { std::cout << getcur_num() << std::endl; }
+
 Node_t *term() {
   if (consume('(')) {
     //うーん. どうやってdoubleとintを混ぜれるのだ.
@@ -194,14 +208,18 @@ FunctionType* getTypebyToken(int token) {
 }
 
 
+/*
 class ExprAST { //Ex. 
   int x;
 
 public:
   ExprAST(int _x) { x = _x; }
-  
+  Value* codegen() {
+	  
+  }
 
 };
+*/
 class FuncAST {
   std::string name = "";
   int retty = -1;
@@ -236,27 +254,69 @@ void funcgen() {
   //戻り値
   if (!consume(tok_arrow))
     error("fn: " + func->getName() + " has no arrow.");
-  if (tytokens[curtok].ty < 100 && tytokens[curtok].ty > 199 &&
-      tytokens[curtok].ty != tok_identifier)
+  if (getcurty() < 100 && getcurty() > 199 &&
+      getcurty() != tok_identifier)
     error("fn: " + func->getName() + " has no ret value1.");
   curtok++;
-  func->setRetTy(tytokens[curtok].ty);
+  func->setRetTy(getcurty());
 
   if (!consume(tok_lb))
     error("fn: " + func->getName() + " has no parentheses.");
-
+  
   Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
 }
-void exprgen() {
-
+void exprgen(Value* x) {
+  if (getnextty() == tok_plus || getnextty() == tok_minus ||
+      getnextty() == tok_star || getnextty() == tok_slash ||
+      getnextty() == tok_semi) {
+    if (getnextty() == tok_semi) {
+      Builder.CreateStore(Builder.getInt32(getcur_num()), x);
+      return;
+	}
+  }
 }
+void subst_intgen() {
+  if (!getnextty() == tok_identifier)
+    error("After type must be identifier.");
+  curtok++;
+  Value *x = Builder.CreateAlloca(Builder.getInt32Ty(), nullptr, getcur_str());
+  if (!getnextty() == tok_semi || !getnextty() == tok_equal) {
+    error("NO");
+    exit(1);
+  }
+if (getnextty() == tok_semi) {
+    curtok++;
+    return;
+}
+if (getnextty() == tok_equal) {
+  curtok++;
+  /* エラーハンドリング
+  if (getnextty() != tok_num_int || getnextty() != tok_num_double ||
+       getnextty() !=tok_identifier) {
+    error("NO");
+    exit(1); //期待するものではなかった
+    } 
+	*/
+  curtok++;
+	if (getcurty() == tok_num_int) {
+    exprgen(x);
+    }
+  }
+}
+void retgen() {  } //ここから；
     // topofgen グローバルからの
 void gen() { // fn <id>(){
-  if (tytokens[curtok].ty == tok_fn) {
+  if (getcurty() == tok_fn) {
     funcgen();
   }
-  if (tytokens[curtok].ty == tok_int) {
-    exprgen();
+  if (getcurty() == tok_num_int) {
+    
+  }
+  if (getcurty() == tok_int) {
+    subst_intgen();
+  }
+  if (getcurty() == tok_ret) {
+   
   }
 }
 
@@ -285,14 +345,18 @@ int main() {
     tok = gettoken();
   }
   int it = tokens.size();
+#ifdef HIGHDEBUGG
   std::cout << "-----Token dump-----" << std::endl;
+#endif //  HIGHDEBUGG
   for (int i = 0; i < it; i++) {
     Token_t t;
     t.ty = tokens[i];
     t.val = literals[i];
     tytokens.push_back(t);
-    std::cout << "input:" << literals[i] << std::endl
+#ifdef  HIGHDEBUGG
+	std::cout << "input:" << literals[i] << std::endl
               << "enum=" << tokens[i] << std::endl;
+#endif //  HIGHDEBUGG
   }
   Token_t t;
   t.ty = -1;
@@ -301,7 +365,7 @@ int main() {
   TheModule = make_unique<Module>("top", TheContext);
 
   curtok = 0;
-  while (tytokens[curtok].ty != -1) {
+  while (getcurty() != -1) {
 	gen();
     curtok++;
   }

@@ -9,6 +9,9 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+
+#include "Token.h"
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -44,30 +47,6 @@ std::vector<int> tokens;
 std::vector<std::string> literals;
 std::vector<Token_t> tytokens;
 
-// TOKENS--------------->
-enum {
-  tok_fn = 2,
-
-  tok_void = 100,
-  tok_int = 101,
-
-  tok_num_int = 200,
-  tok_num_double = 201,
-
-  tok_semi = 300,
-  tok_equal = 301,
-  tok_lp = 302, // (
-  tok_rp = 303, // )
-  tok_lb = 304, // {
-  tok_rb = 305, // }
-  tok_minus = 306,
-  tok_plus = 307,
-  tok_arrow = 308,
-
-  tok_identifier = 500,
-
-  tok_eof = -1
-};
 
 // Useful funcs----------->
 
@@ -214,55 +193,70 @@ FunctionType* getTypebyToken(int token) {
     return FunctionType::get(Type::getInt32Ty(TheContext),false);
 }
 
-void expr() {}
 
+class ExprAST { //Ex. 
+  int x;
+
+public:
+  ExprAST(int _x) { x = _x; }
+  
+
+};
 class FuncAST {
   std::string name = "";
   int retty = -1;
+
 public:
   void setName(std::string _name) { name = _name; }
   std::string &getName() { return name; }
   void setRetTy(int _retty) { retty = _retty; }
   int getRetTy() { return retty; }
-  Function* codegen() {
+  Function *codegen() {
     if (name == "")
       error("Failed to parsing functy: fn name is missing.");
     if (retty == -1)
       error("Failed to parsing functy: ret value is missing.");
     std::cout << "fn name=" << name << std::endl;
-    Function* fn = Function::Create(getTypebyToken(retty), Function::ExternalLinkage, name, TheModule.get());
+    Function *fn =
+        Function::Create(getTypebyToken(retty), Function::ExternalLinkage, name,
+                         TheModule.get());
     return fn;
   }
 };
+void funcgen() {
+  FuncAST *func = new FuncAST;
+  if (!consume(tok_identifier))
+    error("After fn must be an identifier");
+  func->setName(tytokens[curtok].val);
+  if (!consume(tok_lp))
+    error("fn: " + func->getName() + " has no parentheses.");
+  //引数解析.スキップ
+  if (!consume(tok_rp))
+    error("fn: " + func->getName() + " has no parentheses.");
+  //戻り値
+  if (!consume(tok_arrow))
+    error("fn: " + func->getName() + " has no arrow.");
+  if (tytokens[curtok].ty < 100 && tytokens[curtok].ty > 199 &&
+      tytokens[curtok].ty != tok_identifier)
+    error("fn: " + func->getName() + " has no ret value1.");
+  curtok++;
+  func->setRetTy(tytokens[curtok].ty);
 
-// topofgen
+  if (!consume(tok_lb))
+    error("fn: " + func->getName() + " has no parentheses.");
+
+  Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
+}
+void exprgen() {
+
+}
+    // topofgen グローバルからの
 void gen() { // fn <id>(){
-
   if (tytokens[curtok].ty == tok_fn) {
-    FuncAST *func = new FuncAST;
-    if (!consume(tok_identifier))
-      error("After fn must be an identifier");
-    func->setName(tytokens[curtok].val);
-    if (!consume(tok_lp))
-      error("fn: " + func->getName() + " has no parentheses.");
-    //引数解析.スキップ
-    if (!consume(tok_rp))
-      error("fn: " + func->getName() + " has no parentheses.");
-    //戻り値
-    if (!consume(tok_arrow))
-      error("fn: " + func->getName() + " has no arrow.");
-    if (tytokens[curtok].ty < 100 && tytokens[curtok].ty > 199 && tytokens[curtok].ty != tok_identifier)
-      error("fn: " + func->getName() + " has no ret value1.");
-	curtok++;
-    func->setRetTy(tytokens[curtok].ty);
-    
-    if (!consume(tok_lb))
-      error("fn: " + func->getName() + " has no parentheses.");
-
-    Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
-    
-    
-    
+    funcgen();
+  }
+  if (tytokens[curtok].ty == tok_int) {
+    exprgen();
   }
 }
 
@@ -305,7 +299,7 @@ int main() {
   tytokens.push_back(t);
   // Parser--->
   TheModule = make_unique<Module>("top", TheContext);
-  //テストとして.
+
   curtok = 0;
   while (tytokens[curtok].ty != -1) {
 	gen();

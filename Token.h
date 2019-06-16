@@ -7,6 +7,12 @@ enum {
   tok_ret = 100,
   tok_void = 101,
   tok_int = 102,
+  tok_float =  103,
+  tok_double = 104,
+  tok_short = 105,
+  tok_long = 106,
+  tok_char = 107,
+  tok_string = 108,
 
   tok_num_int = 200,
   tok_num_double = 201,

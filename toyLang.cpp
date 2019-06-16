@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <stack>
 
 // IFDEF
 //#define HIGH_DEBUGG
@@ -29,13 +30,6 @@ typedef struct {
   int ty;
   std::string val;
 } Token_t;
-typedef struct Node_t {
-  int ty;
-  Node_t *lhs;
-  Node_t *rhs;
-  int val;
-  double dval;
-} Node_t;
 
 // GLOBALS------------->
 std::string source;
@@ -88,6 +82,12 @@ int gettoken() {
     } else if (compare_cs("ret")) {
       return tok_ret;
     }
+	else if (compare_cs("float")) { return tok_float; }
+	else if (compare_cs("double")) { return tok_double; }
+	else if (compare_cs("short")) { return tok_short; }
+	else if (compare_cs("long")) { return tok_long; }
+	else if (compare_cs("char")) { return tok_char; }
+	else if (compare_cs("string")) { return tok_string; }
 
     else {
       return tok_identifier;
@@ -137,6 +137,10 @@ int gettoken() {
     }
     if (cc == '+')
       return tok_plus;
+	if (cc == '*')
+		return tok_star;
+	if (cc == '/')
+		return tok_slash;
   }
 
   std::string s = "";
@@ -160,14 +164,12 @@ static IRBuilder<> Builder(TheContext);
 static std::unique_ptr<Module> TheModule;
 static std::map<std::string, Value *> NamedValues;
 
+static int RetType = 0; //戻り値の型
+std::stack<int> stack;
+
+
 // Useful Funcs
 
-Node_t *new_node_intliteral(int _val) {
-  Node_t *node = new Node_t;
-  node->ty = tok_num_int;
-  node->val = _val;
-  return node;
-}
 //次のトークンが期待するtyだったら読み進める.
 bool consume(int ty) {
   if (tytokens[curtok + 1].ty != ty)
@@ -189,37 +191,16 @@ std::string getcur_str() { return tytokens[curtok].val; }
 void cout_cur() { std::cout << tytokens[curtok].val; }
 void cout_cur_n() { std::cout << getcur_num() << std::endl; }
 
-Node_t *term() {
-  if (consume('(')) {
-    //うーん. どうやってdoubleとintを混ぜれるのだ.
-  }
-  if (tokens[pos] == tok_num_int)
-    return new_node_intliteral(tokens[pos++]);
 
-  error("Unanticipated expression, Exit.");
-  return nullptr;
-}
 
 FunctionType* getTypebyToken(int token) {
+	RetType = token;
   if (token == tok_void)
     return FunctionType::get(Type::getVoidTy(TheContext), false);
   if (token == tok_int)
     return FunctionType::get(Type::getInt32Ty(TheContext),false);
 }
 
-
-/*
-class ExprAST { //Ex. 
-  int x;
-
-public:
-  ExprAST(int _x) { x = _x; }
-  Value* codegen() {
-	  
-  }
-
-};
-*/
 class FuncAST {
   std::string name = "";
   int retty = -1;
@@ -265,22 +246,27 @@ void funcgen() {
   
   Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
 }
+
+
 void exprgen(Value* x) {
   if (getnextty() == tok_plus || getnextty() == tok_minus ||
       getnextty() == tok_star || getnextty() == tok_slash ||
       getnextty() == tok_semi) {
-    if (getnextty() == tok_semi) {
+    if (getnextty() == tok_semi && x!=nullptr) {
       Builder.CreateStore(Builder.getInt32(getcur_num()), x);
       return;
+	}
+	else {
+		
 	}
   }
 }
 void subst_intgen() {
-  if (!getnextty() == tok_identifier)
+  if (getnextty() != tok_identifier)
     error("After type must be identifier.");
   curtok++;
   Value *x = Builder.CreateAlloca(Builder.getInt32Ty(), nullptr, getcur_str());
-  if (!getnextty() == tok_semi || !getnextty() == tok_equal) {
+  if (getnextty() != tok_semi && getnextty() != tok_equal) {
     error("NO");
     exit(1);
   }
@@ -299,25 +285,32 @@ if (getnextty() == tok_equal) {
 	*/
   curtok++;
 	if (getcurty() == tok_num_int) {
-    exprgen(x);
+		exprgen(x);
     }
   }
 }
-void retgen() {  } //ここから；
+void retgen() { 
+	if (RetType == tok_void && getnextty() == tok_semi) { //ret;  syntax ok
+		Builder.CreateRetVoid();
+	}
+	else { //戻り値が存在する
+
+	}
+} 
     // topofgen グローバルからの
 void gen() { // fn <id>(){
-  if (getcurty() == tok_fn) {
-    funcgen();
-  }
-  if (getcurty() == tok_num_int) {
-    
-  }
-  if (getcurty() == tok_int) {
-    subst_intgen();
-  }
-  if (getcurty() == tok_ret) {
-   
-  }
+	if (getcurty() == tok_fn) {
+		funcgen();
+	}
+	if (getcurty() == tok_num_int) {
+		
+	}
+	if (getcurty() == tok_int) {
+		subst_intgen();
+	}
+	if (getcurty() == tok_ret) {
+		retgen();
+	}
 }
 
 // Load source

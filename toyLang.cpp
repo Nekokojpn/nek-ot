@@ -23,7 +23,7 @@
 #include <stack>
 
 // IFDEF
-//#define HIGH_DEBUGG
+#define HIGH_DEBUGG
 
 // typedef
 typedef struct {
@@ -40,11 +40,12 @@ int line = 0;   // source line
 std::vector<int> tokens;
 std::vector<std::string> literals;
 std::vector<Token_t> tytokens;
+bool isdq_started = false;
 
 
 // Useful funcs----------->
 
-void error(std::string message) { std::cerr << message << std::endl; }
+void error(std::string message) { std::cerr << message << std::endl; exit(1); }
 void error_at(std::string message) {}
 
 void get_char() { cc = source[pc++]; }
@@ -69,6 +70,19 @@ int gettoken() {
       cs += cc;
       get_char();
     }
+
+	if (isdq_started) {
+		while (cc != '\"' && cc != '\0') {
+			cs += cc;
+			get_char();
+		}
+		if (cc == '\0') {
+			error("tokenization error");
+		}
+		undo_char();
+		addToliteral();
+		return tok_str_string;
+	}
 
     undo_char();
     addToliteral();
@@ -119,14 +133,22 @@ int gettoken() {
       return tok_equal;
     if (cc == ';')
       return tok_semi;
-    if (cc == '(')
-      return tok_lp;
-    if (cc == ')')
-      return tok_rp;
-    if (cc == '{')
-      return tok_lb;
-    if (cc == '}')
-      return tok_rb;
+	if (cc == '(')
+		return tok_lp;
+	if (cc == ')')
+		return tok_rp;
+	if (cc == '{')
+		return tok_lb;
+	if (cc == '}')
+		return tok_rb;
+	if (cc == '\'')
+		return tok_sq;
+	if (cc == '\"') {
+		if (!isdq_started) isdq_started = true;
+		else isdq_started = false;
+		return tok_dq;
+	}
+
     if (cc == '-') {
       get_char();
       if (cc == '>') { // arrow
@@ -167,6 +189,8 @@ static std::map<std::string, Value *> NamedValues;
 static int RetType = 0; //戻り値の型
 std::stack<int> stack;
 
+bool isinFunc = false;
+
 
 // Useful Funcs
 
@@ -180,6 +204,7 @@ bool consume(int ty) {
 
 int getnextty() { return tytokens[curtok + 1].ty; }
 
+//get current tokens.type
 int getcurty() { return tytokens[curtok].ty; }
 
 int getnext_num() { return std::atoi(tytokens[curtok + 1].val.c_str()); }
@@ -201,7 +226,7 @@ FunctionType* getTypebyToken(int token) {
     return FunctionType::get(Type::getInt32Ty(TheContext),false);
 }
 
-class FuncAST {
+class Func {
   std::string name = "";
   int retty = -1;
 
@@ -215,15 +240,27 @@ public:
       error("Failed to parsing functy: fn name is missing.");
     if (retty == -1)
       error("Failed to parsing functy: ret value is missing.");
-    std::cout << "fn name=" << name << std::endl;
     Function *fn =
         Function::Create(getTypebyToken(retty), Function::ExternalLinkage, name,
                          TheModule.get());
     return fn;
   }
 };
+class String {
+	std::string name = "";
+	std::string val = "";
+public:
+	void setName(std::string _name) { name = _name; }
+	std::string& getName() { return name; }
+	void setVal(std::string _val) { val = _val; }
+	std::string& getVal() { return val; }
+	Value* codegen() {
+		return Builder.CreateGlobalStringPtr(val,name);
+	}
+};
 void funcgen() {
-  FuncAST *func = new FuncAST;
+	isinFunc = true;
+  std::unique_ptr<Func> func = std::make_unique<Func>();
   if (!consume(tok_identifier))
     error("After fn must be an identifier");
   func->setName(tytokens[curtok].val);
@@ -244,7 +281,10 @@ void funcgen() {
   if (!consume(tok_lb))
     error("fn: " + func->getName() + " has no parentheses.");
   
-  Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
+  if(func->getName() == "main")
+	Builder.SetInsertPoint(BasicBlock::Create(TheContext, "entry", func->codegen()));
+  else 
+	  Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", func->codegen()));
 }
 
 
@@ -254,6 +294,21 @@ void exprgen(Value* x) {
       getnextty() == tok_semi) {
     if (getnextty() == tok_semi && x!=nullptr) {
       Builder.CreateStore(Builder.getInt32(getcur_num()), x);
+	  /*
+	  Value* hello = Builder.CreateGlobalStringPtr("Hello world");
+	  
+	  // puts をとりだしてつかえるようにセットアップする。
+	  std::vector<Type*> putsArgs;
+	  putsArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+	  ArrayRef<Type*>  argsRef(putsArgs);
+
+	  // puts の型
+	  llvm::FunctionType* putsType =
+		  llvm::FunctionType::get(Builder.getInt32Ty(), argsRef, false);
+	  // puts 関数をいよいよとりだした!
+	  llvm::FunctionCallee putsFunc = TheModule->getOrInsertFunction("puts", putsType);
+	  Builder.CreateCall(putsFunc, hello);
+	  */
       return;
 	}
 	else {
@@ -289,6 +344,36 @@ if (getnextty() == tok_equal) {
     }
   }
 }
+void stringgen() {
+	
+	std::unique_ptr<String> str  = std::make_unique<String>();
+	if (getnextty() != tok_identifier) 
+		error("After string type must be identifier.");
+	curtok++;
+	str->setName(getcur_str());
+	if (getnextty() != tok_equal && getnextty() != tok_semi)
+		error("Syntax error1");
+	curtok++;
+	if (getcurty() == tok_semi) { //Ex string s;
+
+	}
+	else if (getcurty() == tok_equal) { //Ex string s = "sss";
+		if (getnextty() != tok_dq)
+			error("Syntax error2");
+		curtok++;
+		if (getnextty() != tok_str_string)
+			error("Syntax error3");
+		curtok++;
+		str->setVal(getcur_str());
+		if (getnextty() != tok_dq)
+			error("Syntax error4");
+		curtok++;
+		if (getnextty() != tok_semi)
+			error("Syntax error5");
+		std::cout<<"ieee";
+		str->codegen();//ここから　戻り値ありなんだけどこれを管理する方法。
+	}
+}
 void retgen() { 
 	if (RetType == tok_void && getnextty() == tok_semi) { //ret;  syntax ok
 		Builder.CreateRetVoid();
@@ -296,6 +381,7 @@ void retgen() {
 	else { //戻り値が存在する
 
 	}
+	isinFunc = false;
 } 
     // topofgen グローバルからの
 void gen() { // fn <id>(){
@@ -307,6 +393,9 @@ void gen() { // fn <id>(){
 	}
 	if (getcurty() == tok_int) {
 		subst_intgen();
+	}
+	if (getcurty() == tok_string) {
+		stringgen();
 	}
 	if (getcurty() == tok_ret) {
 		retgen();
@@ -330,6 +419,8 @@ int load_source() {
 }
 
 int main() {
+	std::chrono::system_clock::time_point start, end_toknize, end;
+	start = std::chrono::system_clock::now();
   if (load_source() == 1)
     return 1;
   int tok = gettoken();
@@ -338,7 +429,7 @@ int main() {
     tok = gettoken();
   }
   int it = tokens.size();
-#ifdef HIGHDEBUGG
+#ifdef HIGH_DEBUGG
   std::cout << "-----Token dump-----" << std::endl;
 #endif //  HIGHDEBUGG
   for (int i = 0; i < it; i++) {
@@ -346,7 +437,7 @@ int main() {
     t.ty = tokens[i];
     t.val = literals[i];
     tytokens.push_back(t);
-#ifdef  HIGHDEBUGG
+#ifdef  HIGH_DEBUGG
 	std::cout << "input:" << literals[i] << std::endl
               << "enum=" << tokens[i] << std::endl;
 #endif //  HIGHDEBUGG
@@ -354,6 +445,7 @@ int main() {
   Token_t t;
   t.ty = -1;
   tytokens.push_back(t);
+  end_toknize = std::chrono::system_clock::now();
   // Parser--->
   TheModule = make_unique<Module>("top", TheContext);
 
@@ -362,6 +454,23 @@ int main() {
 	gen();
     curtok++;
   }
+
+  end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;
   TheModule->dump();
+  std::cout << "-----time-----" << std::endl;
+  double all_time = static_cast<double>(
+	  std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() /
+	  1000000.0);
+  double toknize_time = static_cast<double>(
+	  std::chrono::duration_cast<std::chrono::microseconds>(end_toknize - start)
+	  .count() /
+	  1000000.0);
+  double parse_time = static_cast<double>(
+	  std::chrono::duration_cast<std::chrono::microseconds>(end - end_toknize)
+	  .count() /
+	  1000000.0);
+  printf("All time %lf[s]\n", all_time);
+  printf("Tokenize time %lf[s]\n", toknize_time);
+  printf("Parse time %lf[s]\n", parse_time);
 }

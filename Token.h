@@ -16,6 +16,7 @@ enum {
 
   tok_num_int = 200,
   tok_num_double = 201,
+  tok_str_string =202,
 
   tok_semi = 300,
   tok_equal = 301,
@@ -23,7 +24,9 @@ enum {
   tok_rp = 303, // )
   tok_lb = 304, // {
   tok_rb = 305, // }
-  tok_arrow = 306,
+  tok_arrow = 306, // ->
+  tok_sq = 307, // '
+  tok_dq = 308, // "
 
   // operator
   tok_plus = 400,

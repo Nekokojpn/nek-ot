@@ -25,6 +25,48 @@
 // IFDEF
 //#define HIGH_DEBUGG
 
+
+
+//Common globals----->
+using namespace llvm;
+
+static LLVMContext TheContext;
+static IRBuilder<> Builder(TheContext);
+static std::unique_ptr<Module> TheModule;
+//<-----
+//Parser globals
+int pos = 0;
+int curtok = 0;
+
+static std::map<std::string, FunctionCallee> Functions_Global;
+
+static std::map<std::string, Value*> NamedValues_Global;
+static std::map<std::string, Value*> NamedValues_Local;
+
+static int RetType = 0; //戻り値の型
+std::stack<int> stack;
+
+bool isinFunc = false;
+//<-----
+
+class Sys {
+public:
+	class IO {
+	public:
+		static void CreateFunc() {
+			//puts
+			std::vector<Type*> putsArgs;
+			putsArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+			ArrayRef<Type*>  argsRef(putsArgs);
+			FunctionType* putsType =
+				FunctionType::get(Builder.getInt32Ty(), argsRef, false);
+			FunctionCallee putsFunc = TheModule->getOrInsertFunction("puts", putsType);
+			Functions_Global["puts"] = putsFunc;
+		}
+	};
+};
+
+
 // typedef
 typedef struct {
   int ty;
@@ -161,8 +203,21 @@ int gettoken() {
       return tok_plus;
 	if (cc == '*')
 		return tok_star;
-	if (cc == '/')
-		return tok_slash;
+	if (cc == '/') {
+		get_char();
+		if (cc == '/') {
+			get_char();
+			while (cc != '\n'&&cc!='\0') {
+				get_char();
+			}
+			return tok_nope;
+		}
+		else {
+			undo_char();
+			return tok_slash;
+		}
+		
+	}
   }
 
   std::string s = "";
@@ -176,20 +231,7 @@ int gettoken() {
 
 // Parser------------------------>
 
-// GLOBALS
-int pos = 0;
-int curtok = 0;
-using namespace llvm;
 
-static LLVMContext TheContext;
-static IRBuilder<> Builder(TheContext);
-static std::unique_ptr<Module> TheModule;
-static std::map<std::string, Value *> NamedValues;
-
-static int RetType = 0; //戻り値の型
-std::stack<int> stack;
-
-bool isinFunc = false;
 
 
 // Useful Funcs
@@ -258,6 +300,18 @@ public:
 		return Builder.CreateGlobalStringPtr(val,name);
 	}
 };
+class FuncCall {
+	std::string func_name = "";
+	std::vector<Value*> args;
+public:
+	void setFuncName(std::string _funcname) { func_name = _funcname; }
+	std::string& getFuncName() { return func_name; }
+	void addArgs(Value* _val) { args.push_back(_val); }
+	void codegen() {
+		//引数一個しかだめ、要修正
+		Builder.CreateCall(Functions_Global[func_name], args[0]);
+	}
+};
 void funcgen() {
 	isinFunc = true;
   std::unique_ptr<Func> func = std::make_unique<Func>();
@@ -294,21 +348,6 @@ void exprgen(Value* x) {
       getnextty() == tok_semi) {
     if (getnextty() == tok_semi && x!=nullptr) {
       Builder.CreateStore(Builder.getInt32(getcur_num()), x);
-	  /*
-	  Value* hello = Builder.CreateGlobalStringPtr("Hello world");
-	  
-	  // puts をとりだしてつかえるようにセットアップする。
-	  std::vector<Type*> putsArgs;
-	  putsArgs.push_back(Builder.getInt8Ty()->getPointerTo());
-	  ArrayRef<Type*>  argsRef(putsArgs);
-
-	  // puts の型
-	  llvm::FunctionType* putsType =
-		  llvm::FunctionType::get(Builder.getInt32Ty(), argsRef, false);
-	  // puts 関数をいよいよとりだした!
-	  llvm::FunctionCallee putsFunc = TheModule->getOrInsertFunction("puts", putsType);
-	  Builder.CreateCall(putsFunc, hello);
-	  */
       return;
 	}
 	else {
@@ -370,7 +409,7 @@ void stringgen() {
 		curtok++;
 		if (getnextty() != tok_semi)
 			error("Syntax error5");
-		str->codegen();//ここから　戻り値ありなんだけどこれを管理する方法。
+		NamedValues_Global[str->getName()] = str->codegen();
 	}
 }
 void retgen() { 
@@ -382,6 +421,21 @@ void retgen() {
 	}
 	isinFunc = false;
 } 
+void funccallgen() {
+	std::unique_ptr<FuncCall> fc = make_unique<FuncCall>();
+	fc->setFuncName(getcur_str());
+
+	if (getnextty() != tok_lp)
+		error("");
+	curtok++;
+	if (getnextty() != tok_identifier)
+		error("");
+	curtok++;
+	fc->addArgs(NamedValues_Global[getcur_str()]);
+	if (getnextty() != tok_rp)
+		error("");
+	fc->codegen();
+}
     // topofgen グローバルからの
 void gen() { // fn <id>(){
 	if (getcurty() == tok_fn) {
@@ -399,9 +453,18 @@ void gen() { // fn <id>(){
 	if (getcurty() == tok_ret) {
 		retgen();
 	}
+	if (getcurty() == tok_identifier) {
+		//要修正
+		funccallgen();
+	}
 }
 
-// Load source
+/*												load_source												
+		引数：なし
+		戻り値：int
+		概要：std::ifstreamを使用してソースファイル"source_test.nk"を読み
+		込みます。それをグローバル変数source:stringにセットします。
+*/
 int load_source() {
   std::ifstream ifs("./source_test.nk");
   if (ifs.fail()) {
@@ -410,7 +473,7 @@ int load_source() {
   }
   std::string buf;
   while (getline(ifs, buf)) {
-    source += buf;
+    source += buf+'\n';
   }
   source += '\0';
 #ifdef HIGH_DEBUGG
@@ -426,7 +489,8 @@ int main() {
     return 1;
   int tok = gettoken();
   while (tok != tok_eof) {
-    tokens.push_back(tok);
+	if(tok!=tok_nope)
+		 tokens.push_back(tok);
     tok = gettoken();
   }
   int it = tokens.size();
@@ -451,6 +515,8 @@ int main() {
   TheModule = make_unique<Module>("top", TheContext);
 
   curtok = 0;
+
+  Sys::IO::CreateFunc();
   while (getcurty() != -1) {
 	gen();
     curtok++;

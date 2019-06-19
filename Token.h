@@ -2,6 +2,7 @@
 
 // TOKENS--------------->
 enum {
+  tok_nope = 0,
   tok_fn = 2,
 
   tok_ret = 100,

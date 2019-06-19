@@ -23,7 +23,7 @@
 #include <stack>
 
 // IFDEF
-#define HIGH_DEBUGG
+//#define HIGH_DEBUGG
 
 // typedef
 typedef struct {
@@ -370,7 +370,6 @@ void stringgen() {
 		curtok++;
 		if (getnextty() != tok_semi)
 			error("Syntax error5");
-		std::cout<<"ieee";
 		str->codegen();//ここから　戻り値ありなんだけどこれを管理する方法。
 	}
 }
@@ -414,7 +413,9 @@ int load_source() {
     source += buf;
   }
   source += '\0';
-  std::cout << source << std::endl;
+#ifdef HIGH_DEBUGG
+  std::cout <<"-----Source-----\n" << source << std::endl;
+#endif
   return 0;
 }
 

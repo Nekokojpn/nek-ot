@@ -11,6 +11,7 @@
 #include "llvm/IR/Verifier.h"
 
 #include "Token.h"
+#include "Util.h"
 
 #include <cctype>
 #include <cstdio>
@@ -25,7 +26,12 @@
 // IFDEF
 //#define HIGH_DEBUGG
 
-
+// typedef----->
+typedef struct {
+	int ty;
+	std::string val;
+} Token_t;
+//<-----
 
 //Common globals----->
 using namespace llvm;
@@ -33,8 +39,26 @@ using namespace llvm;
 static LLVMContext TheContext;
 static IRBuilder<> Builder(TheContext);
 static std::unique_ptr<Module> TheModule;
+
+int line = 1;
+int column = 0;
+std::string source_filename;
+std::string bline_source;
+std::string line_source;
 //<-----
-//Parser globals
+
+// Tokenizer globals----->
+std::string source;
+char cc;        // Current char.
+std::string cs; // Current string EX. identiflier,number.
+int pc = 0;     // Program counter
+std::vector<int> tokens;
+std::vector<std::string> literals;
+std::vector<Token_t> tytokens;
+bool isdq_started = false;
+//<-----
+
+//Parser globals----->
 int pos = 0;
 int curtok = 0;
 
@@ -47,6 +71,40 @@ static int RetType = 0; //戻り値の型
 std::stack<int> stack;
 
 bool isinFunc = false;
+//<-----
+
+//Common Funcs----->
+void error(std::string title,std::string message) {
+	std::cerr << std::endl;
+	Console::SetConsoleTextRed();
+	std::cerr << "error: " << title << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << " --> ";
+	Console::SetConsoleTextWhite();
+	std::cerr << source_filename << ":" << line << ":" << column << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |" << std::endl << line << " |";
+	Console::SetConsoleTextWhite();
+	std::cerr << "     " << line_source << std::endl; 
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |";
+	Console::SetConsoleTextWhite();
+	std::cerr << "     ";
+	for(int i = 0; i < column-1; i++)
+		std::cerr << " ";
+	Console::SetConsoleTextRed();
+	std::cerr << "^" << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |";
+	Console::SetConsoleTextWhite();
+	for (int i = 0; i < column - 1; i++)
+		std::cerr << " ";
+	Console::SetConsoleTextRed();
+	std::cerr << message << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |";
+	exit(1);
+}
 //<-----
 
 class Sys {
@@ -66,32 +124,32 @@ public:
 	};
 };
 
-
-// typedef
-typedef struct {
-  int ty;
-  std::string val;
-} Token_t;
-
-// GLOBALS------------->
-std::string source;
-char cc;        // Current char.
-std::string cs; // Current string EX. identiflier,number.
-int pc = 0;     // Program counter
-int line = 0;   // source line
-std::vector<int> tokens;
-std::vector<std::string> literals;
-std::vector<Token_t> tytokens;
-bool isdq_started = false;
-
-
 // Useful funcs----------->
 
-void error(std::string message) { std::cerr << message << std::endl; exit(1); }
-void error_at(std::string message) {}
-
-void get_char() { cc = source[pc++]; }
-void undo_char() { pc--; }
+void get_char() { 
+	cc = source[pc++]; 
+	if (cc == '\n') {
+		line++;
+		column = 1;
+		int i = pc;
+		while (source[i] != '\n')
+			line_source += source[i++];
+	}
+	else {
+		column++;
+	}
+}
+void undo_char() {
+	if (source[pc] == '\n') {
+		line--;
+		column = -1;
+	}
+	else {
+		column--;
+	}
+	pc--;
+	
+}
 
 void addToliteral() { literals.push_back(cs); }
 // Compare
@@ -119,7 +177,7 @@ int gettoken() {
 			get_char();
 		}
 		if (cc == '\0') {
-			error("tokenization error");
+			error("Expected","Expected \"");
 		}
 		undo_char();
 		addToliteral();
@@ -222,7 +280,7 @@ int gettoken() {
 
   std::string s = "";
   s += cc;
-  error("Unknown token '" + s + "'");
+  error("Unknown type","Unknown token '" + s + "'");
   literals.push_back(s);
   return 1;
 }
@@ -279,9 +337,9 @@ public:
   int getRetTy() { return retty; }
   Function *codegen() {
     if (name == "")
-      error("Failed to parsing functy: fn name is missing.");
+      error("parse error","Failed to parsing functy: fn name is missing.");
     if (retty == -1)
-      error("Failed to parsing functy: ret value is missing.");
+      error("parse error", "Failed to parsing functy: ret value is missing.");
     Function *fn =
         Function::Create(getTypebyToken(retty), Function::ExternalLinkage, name,
                          TheModule.get());
@@ -316,24 +374,24 @@ void funcgen() {
 	isinFunc = true;
   std::unique_ptr<Func> func = std::make_unique<Func>();
   if (!consume(tok_identifier))
-    error("After fn must be an identifier");
+    error("parse error", "After fn must be an identifier");
   func->setName(tytokens[curtok].val);
   if (!consume(tok_lp))
-    error("fn: " + func->getName() + " has no parentheses.");
+    error("parse error", "fn: " + func->getName() + " has no parentheses.");
   //引数解析.スキップ
   if (!consume(tok_rp))
-    error("fn: " + func->getName() + " has no parentheses.");
+    error("parse error", "fn: " + func->getName() + " has no parentheses.");
   //戻り値
   if (!consume(tok_arrow))
-    error("fn: " + func->getName() + " has no arrow.");
+    error("parse error", "fn: " + func->getName() + " has no arrow.");
   if (getcurty() < 100 && getcurty() > 199 &&
       getcurty() != tok_identifier)
-    error("fn: " + func->getName() + " has no ret value1.");
+    error("parse error", "fn: " + func->getName() + " has no ret value1.");
   curtok++;
   func->setRetTy(getcurty());
 
   if (!consume(tok_lb))
-    error("fn: " + func->getName() + " has no parentheses.");
+    error("parse error", "fn: " + func->getName() + " has no parentheses.");
   
   if(func->getName() == "main")
 	Builder.SetInsertPoint(BasicBlock::Create(TheContext, "entry", func->codegen()));
@@ -357,11 +415,11 @@ void exprgen(Value* x) {
 }
 void subst_intgen() {
   if (getnextty() != tok_identifier)
-    error("After type must be identifier.");
+    error("parse error", "After type must be identifier.");
   curtok++;
   Value *x = Builder.CreateAlloca(Builder.getInt32Ty(), nullptr, getcur_str());
   if (getnextty() != tok_semi && getnextty() != tok_equal) {
-    error("NO");
+    error("parse error", "NO");
     exit(1);
   }
 if (getnextty() == tok_semi) {
@@ -387,28 +445,28 @@ void stringgen() {
 	
 	std::unique_ptr<String> str  = std::make_unique<String>();
 	if (getnextty() != tok_identifier) 
-		error("After string type must be identifier.");
+		error("parse error", "After string type must be identifier.");
 	curtok++;
 	str->setName(getcur_str());
 	if (getnextty() != tok_equal && getnextty() != tok_semi)
-		error("Syntax error1");
+		error("parse error", "Syntax error1");
 	curtok++;
 	if (getcurty() == tok_semi) { //Ex string s;
 
 	}
 	else if (getcurty() == tok_equal) { //Ex string s = "sss";
 		if (getnextty() != tok_dq)
-			error("Syntax error2");
+			error("parse error", "Syntax error2");
 		curtok++;
 		if (getnextty() != tok_str_string)
-			error("Syntax error3");
+			error("parse error", "Syntax error3");
 		curtok++;
 		str->setVal(getcur_str());
 		if (getnextty() != tok_dq)
-			error("Syntax error4");
+			error("parse error", "Syntax error4");
 		curtok++;
 		if (getnextty() != tok_semi)
-			error("Syntax error5");
+			error("parse error", "Syntax error5");
 		NamedValues_Global[str->getName()] = str->codegen();
 	}
 }
@@ -426,14 +484,14 @@ void funccallgen() {
 	fc->setFuncName(getcur_str());
 
 	if (getnextty() != tok_lp)
-		error("");
+		error("parse error", "");
 	curtok++;
 	if (getnextty() != tok_identifier)
-		error("");
+		error("parse error", "");
 	curtok++;
 	fc->addArgs(NamedValues_Global[getcur_str()]);
 	if (getnextty() != tok_rp)
-		error("");
+		error("parse error", "");
 	fc->codegen();
 }
     // topofgen グローバルからの
@@ -465,12 +523,13 @@ void gen() { // fn <id>(){
 		概要：std::ifstreamを使用してソースファイル"source_test.nk"を読み
 		込みます。それをグローバル変数source:stringにセットします。
 */
-int load_source() {
-  std::ifstream ifs("./source_test.nk");
+int load_source(std::string source_path) {
+  std::ifstream ifs("C:/Users/nekoko/Desktop/llvm-project/build/Debug/bin/source_test.nk");
   if (ifs.fail()) {
-    error("Failed to open source file.");
+    error("no such directory or file name", "Failed to open source file.");
     return 1;
   }
+  source_filename = source_path;
   std::string buf;
   while (getline(ifs, buf)) {
     source += buf+'\n';
@@ -482,11 +541,18 @@ int load_source() {
   return 0;
 }
 
-int main() {
+int main(int argc, char** argv) {
 	std::chrono::system_clock::time_point start, end_toknize, end;
 	start = std::chrono::system_clock::now();
-  if (load_source() == 1)
+/*
+  if (load_source(static_cast<std::string>(argv[1])) == 1)
     return 1;
+*/
+  if (load_source("source_test.nk") == 1)
+	  return 1;
+  int i = pc;
+  while (source[i] != '\n')
+	  line_source += source[i++];
   int tok = gettoken();
   while (tok != tok_eof) {
 	if(tok!=tok_nope)
@@ -540,4 +606,5 @@ int main() {
   printf("All time %lf[s]\n", all_time);
   printf("Tokenize time %lf[s]\n", toknize_time);
   printf("Parse time %lf[s]\n", parse_time);
+  
 }

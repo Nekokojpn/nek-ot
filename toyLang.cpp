@@ -25,6 +25,7 @@
 
 // IFDEF
 //#define HIGH_DEBUGG
+#define DEBUGG
 
 // typedef----->
 typedef struct {
@@ -78,11 +79,15 @@ void error(std::string title,std::string message) {
 	Console::SetConsoleTextBlue();
 	std::cerr << " --> ";
 	Console::SetConsoleTextWhite();
-	std::cerr << source_filename << ":" << line+1 << ":" << column+1 << std::endl;
+	std::cerr << source_filename << ":" << line+1 << ":" << column << std::endl;
 	Console::SetConsoleTextBlue();
 	std::cerr << "  |" << std::endl << line+1 << " |";
 	Console::SetConsoleTextWhite();
-	std::cerr << "     " << source[line] << std::endl; 
+	std::string t = source[line].substr(0, source[line].size() - 1);
+	int i = 0;
+	while (isspace(t[i++]));
+	t = t.substr(i - 1, t.size() - 1);
+	std::cerr << "     " << t << std::endl; 
 	Console::SetConsoleTextBlue();
 	std::cerr << "  |";
 	Console::SetConsoleTextWhite();
@@ -104,12 +109,57 @@ void error(std::string title,std::string message) {
 }
 //<-----
 
+//Tokenizer Funcs----->
+void get_char() {
+	cc = source[line][column++];
+	if (cc == '\n') {
+		line++;
+		column = 0;
+		cc = source[line][column];
+	}
+}
+void undo_char() {
+	column--;
+	if (column < 0) {
+		line--;
+		column = source[line].size()-1;
+	}
+}
+void addToliteral() { literals.push_back(cs); }
+bool compare_cs(const char* str) { return cs == str; };
+//<-----
+
+//Parser Funcs----->
+bool consume(int ty) {
+	if (tytokens[curtok + 1].ty != ty)
+		return false;
+	curtok++;
+	return true;
+}
+int getnextty() { return tytokens[curtok + 1].ty; }
+int getcurty() { return tytokens[curtok].ty; }
+int getnext_num() { return std::atoi(tytokens[curtok + 1].val.c_str()); }
+std::string getnext_str() { return tytokens[curtok + 1].val; }
+int getcur_num() { return std::atoi(tytokens[curtok].val.c_str()); }
+std::string getcur_str() { return tytokens[curtok].val; }
+void cout_cur() { std::cout << tytokens[curtok].val; }
+void cout_cur_n() { std::cout << getcur_num() << std::endl; }
+FunctionType* getTypebyToken(int token) {
+	RetType = token;
+	if (token == tok_void)
+		return FunctionType::get(Type::getVoidTy(TheContext), false);
+	if (token == tok_int)
+		return FunctionType::get(Type::getInt32Ty(TheContext), false);
+}
+//<-----
+
+//Internal Library Classes----->
 class Sys {
 public:
 	class IO {
 	public:
 		static void CreateFunc() {
-			//puts
+			//puts --標準出力
 			std::vector<Type*> putsArgs;
 			putsArgs.push_back(Builder.getInt8Ty()->getPointerTo());
 			ArrayRef<Type*>  argsRef(putsArgs);
@@ -120,198 +170,118 @@ public:
 		}
 	};
 };
+//<-----
 
-// Useful funcs----------->
-
-void get_char() { 
-	cc = source[line][column++]; 
-	if (cc == '\n') {
-		line++;
-		column = 0;
-	}
-}
-void undo_char() {
-	column--;
-	if (column < 0) {
-		line--;
-		column = source[line].size();
-	}
-}
-
-void addToliteral() { literals.push_back(cs); }
-// Compare
-bool compare_cs(const char *str) { return cs == str; };
-
-// LEXER----------------->
+// tokenizer----->
 int gettoken() {
-  get_char();
-  // skip any spaces.
-  while (isspace(cc)) {
-    get_char();
-  }
-  // if source[line][column] is alpha char.
-  if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
-    cs = cc;
-    get_char();
-    while (isalnum(cc)) {
-      cs += cc;
-      get_char();
-    }
-
-	if (isdq_started) {
-		while (cc != '\"' && cc != '\0') {
+	get_char();
+	//skip any spaces.
+	while (isspace(cc)) {
+		get_char();
+	}
+	if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
+		cs = cc;
+		get_char();
+		while (isalnum(cc)) {
 			cs += cc;
 			get_char();
 		}
-		if (cc == '\0') {
-			error("Expected","Expected \"");
+		if (isdq_started) {
+			while (cc != '\"' && cc != '\0') {
+				cs += cc;
+				get_char();
+			}
+			if (cc == '\0') {
+				error("Expected", "Expected --> \"");
+			}
+			undo_char();
+			addToliteral();
+			return tok_str_string;
 		}
 		undo_char();
 		addToliteral();
-		return tok_str_string;
+		if (compare_cs("fn")) { return tok_fn; }
+		else if (compare_cs("int")) { return tok_int; }
+		else if (compare_cs("void")) { return tok_void; }
+		else if (compare_cs("ret")) { return tok_ret; }
+		else if (compare_cs("float")) { return tok_float; }
+		else if (compare_cs("double")) { return tok_double; }
+		else if (compare_cs("short")) { return tok_short; }
+		else if (compare_cs("long")) { return tok_long; }
+		else if (compare_cs("char")) { return tok_char; }
+		else if (compare_cs("string")) { return tok_string; }
+		else { return tok_identifier; }
 	}
-
-    undo_char();
-    addToliteral();
-
-    if (compare_cs("fn")) {
-      return tok_fn;
-    } else if (compare_cs("int")) {
-      return tok_int;
-    } else if (compare_cs("void")) {
-      return tok_void;
-    } else if (compare_cs("ret")) {
-      return tok_ret;
-    }
-	else if (compare_cs("float")) { return tok_float; }
-	else if (compare_cs("double")) { return tok_double; }
-	else if (compare_cs("short")) { return tok_short; }
-	else if (compare_cs("long")) { return tok_long; }
-	else if (compare_cs("char")) { return tok_char; }
-	else if (compare_cs("string")) { return tok_string; }
-
-    else {
-      return tok_identifier;
-    }
-  } else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
-    cs = cc;
-    get_char();
-    bool point = false;
-    while (isdigit(cc) || (cc == '.' && !point)) {
-      if (cc == '.')
-        point = true;
-      cs += cc;
-      get_char();
-    }
-    undo_char();
-    addToliteral();
-    if (point) { // double.
-      return tok_num_double;
-    } else { // int
-      return tok_num_int;
-    }
-  } else { //記号. 必ず1文字
-    std::string s = "";
-    s += cc;
-    literals.push_back(s);
-    if (cc == '\0')
-      return tok_eof;
-    if (cc == '=')
-      return tok_equal;
-    if (cc == ';')
-      return tok_semi;
-	if (cc == '(')
-		return tok_lp;
-	if (cc == ')')
-		return tok_rp;
-	if (cc == '{')
-		return tok_lb;
-	if (cc == '}')
-		return tok_rb;
-	if (cc == '\'')
-		return tok_sq;
-	if (cc == '\"') {
-		if (!isdq_started) isdq_started = true;
-		else isdq_started = false;
-		return tok_dq;
-	}
-
-    if (cc == '-') {
-      get_char();
-      if (cc == '>') { // arrow
-        return tok_arrow;
-      }
-      undo_char();
-      return tok_minus;
-    }
-    if (cc == '+')
-      return tok_plus;
-	if (cc == '*')
-		return tok_star;
-	if (cc == '/') {
+	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
+		cs = cc;
 		get_char();
+		bool point = false;
+		while (isdigit(cc) || (cc == '.' && !point)) {
+			if (cc == '.')
+				point = true;
+			cs += cc;
+			get_char();
+		}
+		undo_char();
+		addToliteral();
+		if (point) { // double.
+			return tok_num_double;
+		}
+		else { // int
+			return tok_num_int;
+		}
+	}
+	else { //記号. 必ず1文字
+		std::string s = "";
+		s += cc;
+		literals.push_back(s);
+		if (cc == '\0') return tok_eof;
+		if (cc == '=')	return tok_equal;
+		if (cc == ';')	return tok_semi;
+		if (cc == '(')	return tok_lp;
+		if (cc == ')')	return tok_rp;
+		if (cc == '{')	return tok_lb;
+		if (cc == '}')	return tok_rb;
+		if (cc == '\'')	return tok_sq;
+		if (cc == '\"') {
+			if (!isdq_started) isdq_started = true;
+			else isdq_started = false;
+			return tok_dq;
+		}
+		if (cc == '-') {
+			get_char();
+			if (cc == '>') { // arrow
+				return tok_arrow;
+			}
+			undo_char();
+			return tok_minus;
+		}
+		if (cc == '+')	return tok_plus;
+		if (cc == '*')	return tok_star;
 		if (cc == '/') {
 			get_char();
-			while (cc != '\n'&&cc!='\0') {
+			if (cc == '/') {
 				get_char();
+				while (cc != '\n' && cc != '\0') {
+					get_char();
+				}
+				return tok_nope;
 			}
-			return tok_nope;
+			else {
+				undo_char();
+				return tok_slash;
+			}
 		}
-		else {
-			undo_char();
-			return tok_slash;
-		}
-		
 	}
-  }
-
-  std::string s = "";
-  s += cc;
-  error("Unknown type","Unknown token '" + s + "'");
-  literals.push_back(s);
-  return 1;
+	std::string s = "";
+	s += cc;
+	error("Unknown type", "Unknown token '" + s + "'");
+	literals.push_back(s);
+	return 1;
 }
-
-// LEXER<------------------------
+//<-----
 
 // Parser------------------------>
-
-
-
-
-// Useful Funcs
-
-//次のトークンが期待するtyだったら読み進める.
-bool consume(int ty) {
-  if (tytokens[curtok + 1].ty != ty)
-    return false;
-  curtok++;
-  return true;
-}
-
-int getnextty() { return tytokens[curtok + 1].ty; }
-
-//get current tokens.type
-int getcurty() { return tytokens[curtok].ty; }
-
-int getnext_num() { return std::atoi(tytokens[curtok + 1].val.c_str()); }
-std::string getnext_str() { return tytokens[curtok + 1].val; }
-
-int getcur_num() { return std::atoi(tytokens[curtok].val.c_str()); }
-std::string getcur_str() { return tytokens[curtok].val; }
-
-void cout_cur() { std::cout << tytokens[curtok].val; }
-void cout_cur_n() { std::cout << getcur_num() << std::endl; }
-
-
-
-FunctionType* getTypebyToken(int token) {
-	RetType = token;
-  if (token == tok_void)
-    return FunctionType::get(Type::getVoidTy(TheContext), false);
-  if (token == tok_int)
-    return FunctionType::get(Type::getInt32Ty(TheContext),false);
-}
 
 class Func {
   std::string name = "";
@@ -436,7 +406,7 @@ void stringgen() {
 	curtok++;
 	str->setName(getcur_str());
 	if (getnextty() != tok_equal && getnextty() != tok_semi)
-		error("parse error", "Syntax error1");
+		error("parse error", "Expected --> ; ");
 	curtok++;
 	if (getcurty() == tok_semi) { //Ex string s;
 
@@ -511,7 +481,7 @@ void gen() { // fn <id>(){
 		込みます。それをグローバル変数std::vector<std:string> sourceにセットします。
 */
 int load_source(std::string source_path) {
-  std::ifstream ifs("C:/Users/nekoko/Desktop/llvm-project/build/Debug/bin/source_test.nk");
+  std::ifstream ifs(source_path);
   if (ifs.fail()) {
     error("no such directory or file name", "Failed to open source file.");
     return 1;
@@ -519,7 +489,7 @@ int load_source(std::string source_path) {
   source_filename = source_path;
   std::string buf;
   while (getline(ifs, buf)) {
-	  std::string t = buf;
+	  std::string t = buf+'\n';
 	  source.push_back(t);
   }
   buf = "";
@@ -528,20 +498,24 @@ int load_source(std::string source_path) {
 #ifdef HIGH_DEBUGG
   std::cout << "-----Source-----" << std::endl;
   for(std::string t : source)
-	std::cout  << t << std::endl;
+	std::cout  << t;
 #endif
   return 0;
 }
 
 int main(int argc, char** argv) {
+#ifdef DEBUGG
 	std::chrono::system_clock::time_point start, end_toknize, end;
 	start = std::chrono::system_clock::now();
-/*
+#endif
+#ifdef DEBUGG
+  if (load_source("C:/Users/nekoko/Desktop/llvm-project/build/Debug/bin/source_test.nk") == 1)
+	  return 1;
+#else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
     return 1;
-*/
-  if (load_source("source_test.nk") == 1)
-	  return 1;
+#endif
+
   int tok = gettoken();
   while (tok != tok_eof) {
 	if(tok!=tok_nope)
@@ -565,7 +539,9 @@ int main(int argc, char** argv) {
   Token_t t;
   t.ty = -1;
   tytokens.push_back(t);
+#ifdef DEBUGG
   end_toknize = std::chrono::system_clock::now();
+#endif
   // Parser--->
   TheModule = make_unique<Module>("top", TheContext);
 
@@ -576,7 +552,7 @@ int main(int argc, char** argv) {
 	gen();
     curtok++;
   }
-
+#ifdef DEBUGG
   end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;
   TheModule->dump();
@@ -594,6 +570,6 @@ int main(int argc, char** argv) {
 	  1000000.0);
   printf("All time %lf[s]\n", all_time);
   printf("Tokenize time %lf[s]\n", toknize_time);
-  printf("Parse time %lf[s]\n", parse_time);
-  
+  printf("Parse time %lf[s]\n", parse_time);  
+#endif
 }

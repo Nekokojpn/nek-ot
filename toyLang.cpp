@@ -40,18 +40,15 @@ static LLVMContext TheContext;
 static IRBuilder<> Builder(TheContext);
 static std::unique_ptr<Module> TheModule;
 
-int line = 1;
+int line = 0;
 int column = 0;
 std::string source_filename;
-std::string bline_source;
-std::string line_source;
 //<-----
 
 // Tokenizer globals----->
-std::string source;
+std::vector<std::string> source;
 char cc;        // Current char.
 std::string cs; // Current string EX. identiflier,number.
-int pc = 0;     // Program counter
 std::vector<int> tokens;
 std::vector<std::string> literals;
 std::vector<Token_t> tytokens;
@@ -81,11 +78,11 @@ void error(std::string title,std::string message) {
 	Console::SetConsoleTextBlue();
 	std::cerr << " --> ";
 	Console::SetConsoleTextWhite();
-	std::cerr << source_filename << ":" << line << ":" << column << std::endl;
+	std::cerr << source_filename << ":" << line+1 << ":" << column+1 << std::endl;
 	Console::SetConsoleTextBlue();
-	std::cerr << "  |" << std::endl << line << " |";
+	std::cerr << "  |" << std::endl << line+1 << " |";
 	Console::SetConsoleTextWhite();
-	std::cerr << "     " << line_source << std::endl; 
+	std::cerr << "     " << source[line] << std::endl; 
 	Console::SetConsoleTextBlue();
 	std::cerr << "  |";
 	Console::SetConsoleTextWhite();
@@ -127,28 +124,18 @@ public:
 // Useful funcs----------->
 
 void get_char() { 
-	cc = source[pc++]; 
+	cc = source[line][column++]; 
 	if (cc == '\n') {
 		line++;
-		column = 1;
-		int i = pc;
-		while (source[i] != '\n')
-			line_source += source[i++];
-	}
-	else {
-		column++;
+		column = 0;
 	}
 }
 void undo_char() {
-	if (source[pc] == '\n') {
+	column--;
+	if (column < 0) {
 		line--;
-		column = -1;
+		column = source[line].size();
 	}
-	else {
-		column--;
-	}
-	pc--;
-	
 }
 
 void addToliteral() { literals.push_back(cs); }
@@ -162,7 +149,7 @@ int gettoken() {
   while (isspace(cc)) {
     get_char();
   }
-  // if source[pc] is alpha char.
+  // if source[line][column] is alpha char.
   if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
     cs = cc;
     get_char();
@@ -521,7 +508,7 @@ void gen() { // fn <id>(){
 		引数：なし
 		戻り値：int
 		概要：std::ifstreamを使用してソースファイル"source_test.nk"を読み
-		込みます。それをグローバル変数source:stringにセットします。
+		込みます。それをグローバル変数std::vector<std:string> sourceにセットします。
 */
 int load_source(std::string source_path) {
   std::ifstream ifs("C:/Users/nekoko/Desktop/llvm-project/build/Debug/bin/source_test.nk");
@@ -532,11 +519,16 @@ int load_source(std::string source_path) {
   source_filename = source_path;
   std::string buf;
   while (getline(ifs, buf)) {
-    source += buf+'\n';
+	  std::string t = buf;
+	  source.push_back(t);
   }
-  source += '\0';
+  buf = "";
+  buf += '\0';
+  source.push_back(buf);
 #ifdef HIGH_DEBUGG
-  std::cout <<"-----Source-----\n" << source << std::endl;
+  std::cout << "-----Source-----" << std::endl;
+  for(std::string t : source)
+	std::cout  << t << std::endl;
 #endif
   return 0;
 }
@@ -550,9 +542,6 @@ int main(int argc, char** argv) {
 */
   if (load_source("source_test.nk") == 1)
 	  return 1;
-  int i = pc;
-  while (source[i] != '\n')
-	  line_source += source[i++];
   int tok = gettoken();
   while (tok != tok_eof) {
 	if(tok!=tok_nope)

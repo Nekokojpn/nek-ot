@@ -1,1 +1,4 @@
-int i = 1000123;
+fn main() -> void{
+	string s = "Hello";
+	int i = 123;
+}

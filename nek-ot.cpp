@@ -6,7 +6,6 @@ extern std::string cs;
 extern std::vector<TK> tokens;
 extern std::vector<std::string> literals;
 extern std::vector<Token_t> tytokens;
-extern bool isdq_started;
 
 
 //Common globals----->
@@ -18,6 +17,7 @@ static std::unique_ptr<Module> TheModule;
 
 int line = 0;
 int column = 0;
+int tytoken_size;
 std::string source_filename;
 //<-----
 
@@ -64,6 +64,7 @@ FunctionType* getTypebyToken(TK token) {
 		return FunctionType::get(Type::getVoidTy(TheContext), false);
 	if (token == TK::tok_int)
 		return FunctionType::get(Type::getInt32Ty(TheContext), false);
+	return nullptr;
 }
 //<-----
 
@@ -281,34 +282,7 @@ void gen() { // fn <id>(){
 	}
 }
 
-/*												load_source												
-		引数：なし
-		戻り値：int
-		概要：std::ifstreamを使用してソースファイル"source_test.nk"を読み
-		込みます。それをグローバル変数std::vector<std:string> sourceにセットします。
-*/
-int load_source(std::string source_path) {
-  std::ifstream ifs(source_path);
-  if (ifs.fail()) {
-    error("no such directory or file name", "Failed to open source file.");
-    return 1;
-  }
-  source_filename = source_path;
-  std::string buf;
-  while (getline(ifs, buf)) {
-	  std::string t = buf+'\n';
-	  source.push_back(t);
-  }
-  buf = "";
-  buf += '\0';
-  source.push_back(buf);
-#ifdef HIGH_DEBUGG
-  std::cout << "-----Source-----" << std::endl;
-  for(std::string t : source)
-	std::cout  << t;
-#endif
-  return 0;
-}
+
 
 int main(int argc, char** argv) {
 #ifdef DEBUGG
@@ -345,6 +319,7 @@ int main(int argc, char** argv) {
   Token_t t;
   t.ty = TK::tok_eof;
   tytokens.push_back(t);
+  tytoken_size = tytokens.size();
 #ifdef DEBUGG
   end_toknize = std::chrono::system_clock::now();
 #endif

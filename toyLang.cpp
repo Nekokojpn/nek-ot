@@ -1,38 +1,6 @@
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Verifier.h"
+#include "nek-ot.h"
 
-#include "Token.h"
-#include "Util.h"
 
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
-#include <stack>
-
-// IFDEF
-//#define HIGH_DEBUGG
-#define DEBUGG
-
-// typedef----->
-typedef struct {
-	int ty;
-	std::string val;
-} Token_t;
-//<-----
 
 //Common globals----->
 using namespace llvm;
@@ -50,7 +18,7 @@ std::string source_filename;
 std::vector<std::string> source;
 char cc;        // Current char.
 std::string cs; // Current string EX. identiflier,number.
-std::vector<int> tokens;
+std::vector<TK> tokens;
 std::vector<std::string> literals;
 std::vector<Token_t> tytokens;
 bool isdq_started = false;
@@ -65,7 +33,7 @@ static std::map<std::string, FunctionCallee> Functions_Global;
 static std::map<std::string, Value*> NamedValues_Global;
 static std::map<std::string, Value*> NamedValues_Local;
 
-static int RetType = 0; //戻り値の型
+static TK RetType; //戻り値の型
 std::stack<int> stack;
 
 bool isinFunc = false;
@@ -130,25 +98,25 @@ bool compare_cs(const char* str) { return cs == str; };
 //<-----
 
 //Parser Funcs----->
-bool consume(int ty) {
+bool consume(TK ty) {
 	if (tytokens[curtok + 1].ty != ty)
 		return false;
 	curtok++;
 	return true;
 }
-int getnextty() { return tytokens[curtok + 1].ty; }
-int getcurty() { return tytokens[curtok].ty; }
+TK getnextty() { return tytokens[curtok + 1].ty; }
+TK getcurty() { return tytokens[curtok].ty; }
 int getnext_num() { return std::atoi(tytokens[curtok + 1].val.c_str()); }
 std::string getnext_str() { return tytokens[curtok + 1].val; }
 int getcur_num() { return std::atoi(tytokens[curtok].val.c_str()); }
 std::string getcur_str() { return tytokens[curtok].val; }
 void cout_cur() { std::cout << tytokens[curtok].val; }
 void cout_cur_n() { std::cout << getcur_num() << std::endl; }
-FunctionType* getTypebyToken(int token) {
+FunctionType* getTypebyToken(TK token) {
 	RetType = token;
-	if (token == tok_void)
+	if (token == TK::tok_void)
 		return FunctionType::get(Type::getVoidTy(TheContext), false);
-	if (token == tok_int)
+	if (token == TK::tok_int)
 		return FunctionType::get(Type::getInt32Ty(TheContext), false);
 }
 //<-----
@@ -173,7 +141,7 @@ public:
 //<-----
 
 // tokenizer----->
-int gettoken() {
+TK gettoken() {
 	get_char();
 	//skip any spaces.
 	while (isspace(cc)) {
@@ -196,21 +164,21 @@ int gettoken() {
 			}
 			undo_char();
 			addToliteral();
-			return tok_str_string;
+			return TK::tok_str_string;
 		}
 		undo_char();
 		addToliteral();
-		if (compare_cs("fn")) { return tok_fn; }
-		else if (compare_cs("int")) { return tok_int; }
-		else if (compare_cs("void")) { return tok_void; }
-		else if (compare_cs("ret")) { return tok_ret; }
-		else if (compare_cs("float")) { return tok_float; }
-		else if (compare_cs("double")) { return tok_double; }
-		else if (compare_cs("short")) { return tok_short; }
-		else if (compare_cs("long")) { return tok_long; }
-		else if (compare_cs("char")) { return tok_char; }
-		else if (compare_cs("string")) { return tok_string; }
-		else { return tok_identifier; }
+		if (compare_cs("fn")) { return TK::tok_fn; }
+		else if (compare_cs("int")) { return TK::tok_int; }
+		else if (compare_cs("void")) { return TK::tok_void; }
+		else if (compare_cs("ret")) { return TK::tok_ret; }
+		else if (compare_cs("float")) { return TK::tok_float; }
+		else if (compare_cs("double")) { return TK::tok_double; }
+		else if (compare_cs("short")) { return TK::tok_short; }
+		else if (compare_cs("long")) { return TK::tok_long; }
+		else if (compare_cs("char")) { return TK::tok_char; }
+		else if (compare_cs("string")) { return TK::tok_string; }
+		else { return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
 		cs = cc;
@@ -225,39 +193,39 @@ int gettoken() {
 		undo_char();
 		addToliteral();
 		if (point) { // double.
-			return tok_num_double;
+			return TK::tok_num_double;
 		}
 		else { // int
-			return tok_num_int;
+			return TK::tok_num_int;
 		}
 	}
 	else { //記号. 必ず1文字
 		std::string s = "";
 		s += cc;
 		literals.push_back(s);
-		if (cc == '\0') return tok_eof;
-		if (cc == '=')	return tok_equal;
-		if (cc == ';')	return tok_semi;
-		if (cc == '(')	return tok_lp;
-		if (cc == ')')	return tok_rp;
-		if (cc == '{')	return tok_lb;
-		if (cc == '}')	return tok_rb;
-		if (cc == '\'')	return tok_sq;
+		if (cc == '\0') return TK::tok_eof;
+		if (cc == '=')	return TK::tok_equal;
+		if (cc == ';')	return TK::tok_semi;
+		if (cc == '(')	return TK::tok_lp;
+		if (cc == ')')	return TK::tok_rp;
+		if (cc == '{')	return TK::tok_lb;
+		if (cc == '}')	return TK::tok_rb;
+		if (cc == '\'')	return TK::tok_sq;
 		if (cc == '\"') {
 			if (!isdq_started) isdq_started = true;
 			else isdq_started = false;
-			return tok_dq;
+			return TK::tok_dq;
 		}
 		if (cc == '-') {
 			get_char();
 			if (cc == '>') { // arrow
-				return tok_arrow;
+				return TK::tok_arrow;
 			}
 			undo_char();
-			return tok_minus;
+			return TK::tok_minus;
 		}
-		if (cc == '+')	return tok_plus;
-		if (cc == '*')	return tok_star;
+		if (cc == '+')	return TK::tok_plus;
+		if (cc == '*')	return TK::tok_star;
 		if (cc == '/') {
 			get_char();
 			if (cc == '/') {
@@ -265,11 +233,11 @@ int gettoken() {
 				while (cc != '\n' && cc != '\0') {
 					get_char();
 				}
-				return tok_nope;
+				return TK::tok_nope;
 			}
 			else {
 				undo_char();
-				return tok_slash;
+				return TK::tok_slash;
 			}
 		}
 	}
@@ -277,7 +245,7 @@ int gettoken() {
 	s += cc;
 	error("Unknown type", "Unknown token '" + s + "'");
 	literals.push_back(s);
-	return 1;
+	return TK::tok_unknown;
 }
 //<-----
 
@@ -285,17 +253,17 @@ int gettoken() {
 
 class Func {
   std::string name = "";
-  int retty = -1;
+  TK retty = TK::tok_unknown;
 
 public:
   void setName(std::string _name) { name = _name; }
   std::string &getName() { return name; }
-  void setRetTy(int _retty) { retty = _retty; }
-  int getRetTy() { return retty; }
+  void setRetTy(TK _retty) { retty = _retty; }
+  TK getRetTy() { return retty; }
   Function *codegen() {
     if (name == "")
       error("parse error","Failed to parsing functy: fn name is missing.");
-    if (retty == -1)
+    if (retty == TK::tok_unknown)
       error("parse error", "Failed to parsing functy: ret value is missing.");
     Function *fn =
         Function::Create(getTypebyToken(retty), Function::ExternalLinkage, name,
@@ -330,24 +298,24 @@ public:
 void funcgen() {
 	isinFunc = true;
   std::unique_ptr<Func> func = std::make_unique<Func>();
-  if (!consume(tok_identifier))
+  if (!consume(TK::tok_identifier))
     error("parse error", "After fn must be an identifier");
   func->setName(tytokens[curtok].val);
-  if (!consume(tok_lp))
+  if (!consume(TK::tok_lp))
     error("parse error", "fn: " + func->getName() + " has no parentheses.");
   //引数解析.スキップ
-  if (!consume(tok_rp))
+  if (!consume(TK::tok_rp))
     error("parse error", "fn: " + func->getName() + " has no parentheses.");
   //戻り値
-  if (!consume(tok_arrow))
+  if (!consume(TK::tok_arrow))
     error("parse error", "fn: " + func->getName() + " has no arrow.");
-  if (getcurty() < 100 && getcurty() > 199 &&
-      getcurty() != tok_identifier)
+  if ((int)getcurty() < 100 && (int)getcurty() > 199 &&
+      getcurty() != TK::tok_identifier)
     error("parse error", "fn: " + func->getName() + " has no ret value1.");
   curtok++;
   func->setRetTy(getcurty());
 
-  if (!consume(tok_lb))
+  if (!consume(TK::tok_lb))
     error("parse error", "fn: " + func->getName() + " has no parentheses.");
   
   if(func->getName() == "main")
@@ -358,10 +326,10 @@ void funcgen() {
 
 
 void exprgen(Value* x) {
-  if (getnextty() == tok_plus || getnextty() == tok_minus ||
-      getnextty() == tok_star || getnextty() == tok_slash ||
-      getnextty() == tok_semi) {
-    if (getnextty() == tok_semi && x!=nullptr) {
+  if (getnextty() == TK::tok_plus || getnextty() == TK::tok_minus ||
+      getnextty() == TK::tok_star || getnextty() == TK::tok_slash ||
+      getnextty() == TK::tok_semi) {
+    if (getnextty() == TK::tok_semi && x!=nullptr) {
       Builder.CreateStore(Builder.getInt32(getcur_num()), x);
       return;
 	}
@@ -371,29 +339,29 @@ void exprgen(Value* x) {
   }
 }
 void subst_intgen() {
-  if (getnextty() != tok_identifier)
+  if (getnextty() != TK::tok_identifier)
     error("parse error", "After type must be identifier.");
   curtok++;
   Value *x = Builder.CreateAlloca(Builder.getInt32Ty(), nullptr, getcur_str());
-  if (getnextty() != tok_semi && getnextty() != tok_equal) {
+  if (getnextty() != TK::tok_semi && getnextty() != TK::tok_equal) {
     error("parse error", "NO");
     exit(1);
   }
-if (getnextty() == tok_semi) {
+if (getnextty() == TK::tok_semi) {
     curtok++;
     return;
 }
-if (getnextty() == tok_equal) {
+if (getnextty() == TK::tok_equal) {
   curtok++;
   /* エラーハンドリング
-  if (getnextty() != tok_num_int || getnextty() != tok_num_double ||
-       getnextty() !=tok_identifier) {
+  if (getnextty() != TK::tok_num_int || getnextty() != TK::tok_num_double ||
+       getnextty() !=TK::tok_identifier) {
     error("NO");
     exit(1); //期待するものではなかった
     } 
 	*/
   curtok++;
-	if (getcurty() == tok_num_int) {
+	if (getcurty() == TK::tok_num_int) {
 		exprgen(x);
     }
   }
@@ -401,34 +369,34 @@ if (getnextty() == tok_equal) {
 void stringgen() {
 	
 	std::unique_ptr<String> str  = std::make_unique<String>();
-	if (getnextty() != tok_identifier) 
+	if (getnextty() != TK::tok_identifier) 
 		error("parse error", "After string type must be identifier.");
 	curtok++;
 	str->setName(getcur_str());
-	if (getnextty() != tok_equal && getnextty() != tok_semi)
+	if (getnextty() != TK::tok_equal && getnextty() != TK::tok_semi)
 		error("parse error", "Expected --> ; ");
 	curtok++;
-	if (getcurty() == tok_semi) { //Ex string s;
+	if (getcurty() == TK::tok_semi) { //Ex string s;
 
 	}
-	else if (getcurty() == tok_equal) { //Ex string s = "sss";
-		if (getnextty() != tok_dq)
+	else if (getcurty() == TK::tok_equal) { //Ex string s = "sss";
+		if (getnextty() != TK::tok_dq)
 			error("parse error", "Syntax error2");
 		curtok++;
-		if (getnextty() != tok_str_string)
+		if (getnextty() != TK::tok_str_string)
 			error("parse error", "Syntax error3");
 		curtok++;
 		str->setVal(getcur_str());
-		if (getnextty() != tok_dq)
+		if (getnextty() != TK::tok_dq)
 			error("parse error", "Syntax error4");
 		curtok++;
-		if (getnextty() != tok_semi)
+		if (getnextty() != TK::tok_semi)
 			error("parse error", "Syntax error5");
 		NamedValues_Global[str->getName()] = str->codegen();
 	}
 }
 void retgen() { 
-	if (RetType == tok_void && getnextty() == tok_semi) { //ret;  syntax ok
+	if (RetType == TK::tok_void && getnextty() == TK::tok_semi) { //ret;  syntax ok
 		Builder.CreateRetVoid();
 	}
 	else { //戻り値が存在する
@@ -440,35 +408,35 @@ void funccallgen() {
 	std::unique_ptr<FuncCall> fc = make_unique<FuncCall>();
 	fc->setFuncName(getcur_str());
 
-	if (getnextty() != tok_lp)
+	if (getnextty() != TK::tok_lp)
 		error("parse error", "");
 	curtok++;
-	if (getnextty() != tok_identifier)
+	if (getnextty() != TK::tok_identifier)
 		error("parse error", "");
 	curtok++;
 	fc->addArgs(NamedValues_Global[getcur_str()]);
-	if (getnextty() != tok_rp)
+	if (getnextty() != TK::tok_rp)
 		error("parse error", "");
 	fc->codegen();
 }
     // topofgen グローバルからの
 void gen() { // fn <id>(){
-	if (getcurty() == tok_fn) {
+	if (getcurty() == TK::tok_fn) {
 		funcgen();
 	}
-	if (getcurty() == tok_num_int) {
+	if (getcurty() == TK::tok_num_int) {
 		
 	}
-	if (getcurty() == tok_int) {
+	if (getcurty() == TK::tok_int) {
 		subst_intgen();
 	}
-	if (getcurty() == tok_string) {
+	if (getcurty() == TK::tok_string) {
 		stringgen();
 	}
-	if (getcurty() == tok_ret) {
+	if (getcurty() == TK::tok_ret) {
 		retgen();
 	}
-	if (getcurty() == tok_identifier) {
+	if (getcurty() == TK::tok_identifier) {
 		//要修正
 		funccallgen();
 	}
@@ -509,16 +477,16 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-  if (load_source("C:/Users/nekoko/Desktop/llvm-project/build/Debug/bin/source_test.nk") == 1)
+  if (load_source("source_test.nk") == 1)
 	  return 1;
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
     return 1;
 #endif
 
-  int tok = gettoken();
-  while (tok != tok_eof) {
-	if(tok!=tok_nope)
+  TK tok = gettoken();
+  while (tok != TK::tok_eof) {
+	if(tok!=TK::tok_nope)
 		 tokens.push_back(tok);
     tok = gettoken();
   }
@@ -532,12 +500,11 @@ int main(int argc, char** argv) {
     t.val = literals[i];
     tytokens.push_back(t);
 #ifdef  HIGH_DEBUGG
-	std::cout << "input:" << literals[i] << std::endl
-              << "enum=" << tokens[i] << std::endl;
+	std::cout  << tokens[i] << " " << literals[i] << std::endl;
 #endif //  HIGHDEBUGG
   }
   Token_t t;
-  t.ty = -1;
+  t.ty = TK::tok_eof;
   tytokens.push_back(t);
 #ifdef DEBUGG
   end_toknize = std::chrono::system_clock::now();
@@ -548,7 +515,7 @@ int main(int argc, char** argv) {
   curtok = 0;
 
   Sys::IO::CreateFunc();
-  while (getcurty() != -1) {
+  while (getcurty() != TK::tok_eof) {
 	gen();
     curtok++;
   }

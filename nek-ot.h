@@ -76,6 +76,8 @@ typedef struct {
 } Token_t;
 //<-----
 
+void error(std::string title, std::string message);
+
 class Console {
 public:
 	static void SetConsoleTextGray();
@@ -84,3 +86,9 @@ public:
 	static void SetConsoleTextWhite();
 	static void SetConsoleTextBlue();
 };
+
+void get_char();
+void undo_char();
+void addToliteral();
+bool compare_cs(const char* str);
+TK gettoken();

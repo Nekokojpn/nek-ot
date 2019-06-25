@@ -92,3 +92,5 @@ void undo_char();
 void addToliteral();
 bool compare_cs(const char* str);
 TK gettoken();
+
+int load_source(std::string source_path);

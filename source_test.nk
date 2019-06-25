@@ -1,4 +1,5 @@
 fn main() -> void{
-	string s = "Hello";
-	int i = 123;
+	string s = "Hello nek-ot";
+	puts(s);
+	ret;
 }

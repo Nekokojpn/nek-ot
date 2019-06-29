@@ -15,7 +15,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 
-#include <windows.h>
+#include <windows.h>				//Using at Console class
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -26,7 +26,6 @@
 #include <vector>
 #include <stack>
 
-//		Tokens----->
 // TOKENS--------------->
 enum class TK {
 	tok_nope = 0,
@@ -94,3 +93,46 @@ bool compare_cs(const char* str);
 TK gettoken();
 
 int load_source(std::string source_path);
+
+enum class Op{
+	Plus,
+	Minus,
+	Mul,
+	Div
+};
+enum class NDType {
+	Number,
+	BinOp,
+};
+class AST {
+	NDType ndtype;
+public:
+	virtual NDType get_nd_type() = 0;
+};
+
+class ASTValue : public AST {
+public:
+	int value;
+	ASTValue(int _value) : value(_value) {};
+	NDType get_nd_type() override { return NDType::Number; }
+};
+class ASTBinOp : public AST {
+public:
+	std::unique_ptr<AST> lhs;
+	std::unique_ptr<AST> rhs;
+	Op op;
+	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
+	NDType get_nd_type() override { return NDType::BinOp; }
+};
+class Parser {
+	int index;
+	std::vector<Token_t> tokens;
+	std::unique_ptr<AST> expr_primary();
+	std::unique_ptr<AST> expr_mul();
+	std::unique_ptr<AST> expr_add();
+	bool consume(TK tk);
+	Token_t Parser::get();
+public:
+	Parser(std::vector<Token_t> _tokens);
+	std::unique_ptr<AST> parse();
+};

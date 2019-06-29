@@ -33,7 +33,7 @@ static std::map<std::string, Value*> NamedValues_Global;
 static std::map<std::string, Value*> NamedValues_Local;
 
 static TK RetType; //戻り値の型
-std::stack<int> stack;
+std::stack<TK> stack;
 
 bool isinFunc = false;
 //<-----
@@ -143,6 +143,8 @@ void funcgen() {
   func->setName(tytokens[curtok].val);
   if (!consume(TK::tok_lp))
     error("parse error", "fn: " + func->getName() + " has no parentheses.");
+  stack.push(TK::tok_lp);
+
   //引数解析.スキップ
   if (!consume(TK::tok_rp))
     error("parse error", "fn: " + func->getName() + " has no parentheses.");
@@ -280,9 +282,38 @@ void gen() { // fn <id>(){
 		//要修正
 		funccallgen();
 	}
+	if (getcurty() == TK::tok_rp) {
+		//要修正
+		if (stack.top() != TK::tok_rp) {
+			error("expected", "expected '('"); exit(1);
+		}
+		//stack.pop();
+	}
 }
 
+void gen_as_polish_notation(AST* ast) {
+	if (ast->get_nd_type() == NDType::BinOp) {
+		ASTBinOp* binop = (ASTBinOp*)ast;
+		
+		char c;
+		if (binop->op == Op::Plus)
+			c = '+';
+		else if (binop->op == Op::Minus)
+			c = '-';
+		else if (binop->op == Op::Mul)
+			c = '*';
+		else
+			c = '/';
+		std::cout << c << " ";
 
+		gen_as_polish_notation(binop->lhs.get());
+		gen_as_polish_notation(binop->rhs.get());
+	}
+	else if (ast->get_nd_type() == NDType::Number) {
+		ASTValue* value = (ASTValue*)ast;
+		std::cout << value->value << " ";
+	}
+}
 
 int main(int argc, char** argv) {
 #ifdef DEBUGG
@@ -290,7 +321,7 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-  if (load_source("source_test.nk") == 1)
+  if (load_source("arith_expr.nk") == 1)
 	  return 1;
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
@@ -313,7 +344,7 @@ int main(int argc, char** argv) {
     t.val = literals[i];
     tytokens.push_back(t);
 #ifdef  HIGH_DEBUGG
-	std::cout  << tokens[i] << " " << literals[i] << std::endl;
+	std::cout  << (int)tokens[i] << " " << literals[i] << std::endl;
 #endif //  HIGHDEBUGG
   }
   Token_t t;
@@ -329,10 +360,11 @@ int main(int argc, char** argv) {
   curtok = 0;
 
   Sys::IO::CreateFunc();
-  while (getcurty() != TK::tok_eof) {
-	gen();
-    curtok++;
-  }
+  auto parser = Parser(tytokens);
+  auto ast = parser.parse();
+  gen_as_polish_notation(ast.get());
+  std::cout << std::endl;
+
 #ifdef DEBUGG
   end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;

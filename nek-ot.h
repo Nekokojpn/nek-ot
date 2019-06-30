@@ -26,6 +26,8 @@
 #include <vector>
 #include <stack>
 
+using namespace llvm;
+
 // TOKENS--------------->
 enum class TK {
 	tok_nope = 0,
@@ -72,6 +74,8 @@ enum class TK {
 typedef struct {
 	TK ty;
 	std::string val;
+	int location_begin;
+	int location_end;
 } Token_t;
 //<-----
 
@@ -103,17 +107,21 @@ enum class Op{
 enum class NDType {
 	Number,
 	BinOp,
+	Func,
 };
 class AST {
 	NDType ndtype;
 public:
 	virtual NDType get_nd_type() = 0;
+	virtual Value* codegen() = 0;
 };
 
 class ASTValue : public AST {
 public:
+	std::string name;
 	int value;
 	ASTValue(int _value) : value(_value) {};
+	Value* codegen() override;
 	NDType get_nd_type() override { return NDType::Number; }
 };
 class ASTBinOp : public AST {
@@ -122,7 +130,15 @@ public:
 	std::unique_ptr<AST> rhs;
 	Op op;
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
+	Value* codegen() override;
 	NDType get_nd_type() override { return NDType::BinOp; }
+};
+class ASTFunc : public AST {
+public:
+	std::string name;
+	ASTFunc(std::string _name);
+	Value* codegen() override;
+	NDType get_nd_type() override { return NDType::Func;  }
 };
 class Parser {
 	int index;

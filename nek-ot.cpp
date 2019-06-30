@@ -1,15 +1,5 @@
 #include "nek-ot.h"
-
-extern std::vector<std::string> source;
-extern char cc;        
-extern std::string cs; 
-extern std::vector<TK> tokens;
-extern std::vector<std::string> literals;
-extern std::vector<Token_t> tytokens;
-
-
 //Common globals----->
-using namespace llvm;
 
 static LLVMContext TheContext;
 static IRBuilder<> Builder(TheContext);
@@ -20,6 +10,15 @@ int column = 0;
 int tytoken_size;
 std::string source_filename;
 //<-----
+extern std::vector<std::string> source;
+extern char cc;        
+extern std::string cs; 
+extern std::vector<TK> tokens;
+extern std::vector<std::string> literals;
+extern std::vector<Token_t> tytokens;
+
+
+
 
 
 
@@ -290,6 +289,7 @@ void gen() { // fn <id>(){
 		//stack.pop();
 	}
 }
+
 
 void gen_as_polish_notation(AST* ast) {
 	if (ast->get_nd_type() == NDType::BinOp) {

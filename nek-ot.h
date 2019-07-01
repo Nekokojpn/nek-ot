@@ -111,14 +111,14 @@ enum class Op{
 };
 class AST {
 public:
-	virtual Value* codegen() = 0;
+	virtual Value* codegen(IRBuilder<>& Builder) = 0;
 };
 
 class ASTValue : public AST {
 public:
 	int value;
 	ASTValue(int _value) : value(_value) {};
-	Value* codegen() override;
+	Value* codegen(IRBuilder<>& Builder) override;
 };
 class ASTBinOp : public AST {
 public:
@@ -126,16 +126,20 @@ public:
 	std::unique_ptr<AST> rhs;
 	Op op;
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
-	Value* codegen() override;
+	Value* codegen(IRBuilder<>& Builder) override;
 };
 class ASTInt : public AST {
+public:
 	std::string name;
+	std::unique_ptr<AST> expr_p;
+	ASTInt(std::string _name) : name(_name) {};
+	Value* codegen(IRBuilder<>& Builder) override;
 };
 class ASTFunc : public AST {
 public:
 	std::string name;
 	ASTFunc(std::string _name);
-	Value* codegen() override;
+	Value* codegen(IRBuilder<>& Builder) override;
 };
 class Parser {
 	int index;
@@ -151,5 +155,5 @@ class Parser {
 	void Parser::getNextToken();
 public:
 	Parser(std::vector<Token_t> _tokens);
-	std::unique_ptr<AST> parse();
+	std::unique_ptr<AST> parse_codegen();
 };

@@ -12,7 +12,7 @@ extern std::vector<std::string> source;
 int load_source(std::string source_path) {
 	std::ifstream ifs(source_path);
 	if (ifs.fail()) {
-		error("no such directory or file name", "Failed to open source file.");
+		error("no such directory or file name", "Failed to open source file.", 0, 0);
 		return 1;
 	}
 	source_filename = source_path;

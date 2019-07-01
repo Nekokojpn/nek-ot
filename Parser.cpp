@@ -1,35 +1,30 @@
 #include "nek-ot.h"
 
-extern LLVMContext TheContext;
-extern IRBuilder<> Builder(TheContext);
-extern std::unique_ptr<Module> TheModule;
 
 std::map<std::string, Value*> NamedValues;
+LLVMContext& TheContext = getContext();
+IRBuilder<>& Builder = getBuilder();
+//std::unique_ptr<Module> TheModule = getModule();
 
 Value* ASTValue::codegen() {
-	Value* value = NamedValues[name];
-	if (!value)
-	{
-	}
-	return value;
+	return Builder.getInt32(value);
 }
 
 
 Value* ASTBinOp::codegen() {
 	Value* l = lhs->codegen();
-	Value* r = lhs->codegen();
+	Value* r = rhs->codegen();
 	if (!l || !r)
 		return nullptr;
 	switch (op) {
 	case Op::Plus:
-		return Builder.CreateFAdd(l, r, "addtmp");
+		return Builder.CreateAdd(l, r, "addtmp");
 	case Op::Minus:
-		return Builder.CreateFSub(l, r, "subtmp");
+		return Builder.CreateSub(l, r, "subtmp");
 	case Op::Mul:
-		return Builder.CreateFMul(l, r, "multmp");
+		return Builder.CreateMul(l, r, "multmp");
 	case Op::Div:
-		l = Builder.CreateFCmpULT(l, r, "cmptmp");
-		return Builder.CreateUIToFP(l, Type::getDoubleTy(TheContext), "booltmp");
+		return Builder.CreateSDiv(l, r, "divtmp");
 	default:
 		return nullptr;
 	}
@@ -39,17 +34,18 @@ Value* ASTBinOp::codegen() {
 bool Parser::consume(TK tk) {
 	if (tokens[index].ty == tk)
 	{
-		index++;
+		getNextToken();
 		return true;
 	}
 	return false;
 }
-Token_t Parser::get() {
-	Token_t t = tokens[index++];
-	return t;
+void Parser::getNextToken() {
+	curtok = tokens[++index];
+}
+std::unique_ptr<AST> Parser::expr() {
+	return std::move(expr_add());
 }
 std::unique_ptr<AST> Parser::expr_add() {
-	
 	std::unique_ptr<AST> lhs = expr_mul();
 	while (true) {
 		Op op;
@@ -62,7 +58,7 @@ std::unique_ptr<AST> Parser::expr_add() {
 		else {
 			break;
 		}
-		std::unique_ptr<AST> rhs = expr_mul();
+		auto rhs = expr_mul();
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
 	}
 	return std::move(lhs);
@@ -84,22 +80,45 @@ std::unique_ptr<AST> Parser::expr_mul() {
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
 	}
 	return std::move(lhs);
-
 }
 std::unique_ptr<AST> Parser::expr_primary() {
-	Token_t t = get();
-	if (t.ty != TK::tok_num_int) {
-		error("Unexpected", "must be a number.");
-		exit(1);
+
+	if (curtok.ty == TK::tok_num_int) {
+		
+		auto value = std::make_unique<ASTValue>(std::atoi(curtok.val.c_str()));
+		getNextToken();
+		return std::move(value);
 	}
-	auto value = std::make_unique<ASTValue>(std::atoi(t.val.c_str()));
-	return std::move(value);
+	else if (curtok.ty == TK::tok_lp) {
+		getNextToken();
+		auto ast = expr();
+		
+		if (consume(TK::tok_rp))
+			return std::move(ast);
+
+		error("Expected", "Expected --> )",0,0);
+	}
+	error("Unexpected", "must be a number.", 0, 0);
+	exit(1);
+	
+}
+std::unique_ptr<AST> Parser::def_int() {
+	return nullptr;
+
 }
 
 Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {
 	index = 0;
-
+	curtok = tokens[index];
 }
-std::unique_ptr<AST> Parser::parse() {
-	return std::move(expr_add());
+std::unique_ptr<AST> Parser::parse() {	
+	std::unique_ptr<AST> ast;
+	if (curtok.ty == TK::tok_int)
+	{
+		ast = std::move(def_int());
+	}
+	if(curtok.ty == TK::tok_num_int)
+		 ast = std::move(expr());
+	Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen());
+	return std::move(ast);
 }

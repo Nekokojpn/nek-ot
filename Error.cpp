@@ -1,11 +1,9 @@
 #include "nek-ot.h"
 
 extern std::string source_filename;
-extern int line;
-extern int column;
 extern std::vector<std::string> source;
 
-void error(std::string title, std::string message) {
+void error(std::string title, std::string message, int line, int column) {
 	std::cerr << std::endl;
 	Console::SetConsoleTextRed();
 	std::cerr << "error: " << title << std::endl;

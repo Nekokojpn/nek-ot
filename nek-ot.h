@@ -1,6 +1,6 @@
 #pragma once
 
-//#define HIGH_DEBUGG			//ハイ・レベルデバッグ
+#define HIGH_DEBUGG			//ハイ・レベルデバッグ
 #define DEBUGG						//デバッグモード.
 
 #include "llvm/ADT/APFloat.h"
@@ -79,7 +79,12 @@ typedef struct {
 } Token_t;
 //<-----
 
-void error(std::string title, std::string message);
+void error(std::string title, std::string message, int line, int column);
+
+LLVMContext& getContext();
+IRBuilder<>& getBuilder();
+std::unique_ptr<Module> getModule();
+
 
 class Console {
 public:
@@ -104,25 +109,16 @@ enum class Op{
 	Mul,
 	Div
 };
-enum class NDType {
-	Number,
-	BinOp,
-	Func,
-};
 class AST {
-	NDType ndtype;
 public:
-	virtual NDType get_nd_type() = 0;
 	virtual Value* codegen() = 0;
 };
 
 class ASTValue : public AST {
 public:
-	std::string name;
 	int value;
 	ASTValue(int _value) : value(_value) {};
 	Value* codegen() override;
-	NDType get_nd_type() override { return NDType::Number; }
 };
 class ASTBinOp : public AST {
 public:
@@ -131,23 +127,28 @@ public:
 	Op op;
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
 	Value* codegen() override;
-	NDType get_nd_type() override { return NDType::BinOp; }
+};
+class ASTInt : public AST {
+	std::string name;
 };
 class ASTFunc : public AST {
 public:
 	std::string name;
 	ASTFunc(std::string _name);
 	Value* codegen() override;
-	NDType get_nd_type() override { return NDType::Func;  }
 };
 class Parser {
 	int index;
+	Token_t curtok;
 	std::vector<Token_t> tokens;
-	std::unique_ptr<AST> expr_primary();
-	std::unique_ptr<AST> expr_mul();
+	std::unique_ptr<AST> expr();
 	std::unique_ptr<AST> expr_add();
+	std::unique_ptr<AST> expr_mul();
+	std::unique_ptr<AST> expr_primary();
+	std::unique_ptr<AST> def_int();
+	
 	bool consume(TK tk);
-	Token_t Parser::get();
+	void Parser::getNextToken();
 public:
 	Parser(std::vector<Token_t> _tokens);
 	std::unique_ptr<AST> parse();

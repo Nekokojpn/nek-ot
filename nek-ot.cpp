@@ -105,8 +105,8 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-  if (load_source("arith_expr.nk") == 1)
-	  return 1;
+	if (load_source("def_int.nk") == 1)
+		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
     return 1;
@@ -149,8 +149,8 @@ Sys::IO::CreateFunc();
 
   
   auto parser = Parser(tytokens);
-  auto ast = parser.parse();
-  //gen_as_polish_notation(ast.get());
+  auto ast = parser.parse_codegen();
+  
   std::cout << std::endl;
 
 #ifdef DEBUGG

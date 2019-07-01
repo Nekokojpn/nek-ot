@@ -1,7 +1,7 @@
 #include "nek-ot.h"
 
-extern int line;
-extern int column;
+int line;
+int column;
 
 // Tokenizer globals----->
 std::vector<std::string> source;
@@ -53,7 +53,7 @@ TK gettoken() {
 				get_char();
 			}
 			if (cc == '\0') {
-				error("Expected", "Expected --> \"");
+				error("Expected", "Expected --> \"", line, column);
 			}
 			undo_char();
 			addToliteral();
@@ -136,7 +136,7 @@ TK gettoken() {
 	}
 	std::string s = "";
 	s += cc;
-	error("Unknown type", "Unknown token '" + s + "'");
+	error("Unknown type", "Unknown token '" + s + "'", line, column);
 	literals.push_back(s);
 	return TK::tok_unknown;
 }

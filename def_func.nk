@@ -1,0 +1,6 @@
+fn main() -> void { 
+	int test = (3+3)*(1+5); 
+} 
+fn sub() -> void { 
+	int test = 3*3+1; 
+}

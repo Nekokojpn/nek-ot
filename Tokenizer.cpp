@@ -19,7 +19,7 @@ void get_char() {
 	if (cc == '\n') {
 		line++;
 		column = 0;
-		cc = source[line][column];
+		cc = source[line][column++];
 	}
 }
 void undo_char() {

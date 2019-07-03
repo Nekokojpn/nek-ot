@@ -67,8 +67,8 @@ LLVMContext& getContext() {
 IRBuilder<>& getBuilder() {
 	return Builder;
 }
-std::unique_ptr<Module> getModule() {
-	return std::move(TheModule);
+Module* getModule() {
+	return TheModule.get();
 }
 
 // Parser------------------------>
@@ -98,6 +98,14 @@ void gen_as_polish_notation(AST* ast) {
 	}
 }
 */
+Value* ASTProto::codegen() {
+	Function* mainFunc =
+		Function::Create(FunctionType::get(Type::getVoidTy(TheContext), false),
+			Function::ExternalLinkage, name, TheModule.get());
+	Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", mainFunc));
+
+	return nullptr;
+}
 
 int main(int argc, char** argv) {
 #ifdef DEBUGG
@@ -105,7 +113,7 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-	if (load_source("def_int.nk") == 1)
+	if (load_source("def_func.nk") == 1)
 		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
@@ -142,14 +150,16 @@ int main(int argc, char** argv) {
 
   TheModule = make_unique<Module>("top", TheContext);
 Sys::IO::CreateFunc();
-  Function* mainFunc =
+
+/*
+Function* mainFunc =
 	  Function::Create(FunctionType::get(Type::getVoidTy(TheContext), false),
 		  Function::ExternalLinkage, "main", TheModule.get());
   Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", mainFunc));
-
+  */
   
   auto parser = Parser(tytokens);
-  auto ast = parser.parse_codegen();
+  parser.parse_codegen();
   
   std::cout << std::endl;
 

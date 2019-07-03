@@ -5,7 +5,7 @@ std::map<std::string, Value*> namedvalues;
 
 LLVMContext& TheContext = getContext();
 IRBuilder<>& Builder = getBuilder();
-//std::unique_ptr<Module> TheModule = getModule();
+Module* TheModule = getModule();
 
 
 
@@ -27,7 +27,7 @@ std::unique_ptr<AST> Parser::expr() {
 	return ast;
 }
 std::unique_ptr<AST> Parser::expr_add() {
-	std::unique_ptr<AST> lhs = expr_mul();
+	auto lhs = expr_mul();
 	while (true) {
 		Op op;
 		if (consume(TK::tok_plus)) {
@@ -45,7 +45,7 @@ std::unique_ptr<AST> Parser::expr_add() {
 	return std::move(lhs);
 }
 std::unique_ptr<AST> Parser::expr_mul() {
-	std::unique_ptr<AST> lhs = expr_primary();
+	auto lhs = expr_primary();
 	while (true) {
 		Op op;
 		if (consume(TK::tok_star)) {
@@ -72,9 +72,11 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	else if (curtok.ty == TK::tok_lp) {
 		getNextToken();
 		auto ast = expr();
-		
-		if (consume(TK::tok_rp))
+		if (curtok.ty == TK::tok_rp)
+		{
+			getNextToken();
 			return std::move(ast);
+		}
 
 		error("Expected", "Expected --> )",0,0);
 	}
@@ -82,7 +84,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	exit(1);
 	
 }
-std::unique_ptr<AST> Parser::def_int() {
+std::unique_ptr<ASTInt> Parser::def_int() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier)
 		error("Syntax error", "After type must be an identifier.",0,0);
@@ -90,17 +92,66 @@ std::unique_ptr<AST> Parser::def_int() {
 	getNextToken();
 	if (consume(TK::tok_equal)) {
 		ast->expr_p = std::move(expr());
-		Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen(Builder), ast->name);
 		if (!consume(TK::tok_semi)) {
 			error("Expected", "Expected --> ;",0,0);
 		}
 		return std::move(ast);
 	}
 	else if (consume(TK::tok_semi)) { // ;
-		Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen(Builder), ast->name);
 		return std::move(ast);
 	}
 	error("Unexpected", "Syntax error.", 0, 0);
+	return nullptr;
+}
+
+std::unique_ptr<ASTFunc> Parser::def_func() {
+	getNextToken();
+	if (curtok.ty != TK::tok_identifier)
+		error("Synatax error", "After fn must be an identifier", 0, 0);
+	std::vector<std::string> v;
+	auto proto = std::make_unique<ASTProto>(curtok.val, v);
+	proto->codegen();
+	getNextToken();
+	if (curtok.ty != TK::tok_lp)
+		error("Expected", "Expected --> (", 0, 0);
+	/*
+		ˆø”–¢ŽÀ‘•
+	*/
+	getNextToken();
+	if (curtok.ty != TK::tok_rp)
+		error("Expected", "Expected --> )", 0, 0);
+	getNextToken();
+	if (curtok.ty != TK::tok_arrow)
+		error("Expected", "Expected --> ->", 0, 0);
+	getNextToken();
+	if (curtok.ty != TK::tok_void)
+		error("", "", 0, 0);
+	getNextToken();
+	if (curtok.ty == TK::tok_lb) {
+		getNextToken();
+		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), expr_block());
+		return std::move(ast_func);
+	}
+	else if (curtok.ty == TK::tok_semi) { // The function has no body
+		getNextToken();
+		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), nullptr);
+		return std::move(ast_func);
+	}
+	else {
+		error("Unexpected", "Unexpected token --> " + curtok.val, 0, 0);
+	}
+	auto body = expr_block();
+	auto ast = std::make_unique<ASTFunc>(std::move(proto),std::move(body));
+	return std::move(ast);
+}
+
+std::unique_ptr<AST> Parser::expr_block() { //Func, () , {} ,etc
+	if (curtok.ty == TK::tok_int)
+	{
+		auto ast = def_int();
+		Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen(), ast->name);
+		return std::move(ast);
+	}
 	return nullptr;
 }
 
@@ -108,12 +159,16 @@ Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {
 	index = 0;
 	curtok = tokens[index];
 }
-std::unique_ptr<AST> Parser::parse_codegen() {	
-	if (curtok.ty == TK::tok_int)
+void Parser::parse_codegen() {	
+	if (curtok.ty == TK::tok_fn)
 	{
-		auto ast = std::move(def_int());
-		
-		return std::move(ast);
+		auto ast = def_func();
+		//return std::move(ast);
 	}
-	return nullptr;
+	if (curtok.ty == TK::tok_eof)
+		return;
+	getNextToken();
+	parse_codegen();
+	return;
+	//return nullptr;
 }

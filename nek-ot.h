@@ -83,7 +83,7 @@ void error(std::string title, std::string message, int line, int column);
 
 LLVMContext& getContext();
 IRBuilder<>& getBuilder();
-std::unique_ptr<Module> getModule();
+Module* getModule();
 
 
 class Console {
@@ -111,14 +111,14 @@ enum class Op{
 };
 class AST {
 public:
-	virtual Value* codegen(IRBuilder<>& Builder) = 0;
+	virtual Value* codegen() = 0;
 };
 
 class ASTValue : public AST {
 public:
 	int value;
 	ASTValue(int _value) : value(_value) {};
-	Value* codegen(IRBuilder<>& Builder) override;
+	Value* codegen() override;
 };
 class ASTBinOp : public AST {
 public:
@@ -126,21 +126,30 @@ public:
 	std::unique_ptr<AST> rhs;
 	Op op;
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
-	Value* codegen(IRBuilder<>& Builder) override;
+	Value* codegen() override;
 };
 class ASTInt : public AST {
 public:
 	std::string name;
 	std::unique_ptr<AST> expr_p;
 	ASTInt(std::string _name) : name(_name) {};
-	Value* codegen(IRBuilder<>& Builder) override;
+	Value* codegen() override;
+};
+class ASTProto : public AST {
+public:
+	std::string name;
+	std::vector<std::string> args;
+	ASTProto(std::string _name, std::vector<std::string> _args) : name(_name), args(_args) {};
+	Value* codegen() override;
 };
 class ASTFunc : public AST {
 public:
-	std::string name;
-	ASTFunc(std::string _name);
-	Value* codegen(IRBuilder<>& Builder) override;
+	std::unique_ptr<ASTProto> proto;
+	std::unique_ptr<AST> body;
+	ASTFunc(std::unique_ptr<ASTProto> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
 };
+
 class Parser {
 	int index;
 	Token_t curtok;
@@ -149,11 +158,13 @@ class Parser {
 	std::unique_ptr<AST> expr_add();
 	std::unique_ptr<AST> expr_mul();
 	std::unique_ptr<AST> expr_primary();
-	std::unique_ptr<AST> def_int();
+	std::unique_ptr<ASTInt> def_int();
+	std::unique_ptr<ASTFunc> def_func();
+	std::unique_ptr<AST> expr_block();
 	
 	bool consume(TK tk);
 	void Parser::getNextToken();
 public:
 	Parser(std::vector<Token_t> _tokens);
-	std::unique_ptr<AST> parse_codegen();
+	void parse_codegen();
 };

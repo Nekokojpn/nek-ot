@@ -27,7 +27,7 @@ int curtok = 0;
 static std::map<std::string, FunctionCallee> Functions_Global;
 
 static std::map<std::string, Value*> NamedValues_Global;
-static std::map<std::string, Value*> NamedValues_Local;
+static std::map<std::string, Value*> namedvalues_local;
 
 static TK RetType; //戻り値の型
 std::stack<TK> stack;
@@ -69,6 +69,9 @@ IRBuilder<>& getBuilder() {
 }
 Module* getModule() {
 	return TheModule.get();
+}
+std::map<std::string, Value*>& getNamedValues_Local() {
+	return namedvalues_local;
 }
 
 // Parser------------------------>

@@ -84,6 +84,7 @@ void error(std::string title, std::string message, int line, int column);
 LLVMContext& getContext();
 IRBuilder<>& getBuilder();
 Module* getModule();
+std::map<std::string, Value*>& getNamedValues_Local();
 
 
 class Console {
@@ -109,11 +110,23 @@ enum class Op{
 	Mul,
 	Div
 };
+enum class AType {
+	Int,
+	Float,
+	Double,
+	Char,
+	String
+};
 class AST {
 public:
 	virtual Value* codegen() = 0;
 };
-
+class ASTIdentifier : public AST {
+public:
+	Value* value;
+	ASTIdentifier(Value* _value) : value(_value) {};
+	Value* codegen() override;
+};
 class ASTValue : public AST {
 public:
 	int value;
@@ -135,11 +148,21 @@ public:
 	ASTInt(std::string _name) : name(_name) {};
 	Value* codegen() override;
 };
+class ASTArgProto : public AST { // int 
+public:
+	std::string identifier;
+	Value* userDefinedType;
+	AType type;
+	bool isUserDefined;
+	ASTArgProto(Value* _userDefinedType, std::string _identifier) : userDefinedType(_userDefinedType), identifier(_identifier) { isUserDefined = true; };
+	ASTArgProto(AType _type, std::string _identifier) : type(_type), identifier(_identifier) { isUserDefined = false; };
+	Value* codegen() override;
+};
 class ASTProto : public AST {
 public:
 	std::string name;
-	std::vector<std::string> args;
-	ASTProto(std::string _name, std::vector<std::string> _args) : name(_name), args(_args) {};
+	std::vector<ASTArgProto> args;
+	ASTProto(std::string _name, std::vector<ASTArgProto> _args) : name(_name), args(_args) {};
 	Value* codegen() override;
 };
 class ASTFunc : public AST {
@@ -149,7 +172,6 @@ public:
 	ASTFunc(std::unique_ptr<ASTProto> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
-
 class Parser {
 	int index;
 	Token_t curtok;

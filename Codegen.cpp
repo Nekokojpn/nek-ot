@@ -3,7 +3,11 @@
 LLVMContext& context = getContext();
 IRBuilder<>& builder = getBuilder();
 Module* module = getModule();
+std::map<std::string, Value*>& namedvalueslocal = getNamedValues_Local();
 
+Value* ASTIdentifier::codegen() {
+	return value;
+}
 
 Value* ASTValue::codegen() {
 	return builder.getInt32(value);
@@ -30,6 +34,7 @@ Value* ASTBinOp::codegen() {
 
 Value* ASTInt::codegen() {
 	Value* value = expr_p->codegen();
+	namedvalueslocal[name] = value;
 	if (!value)
 		return nullptr;
 	return value;
@@ -39,3 +44,11 @@ Value* ASTFunc::codegen() {
 
 	return nullptr;
 }
+Value* ASTArgProto::codegen() {
+	return nullptr;
+}
+/*
+Value* ASTExprBlock::codegen() {
+	return nullptr;
+}
+*/

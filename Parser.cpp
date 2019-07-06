@@ -1,12 +1,12 @@
 #include "nek-ot.h"
 
 
-std::map<std::string, Value*> namedvalues;
+
 
 LLVMContext& TheContext = getContext();
 IRBuilder<>& Builder = getBuilder();
 Module* TheModule = getModule();
-
+std::map<std::string, Value*>& namedvalues_local = getNamedValues_Local();
 
 
 
@@ -69,6 +69,11 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		getNextToken(); //eat num
 		return std::move(value);
 	}
+	else if (curtok.ty == TK::tok_identifier) {
+		auto identifier = std::make_unique<ASTIdentifier>(namedvalues_local[curtok.val]);
+		getNextToken();
+		return std::move(identifier);
+	}
 	else if (curtok.ty == TK::tok_lp) {
 		getNextToken();
 		auto ast = expr();
@@ -108,7 +113,7 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier)
 		error("Synatax error", "After fn must be an identifier", 0, 0);
-	std::vector<std::string> v;
+	std::vector<ASTArgProto> v;
 	auto proto = std::make_unique<ASTProto>(curtok.val, v);
 	proto->codegen();
 	getNextToken();
@@ -146,11 +151,14 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 }
 
 std::unique_ptr<AST> Parser::expr_block() { //Func, () , {} ,etc
-	if (curtok.ty == TK::tok_int)
+	while (curtok.ty != TK::tok_rb)
 	{
-		auto ast = def_int();
-		Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen(), ast->name);
-		return std::move(ast);
+		if (curtok.ty == TK::tok_int)
+		{
+			auto ast = def_int();
+			Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen(), ast->name);
+			//return std::move(ast);
+		}
 	}
 	return nullptr;
 }

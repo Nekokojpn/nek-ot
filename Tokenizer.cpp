@@ -61,16 +61,19 @@ TK gettoken() {
 		}
 		undo_char();
 		addToliteral();
-		if (compare_cs("fn")) { return TK::tok_fn; }
-		else if (compare_cs("int")) { return TK::tok_int; }
-		else if (compare_cs("void")) { return TK::tok_void; }
-		else if (compare_cs("ret")) { return TK::tok_ret; }
-		else if (compare_cs("float")) { return TK::tok_float; }
-		else if (compare_cs("double")) { return TK::tok_double; }
-		else if (compare_cs("short")) { return TK::tok_short; }
-		else if (compare_cs("long")) { return TK::tok_long; }
-		else if (compare_cs("char")) { return TK::tok_char; }
-		else if (compare_cs("string")) { return TK::tok_string; }
+		if (cs == "fn") { return TK::tok_fn; }
+		else if (cs == "int") { return TK::tok_int; }
+		else if (cs == "void") { return TK::tok_void; }
+		else if (cs == "ret") { return TK::tok_ret; }
+		else if (cs == "float") { return TK::tok_float; }
+		else if (cs == "double") { return TK::tok_double; }
+		else if (cs == "short") { return TK::tok_short; }
+		else if (cs == "long") { return TK::tok_long; }
+		else if (cs == "char") { return TK::tok_char; }
+		else if (cs == "string") { return TK::tok_string; }
+		else if (cs == "if") { return TK::tok_if; }
+		else if (cs == "elif") { return TK::tok_elif; }
+		else if (cs == "else") { return TK::tok_else; }
 		else { return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
@@ -92,12 +95,19 @@ TK gettoken() {
 			return TK::tok_num_int;
 		}
 	}
-	else { //ãLçÜ. ïKÇ∏1ï∂éö
+	else { // Symbol.
 		std::string s = "";
 		s += cc;
 		literals.push_back(s);
 		if (cc == '\0') return TK::tok_eof;
-		if (cc == '=')	return TK::tok_equal;
+		if (cc == '=') {
+			get_char();
+			if (cc == '=') { // ==
+				return TK::tok_eqeq;
+			}
+			undo_char();
+			return TK::tok_equal;
+		}
 		if (cc == ';')	return TK::tok_semi;
 		if (cc == '(')	return TK::tok_lp;
 		if (cc == ')')	return TK::tok_rp;
@@ -133,6 +143,31 @@ TK gettoken() {
 				return TK::tok_slash;
 			}
 		}
+		if (cc == '<') {
+			get_char();
+			if (cc == '=') { // <=
+				return TK::tok_lteq;
+			}
+			undo_char();
+			return TK::tok_lt;
+		}
+		if (cc == '>') {
+			get_char();
+			if (cc == '=') { // >=
+				return TK::tok_rteq;
+			}
+			undo_char();
+			return TK::tok_rt;
+		}
+		if (cc == '!') {
+			get_char();
+			if (cc == '=') { // !=
+				return TK::tok_emeq;
+			}
+			undo_char();
+			return TK::tok_em;
+		}
+
 	}
 	std::string s = "";
 	s += cc;

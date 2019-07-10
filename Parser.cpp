@@ -159,8 +159,61 @@ std::unique_ptr<AST> Parser::expr_block() { //Func, () , {} ,etc
 			Value* tmp = Builder.CreateAlloca(Builder.getInt32Ty(), ast->codegen(), ast->name);
 			//return std::move(ast);
 		}
+		else if (curtok.ty == TK::tok_if) {
+			auto ast = bool_statement();
+		}
+		else getNextToken();
 	}
 	return nullptr;
+}
+//Top of bool expr;
+std::unique_ptr<AST> Parser::bool_statement() {
+	getNextToken();
+	if (curtok.ty != TK::tok_lp)
+		error("Expected", "Expected --> (", 0, 0);
+	getNextToken();
+	auto ast = bool_expr();
+	if (curtok.ty != TK::tok_rp)
+		error("Expected", "Expected --> )", 0, 0);
+	getNextToken();
+	if (curtok.ty != TK::tok_lb)
+		error("Expected", "Expected --> {", 0, 0);
+	getNextToken();
+	if (curtok.ty != TK::tok_rb)
+		error("Expected", "Expected --> }", 0, 0);
+	getNextToken();
+	return std::move(ast);
+}
+
+std::unique_ptr<AST> Parser::bool_expr() {
+	auto lhs = expr();
+	while (true) {
+		BOp op;
+		if (consume(TK::tok_lt)) {
+			op = BOp::LThan;
+		}
+		else if (consume(TK::tok_lteq)) {
+			op = BOp::LThanEqual;
+		}
+		else if (consume(TK::tok_rt)) {
+			op = BOp::RThan;
+		}
+		else if (consume(TK::tok_rteq)) {
+			op = BOp::RThanEqual;
+		}
+		else if (consume(TK::tok_eqeq)) {
+			op = BOp::EqualEqual;
+		}
+		else if(consume(TK::tok_emeq)) {
+			op = BOp::NotEqual;
+		}
+		else {
+			break;
+		}
+		auto rhs = expr();
+		lhs = std::make_unique<ASTBoolOp>(std::move(lhs), op, std::move(rhs));
+	}
+	return std::move(lhs);
 }
 
 Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {

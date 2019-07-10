@@ -15,12 +15,6 @@ extern std::vector<TK> tokens;
 extern std::vector<std::string> literals;
 extern std::vector<Token_t> tytokens;
 
-
-
-
-
-
-//Parser globals----->
 int pos = 0;
 int curtok = 0;
 
@@ -74,33 +68,7 @@ std::map<std::string, Value*>& getNamedValues_Local() {
 	return namedvalues_local;
 }
 
-// Parser------------------------>
 
-/*
-void gen_as_polish_notation(AST* ast) {
-	if (ast->get_nd_type() == NDType::BinOp) {
-		ASTBinOp* binop = (ASTBinOp*)ast;
-		
-		char c;
-		if (binop->op == Op::Plus)
-			c = '+';
-		else if (binop->op == Op::Minus)
-			c = '-';
-		else if (binop->op == Op::Mul)
-			c = '*';
-		else
-			c = '/';
-		std::cout << c << " ";
-
-		gen_as_polish_notation(binop->lhs.get());
-		gen_as_polish_notation(binop->rhs.get());
-	}
-	else if (ast->get_nd_type() == NDType::Number) {
-		ASTValue* value = (ASTValue*)ast;
-		std::cout << value->value << " ";
-	}
-}
-*/
 Value* ASTProto::codegen() {
 	Function* mainFunc =
 		Function::Create(FunctionType::get(Type::getVoidTy(TheContext), false),
@@ -116,7 +84,7 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-	if (load_source("def_func.nk") == 1)
+	if (load_source("if.nk") == 1)
 		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
@@ -154,13 +122,6 @@ int main(int argc, char** argv) {
   TheModule = make_unique<Module>("top", TheContext);
 Sys::IO::CreateFunc();
 
-/*
-Function* mainFunc =
-	  Function::Create(FunctionType::get(Type::getVoidTy(TheContext), false),
-		  Function::ExternalLinkage, "main", TheModule.get());
-  Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", mainFunc));
-  */
-  
   auto parser = Parser(tytokens);
   parser.parse_codegen();
   

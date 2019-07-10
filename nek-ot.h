@@ -32,6 +32,9 @@ using namespace llvm;
 enum class TK {
 	tok_nope = 0,
 	tok_fn = 2,
+	tok_if = 3,
+	tok_elif = 4,
+	tok_else = 5,
 
 	tok_ret = 100,
 	tok_void = 101,
@@ -47,8 +50,8 @@ enum class TK {
 	tok_num_double = 201,
 	tok_str_string = 202,
 
-	tok_semi = 300,
-	tok_equal = 301,
+	tok_semi = 300, // ;
+	tok_equal = 301, // =
 	tok_lp = 302, // (
 	tok_rp = 303, // )
 	tok_lb = 304, // {
@@ -56,6 +59,13 @@ enum class TK {
 	tok_arrow = 306, // ->
 	tok_sq = 307, // '
 	tok_dq = 308, // "
+	tok_lt = 309, // <
+	tok_lteq = 310, // <=
+	tok_rt = 311, // >
+	tok_rteq = 312, // >=
+	tok_eqeq = 313, // ==
+	tok_em = 314, // !
+	tok_emeq = 315, //!=
 
 	// operator
 	tok_plus = 400,
@@ -110,7 +120,15 @@ enum class Op{
 	Mul,
 	Div
 };
-enum class AType {
+enum class BOp {
+	LThan,
+	LThanEqual,
+	RThan,
+	RThanEqual,
+	EqualEqual,
+	NotEqual
+};
+enum class AType { //ArgType
 	Int,
 	Float,
 	Double,
@@ -141,6 +159,15 @@ public:
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
 	Value* codegen() override;
 };
+class ASTBoolOp : public AST {
+public:
+	std::unique_ptr<AST> lhs;
+	std::unique_ptr<AST> rhs;
+	BOp bop;
+	ASTBoolOp(std::unique_ptr<AST> _lhs, BOp _bop, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), bop(_bop), rhs(std::move(_rhs)) {};
+	Value* codegen() override;
+};
+
 class ASTInt : public AST {
 public:
 	std::string name;
@@ -172,6 +199,9 @@ public:
 	ASTFunc(std::unique_ptr<ASTProto> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
+class ASTIf : public AST {
+
+};
 class Parser {
 	int index;
 	Token_t curtok;
@@ -183,6 +213,8 @@ class Parser {
 	std::unique_ptr<ASTInt> def_int();
 	std::unique_ptr<ASTFunc> def_func();
 	std::unique_ptr<AST> expr_block();
+	std::unique_ptr<AST> bool_statement();
+	std::unique_ptr<AST> bool_expr();
 	
 	bool consume(TK tk);
 	void Parser::getNextToken();

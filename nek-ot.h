@@ -200,7 +200,22 @@ public:
 	Value* codegen() override;
 };
 class ASTIf : public AST {
+	std::unique_ptr<ASTBoolOp> proto;
+	std::unique_ptr<AST> body;
 
+	ASTIf(std::unique_ptr<ASTBoolOp> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
+};
+class ASTelIf : public AST {
+	std::unique_ptr<ASTBoolOp> proto;
+	std::unique_ptr<AST> body;
+	ASTelIf(std::unique_ptr<ASTBoolOp> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
+};
+class ASTelse : public AST {
+	std::unique_ptr<AST> body;
+	ASTelse(std::unique_ptr<AST> _body) : body(std::move(_body)) {};
+	Value* codegen() override;
 };
 class Parser {
 	int index;

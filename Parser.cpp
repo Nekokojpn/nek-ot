@@ -89,6 +89,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	exit(1);
 	
 }
+
 std::unique_ptr<ASTInt> Parser::def_int() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier)

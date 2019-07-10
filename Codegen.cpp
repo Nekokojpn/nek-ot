@@ -38,7 +38,7 @@ Value* ASTBoolOp::codegen() {
 		return nullptr;
 	switch (bop) {
 	case BOp::LThan:
-		return builder.CreateFCmp(l, r, "addtmp");
+		return builder.CreateFCmpONE(l, r, "iftemp");
 	case BOp::LThanEqual:
 		return builder.CreateAdd(l, r, "addtmp");
 	case BOp::RThan:
@@ -55,7 +55,7 @@ Value* ASTBoolOp::codegen() {
 }
 
 Value* ASTInt::codegen() {
-	Value* value = expr_p->codegen();
+	auto value = expr_p->codegen();
 	namedvalueslocal[name] = value;
 	if (!value)
 		return nullptr;
@@ -69,6 +69,9 @@ Value* ASTArgProto::codegen() {
 	return nullptr;
 }
 
-Value* ASTBoolOp::codegen() {
+Value* ASTIf::codegen() {
+	auto astboolop = proto->codegen();
+	//TODO define if elif BasicBlock 
+	auto ast = body->codegen();
 	return nullptr;
 }

@@ -31,6 +31,28 @@ Value* ASTBinOp::codegen() {
 		return nullptr;
 	}
 }
+Value* ASTBoolOp::codegen() {
+	Value* l = lhs->codegen();
+	Value* r = rhs->codegen();
+	if (!l || !r)
+		return nullptr;
+	switch (bop) {
+	case BOp::LThan:
+		return builder.CreateFCmp(l, r, "addtmp");
+	case BOp::LThanEqual:
+		return builder.CreateAdd(l, r, "addtmp");
+	case BOp::RThan:
+		return builder.CreateAdd(l, r, "addtmp");
+	case BOp::RThanEqual:
+		return builder.CreateAdd(l, r, "addtmp");
+	case BOp::EqualEqual:
+		return builder.CreateAdd(l, r, "addtmp");
+	case BOp::NotEqual:
+		return builder.CreateAdd(l, r, "addtmp");
+	default:
+		return nullptr;
+	}
+}
 
 Value* ASTInt::codegen() {
 	Value* value = expr_p->codegen();
@@ -41,14 +63,12 @@ Value* ASTInt::codegen() {
 }
 
 Value* ASTFunc::codegen() {
-
 	return nullptr;
 }
 Value* ASTArgProto::codegen() {
 	return nullptr;
 }
-/*
-Value* ASTExprBlock::codegen() {
+
+Value* ASTBoolOp::codegen() {
 	return nullptr;
 }
-*/

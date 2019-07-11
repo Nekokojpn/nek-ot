@@ -66,12 +66,13 @@ Value* ASTFunc::codegen() {
 	return nullptr;
 }
 Value* ASTArgProto::codegen() {
-	return nullptr;
+	return nullptr; 
 }
 
 Value* ASTIf::codegen() {
 	auto astboolop = proto->codegen();
 	//TODO define if elif BasicBlock 
+	//BasicBlock* iftmp = 
 	auto ast = body->codegen();
 	return nullptr;
 }

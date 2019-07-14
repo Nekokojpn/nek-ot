@@ -1,9 +1,5 @@
 #include "nek-ot.h"
 
-
-std::map<std::string, Value*>& namedvalues_local = getNamedValues_Local();
-
-
 bool Parser::consume(TK tk) {
 	if (tokens[index].ty == tk)
 	{
@@ -64,7 +60,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		return std::move(value);
 	}
 	else if (curtok.ty == TK::tok_identifier) {
-		auto identifier = std::make_unique<ASTIdentifier>(namedvalues_local[curtok.val]);
+		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
 		getNextToken();
 		return std::move(identifier);
 	}
@@ -89,6 +85,7 @@ std::unique_ptr<ASTInt> Parser::def_int() {
 	if (curtok.ty != TK::tok_identifier)
 		error("Syntax error", "After type must be an identifier.",0,0);
 	auto ast = std::make_unique<ASTInt>(curtok.val);
+	//namedvalues_local[curtok.val] = nullptr;
 	getNextToken();
 	if (consume(TK::tok_equal)) {
 		ast->expr_p = std::move(expr());

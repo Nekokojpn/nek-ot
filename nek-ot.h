@@ -148,8 +148,8 @@ public:
 };
 class ASTIdentifier : public AST {
 public:
-	Value* value;
-	ASTIdentifier(Value* _value) : value(_value) {};
+	std::string name;
+	ASTIdentifier(std::string& _name) : name(_name) {};
 	Value* codegen() override;
 };
 class ASTValue : public AST {

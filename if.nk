@@ -1,4 +1,6 @@
 fn main() -> void{
-	if(3 > 4){
+	int a = 3+3;
+	if(a < 7){
+		int b = 3*3;
 	}
 }

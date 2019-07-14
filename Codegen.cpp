@@ -142,13 +142,25 @@ Value* ASTIf::codegen() {
 
 	BasicBlock* if_block = BasicBlock::Create(context,"if_block",curfunc);
 	BasicBlock* cont = BasicBlock::Create(context, "cont",curfunc);
-	if (ast_elif == nullptr && ast_else == nullptr) {// ifÇµÇ©ë∂ç›ÇµÇ»Ç¢èÍçá.
-		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
-		builder.SetInsertPoint(if_block);
-		for (int i = 0; i < body.size(); i++) {
-			body[i]->codegen();
-		}
-		builder.SetInsertPoint(cont);
+	auto branch = builder.CreateCondBr(astboolop, if_block, cont);
+	builder.SetInsertPoint(if_block);
+	for (int i = 0; i < body.size(); i++) {
+		body[i]->codegen();
 	}
-	return astboolop;
+	if (ast_elif) {
+		BasicBlock* elif_block = BasicBlock::Create(context, "elif_block", curfunc);
+		auto branch = builder.CreateCondBr(astboolop, if_block, elif_block);
+		builder.SetInsertPoint(elif_block);
+		auto elif = ast_elif->codegen();
+		builder.CreateBr(cont);
+	}
+	if(ast_else){
+		BasicBlock* else_block = BasicBlock::Create(context, "else_block", curfunc);
+		auto branch = builder.CreateCondBr(astboolop, if_block, else_block);
+		builder.SetInsertPoint(else_block);
+		auto elsec = ast_else->codegen();
+		builder.CreateBr(cont);
+	}	
+	builder.SetInsertPoint(cont);
+	return cont; //óvåèìô
 }

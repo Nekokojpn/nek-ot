@@ -47,8 +47,8 @@ void Parser::dump() {
 	module->dump();
 }
 
-Value* ASTIdentifier::codegen() {
-	return value;
+Value* ASTIdentifier::codegen() { //globalÇ∆localÇÃãÊï Ç»Çµ.
+	return namedvalues_local[name];
 }
 
 Value* ASTValue::codegen() {
@@ -121,7 +121,7 @@ Value* ASTProto::codegen() {
 	return nullptr;
 }
 Value* ASTFunc::codegen() {
-	auto pr = proto->codegen();
+	auto pr = proto->codegen(); //Proto
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
@@ -135,17 +135,20 @@ Value* ASTElse::codegen() {
 }
 
 Value* ASTIf::codegen() {
-	auto astboolop = proto->codegen();
+	auto astboolop = proto->codegen(); //--> BoolOp
 	if (!astboolop)
 		return nullptr;
 	//TODO define if elif BasicBlock 
 
-	BasicBlock* if_block = BasicBlock::Create(context,"if_block");
-	BasicBlock* cont = BasicBlock::Create(context, "cont");
-	if(ast_elif == nullptr && ast_else == nullptr) // ifÇµÇ©ë∂ç›ÇµÇ»Ç¢èÍçá.
+	BasicBlock* if_block = BasicBlock::Create(context,"if_block",curfunc);
+	BasicBlock* cont = BasicBlock::Create(context, "cont",curfunc);
+	if (ast_elif == nullptr && ast_else == nullptr) {// ifÇµÇ©ë∂ç›ÇµÇ»Ç¢èÍçá.
 		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
-	for (int i = 0; i < body.size(); i++) {
-		body[i]->codegen();
+		builder.SetInsertPoint(if_block);
+		for (int i = 0; i < body.size(); i++) {
+			body[i]->codegen();
+		}
+		builder.SetInsertPoint(cont);
 	}
 	return astboolop;
 }

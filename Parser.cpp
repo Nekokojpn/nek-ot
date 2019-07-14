@@ -184,7 +184,6 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 		return std::move(ast);
 	//ELIF or ELSE----->
 	if (curtok.ty == TK::tok_elif) { //ELIF
-		getNextToken();
 		ast->ast_elif = bool_statement();
 	}
 	else { //ELSE

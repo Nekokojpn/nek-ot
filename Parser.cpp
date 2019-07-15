@@ -155,6 +155,13 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 			auto ast = bool_statement();
 			asts.push_back(std::move(ast));
 		}
+		else if (curtok.ty == TK::tok_while) {
+			auto ast = while_statement();
+			asts.push_back(std::move(ast));
+		}
+		else if (curtok.ty == TK::tok_identifier) {
+
+		}
 		else getNextToken();
 	}
 	return asts;
@@ -183,10 +190,11 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 	if(curtok.ty != TK::tok_elif&&curtok.ty != TK::tok_else)
 		return std::move(ast);
 	//ELIF or ELSE----->
-	if (curtok.ty == TK::tok_elif) { //ELIF
-		ast->ast_elif = bool_statement();
+	while (curtok.ty == TK::tok_elif) { //ELIF
+		ast->ast_elif.push_back(std::move(bool_statement()));
+		getNextToken();
 	}
-	else { //ELSE
+	if(curtok.ty == TK::tok_else) { //ELSE
 		getNextToken();
 		ast->ast_else = std::make_unique<ASTElse>(expr_block());
 	}
@@ -222,6 +230,28 @@ std::unique_ptr<AST> Parser::bool_expr() {
 		lhs = std::make_unique<ASTBoolOp>(std::move(lhs), op, std::move(rhs));
 	}
 	return std::move(lhs);
+}
+
+std::unique_ptr<ASTWhile> Parser::while_statement() {
+	getNextToken();
+	if (curtok.ty != TK::tok_lp)
+		error("Expected", "Expected --> (", 0, 0);
+	getNextToken();
+	auto boolast = bool_expr();
+	if (curtok.ty != TK::tok_rp)
+		error("Expected", "Expected --> )", 0, 0);
+	getNextToken();
+	if (curtok.ty != TK::tok_lb)
+		error("Expected", "Expected --> {", 0, 0);
+
+
+	auto ast = std::make_unique<ASTWhile>(std::move(boolast), expr_block());
+	if (curtok.ty != TK::tok_rb)
+		error("Expected", "Expected --> }", 0, 0);
+	getNextToken();
+	//<-----IF
+
+	return std::move(ast);
 }
 
 Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {

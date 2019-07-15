@@ -74,6 +74,8 @@ TK gettoken() {
 		else if (cs == "if") { return TK::tok_if; }
 		else if (cs == "elif") { return TK::tok_elif; }
 		else if (cs == "else") { return TK::tok_else; }
+		else if (cs == "for") { return TK::tok_for; }
+		else if (cs == "while") { return TK::tok_while; }
 		else { return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

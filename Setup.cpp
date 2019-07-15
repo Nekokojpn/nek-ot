@@ -25,7 +25,7 @@ int load_source(std::string source_path) {
 	buf += '\0';
 	source.push_back(buf);
 #ifdef HIGH_DEBUGG
-	std::cout << "-----Source-----" << std::endl;
+	std::cout << "-----Source (" << source_path << ")-----" << std::endl;
 	for (std::string t : source)
 		std::cout << t;
 #endif

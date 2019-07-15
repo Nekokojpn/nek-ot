@@ -3,7 +3,5 @@ fn main() -> void{
 	if(a < 7){
 		int b = 3*3;
 	}
-	elif(a > 7){
-		int c = 3*4;
-	}
+	int d = 2*2;
 }

@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-	if (load_source("if.nk") == 1)
+	if (load_source("while.nk") == 1)
 		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)

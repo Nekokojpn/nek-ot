@@ -223,11 +223,11 @@ public:
 	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
-class ASTFor : public AST {
+class ASTWhile : public AST {
 public:
 	std::unique_ptr<AST> proto; //BoolOp
 	std::vector<std::unique_ptr<AST>> body;
-	ASTFor(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	ASTWhile(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
 class Parser {
@@ -243,7 +243,7 @@ class Parser {
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
-	std::unique_ptr<ASTFor> while_statement();
+	std::unique_ptr<ASTWhile> while_statement();
 	//-----> LLVM functions
 
 	//<-----

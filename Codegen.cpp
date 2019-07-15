@@ -9,9 +9,7 @@ static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, Value*> namedvalues_global;
 static std::map<std::string, Value*> namedvalues_local;
 
-std::map<std::string, Value*>&  getNamedValues_Local() {
-	return namedvalues_local;
-}
+
 
 void Sys::IO::CreateFunc() {
 	//puts --標準出力
@@ -131,6 +129,9 @@ Value* ASTArgProto::codegen() {
 	return nullptr;
 }
 Value* ASTElse::codegen() {
+	for (int i = 0; i < body.size(); i++) {
+		body[i]->codegen();
+	}
 	return nullptr;
 }
 
@@ -138,29 +139,80 @@ Value* ASTIf::codegen() {
 	auto astboolop = proto->codegen(); //--> BoolOp
 	if (!astboolop)
 		return nullptr;
-	//TODO define if elif BasicBlock 
 
+	std::vector<BasicBlock*> blocks;
 	BasicBlock* if_block = BasicBlock::Create(context,"if_block",curfunc);
-	BasicBlock* cont = BasicBlock::Create(context, "cont",curfunc);
-	auto branch = builder.CreateCondBr(astboolop, if_block, cont);
 	builder.SetInsertPoint(if_block);
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	if (ast_elif) {
-		BasicBlock* elif_block = BasicBlock::Create(context, "elif_block", curfunc);
-		auto branch = builder.CreateCondBr(astboolop, if_block, elif_block);
-		builder.SetInsertPoint(elif_block);
-		auto elif = ast_elif->codegen();
-		builder.CreateBr(cont);
+	blocks.push_back(if_block);
+	builder.SetInsertPoint(curbb);
+	if (ast_elif.size() == 0 && ast_else == nullptr) {
+		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
+		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
+		for (int i = 0; i < blocks.size(); i++) {
+			builder.SetInsertPoint(blocks[i]);
+			curbb = blocks[i];
+			builder.CreateBr(cont);
+		}
+		curbb = cont;
+		builder.SetInsertPoint(cont);
+		return cont;
 	}
-	if(ast_else){
-		BasicBlock* else_block = BasicBlock::Create(context, "else_block", curfunc);
-		auto branch = builder.CreateCondBr(astboolop, if_block, else_block);
-		builder.SetInsertPoint(else_block);
-		auto elsec = ast_else->codegen();
-		builder.CreateBr(cont);
-	}	
-	builder.SetInsertPoint(cont);
-	return cont; //要件等
+	else {
+		
+		if (ast_elif.size() != 0) {
+			for (int i = 0; i < ast_elif.size(); i++) {
+				BasicBlock* elif_block = BasicBlock::Create(context, "elif_block", curfunc);
+				auto branch = builder.CreateCondBr(astboolop, if_block, elif_block);
+				builder.SetInsertPoint(elif_block);
+				curbb = elif_block;
+				
+				builder.CreateCondBr(ast_elif[i]->proto->codegen(), if_block, elif_block);
+				for (int j = 0; j < ast_elif[i]->body.size(); j++) {
+					ast_elif[i]->body[j]->codegen();
+					if (ast_elif[i]->ast_else) {
+						BasicBlock* else_block = BasicBlock::Create(context, "else_block", curfunc);
+						auto branch = builder.CreateCondBr(astboolop, if_block, else_block);
+						builder.SetInsertPoint(else_block);
+						curbb = else_block;
+						ast_elif[i]->ast_else->codegen();
+						blocks.push_back(else_block);
+						builder.SetInsertPoint(elif_block);
+					}
+				}
+				blocks.push_back(elif_block);
+			}
+		}
+		auto cont = BasicBlock::Create(context, "cont", curfunc);
+		if (ast_elif.size() != 0) {
+			for (int i = 0; i < blocks.size(); i++) {
+				builder.SetInsertPoint(blocks[i]);
+				curbb = blocks[i];
+				builder.CreateBr(cont);
+			}
+		}
+		builder.SetInsertPoint(cont);
+		return cont; //要検討
+	}
+}
+Value* ASTFor::codegen() {
+	auto astboolop = proto->codegen(); //--> BoolOp
+	if (!astboolop)
+		return nullptr;
+
+	BasicBlock* while_block = BasicBlock::Create(context, "while_block", curfunc);
+	BasicBlock* body_block = BasicBlock::Create(context, "body_block", curfunc);
+	BasicBlock* cont_block = BasicBlock::Create(context, "cont", curfunc);
+	builder.SetInsertPoint(while_block);
+	builder.CreateCondBr(astboolop, body_block, cont_block);
+	builder.SetInsertPoint(body_block);
+	for (int i = 0; i < body.size(); i++) {
+		body[i]->codegen();
+	}
+	builder.CreateBr(while_block);
+	builder.SetInsertPoint(cont_block);
+	curbb = cont_block;
+	return astboolop;
 }

@@ -35,6 +35,8 @@ enum class TK {
 	tok_if = 3,
 	tok_elif = 4,
 	tok_else = 5,
+	tok_for = 6,
+	tok_while = 7,
 
 	tok_ret = 100,
 	tok_void = 101,
@@ -216,12 +218,18 @@ class ASTIf : public AST {
 public:
 	std::unique_ptr<AST> proto; //BoolOp
 	std::vector<std::unique_ptr<AST>> body;
-	std::unique_ptr<AST> ast_elif;
+	std::vector<std::unique_ptr<ASTIf>> ast_elif;
 	std::unique_ptr<ASTElse> ast_else;
 	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
-
+class ASTFor : public AST {
+public:
+	std::unique_ptr<AST> proto; //BoolOp
+	std::vector<std::unique_ptr<AST>> body;
+	ASTFor(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
+};
 class Parser {
 	int index;
 	Token_t curtok;
@@ -235,7 +243,7 @@ class Parser {
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
-	
+	std::unique_ptr<ASTFor> while_statement();
 	//-----> LLVM functions
 
 	//<-----

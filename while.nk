@@ -1,0 +1,10 @@
+fn main() -> void{
+	int a = 3+3;
+	while(a < 7){
+		int b = 2;
+	}
+	if(a < 10){
+		int c = 3*3;
+	}
+	int d = 10*1*3;
+}

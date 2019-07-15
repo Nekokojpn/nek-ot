@@ -197,7 +197,7 @@ Value* ASTIf::codegen() {
 		return cont; //—vŒŸ“¢
 	}
 }
-Value* ASTFor::codegen() {
+Value* ASTWhile::codegen() {
 	auto astboolop = proto->codegen(); //--> BoolOp
 	if (!astboolop)
 		return nullptr;

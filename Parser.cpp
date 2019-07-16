@@ -160,7 +160,8 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 			asts.push_back(std::move(ast));
 		}
 		else if (curtok.ty == TK::tok_identifier) {
-
+			auto ast = subst_expr();
+			asts.push_back(std::move(ast));
 		}
 		else getNextToken();
 	}
@@ -252,6 +253,25 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 	//<-----IF
 
 	return std::move(ast);
+}
+
+std::unique_ptr<ASTSubst> Parser::subst_expr() {
+	auto id = std::make_unique<ASTIdentifier>(curtok.val);
+	
+	getNextToken();
+	if (curtok.ty == TK::tok_equal) {
+		getNextToken();
+		auto ast = std::make_unique<ASTSubst>(std::move(id),std::move(expr()));
+		//getNextToken();
+		if(curtok.ty != TK::tok_semi)
+			error("Expected", "Expected token --> ;" , 0, 0);
+		return ast;
+	}
+	else if (curtok.ty == TK::tok_semi) {
+		return nullptr;
+	}
+	else
+		error("Unexpected", "Unexpected token -->" + curtok.val, 0, 0);
 }
 
 Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {

@@ -80,15 +80,15 @@ Value* ASTBoolOp::codegen() {
 	case BOp::LThan:
 		return builder.CreateICmpSLT(l, r, "iftemp");
 	case BOp::LThanEqual:
-		return builder.CreateICmpSLE(l, r, "addtmp");
+		return builder.CreateICmpSLE(l, r, "iftemp");
 	case BOp::RThan:
-		return builder.CreateICmpSGT(l, r, "addtmp");
+		return builder.CreateICmpSGT(l, r, "iftemp");
 	case BOp::RThanEqual:
-		return builder.CreateICmpSGE(l, r, "addtmp");
+		return builder.CreateICmpSGE(l, r, "iftemp");
 	case BOp::EqualEqual:
-		return builder.CreateICmpEQ(l, r, "addtmp");
+		return builder.CreateICmpEQ(l, r, "iftemp");
 	case BOp::NotEqual:
-		return builder.CreateICmpNE(l, r, "addtmp");
+		return builder.CreateICmpNE(l, r, "iftemp");
 	default:
 		return nullptr;
 	}
@@ -136,13 +136,6 @@ Value* ASTElse::codegen() {
 }
 
 Value* ASTIf::codegen() {
-<<<<<<< HEAD
-	auto astboolop = proto->codegen();
-	//TODO define if elif BasicBlock 
-	//BasicBlock* iftmp = 
-	auto ast = body->codegen();
-	return nullptr;
-=======
 	auto astboolop = proto->codegen(); //--> BoolOp
 	if (!astboolop)
 		return nullptr;
@@ -222,5 +215,10 @@ Value* ASTWhile::codegen() {
 	builder.SetInsertPoint(cont_block);
 	curbb = cont_block;
 	return astboolop;
->>>>>>> 26508e806550c3d78080e979ded4b5f6b550495c
+}
+Value* ASTSubst::codegen() {
+	auto value = id->codegen();
+	value = builder.CreateAlloca(value->getType(), expr->codegen(), id->name);
+	namedvalues_local[id->name] = value;
+	return value;
 }

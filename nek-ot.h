@@ -230,6 +230,13 @@ public:
 	ASTWhile(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
+class ASTSubst : public AST {
+public:
+	std::unique_ptr<ASTIdentifier> id;
+	std::unique_ptr<AST> expr;
+	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
+	Value* codegen() override;
+};
 class Parser {
 	int index;
 	Token_t curtok;
@@ -244,6 +251,7 @@ class Parser {
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
 	std::unique_ptr<ASTWhile> while_statement();
+	std::unique_ptr<ASTSubst> subst_expr();
 	//-----> LLVM functions
 
 	//<-----

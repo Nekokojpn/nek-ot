@@ -1,9 +1,6 @@
 #include "nek-ot.h"
 //Common globals----->
 
-LLVMContext TheContext;
-IRBuilder<> Builder(TheContext);
-std::unique_ptr<Module> TheModule;
 
 int tytoken_size;
 std::string source_filename;
@@ -18,10 +15,6 @@ extern std::vector<Token_t> tytokens;
 int pos = 0;
 int curtok = 0;
 
-static std::map<std::string, FunctionCallee> Functions_Global;
-
-static std::map<std::string, Value*> NamedValues_Global;
-static std::map<std::string, Value*> namedvalues_local;
 
 static TK RetType; //戻り値の型
 std::stack<TK> stack;
@@ -35,56 +28,13 @@ bool isinFunc = false;
 
 
 
-
-//Internal Library Classes----->
-class Sys {
-public:
-	class IO {
-	public:
-		static void CreateFunc() {
-			//puts --標準出力
-			std::vector<Type*> putsArgs;
-			putsArgs.push_back(Builder.getInt8Ty()->getPointerTo());
-			ArrayRef<Type*>  argsRef(putsArgs);
-			FunctionType* putsType =
-				FunctionType::get(Builder.getInt32Ty(), argsRef, false);
-			FunctionCallee putsFunc = TheModule->getOrInsertFunction("puts", putsType);
-			Functions_Global["puts"] = putsFunc;
-		}
-	};
-};
-//<-----
-
-LLVMContext& getContext() {
-	return TheContext;
-}
-IRBuilder<>& getBuilder() {
-	return Builder;
-}
-Module* getModule() {
-	return TheModule.get();
-}
-std::map<std::string, Value*>& getNamedValues_Local() {
-	return namedvalues_local;
-}
-
-
-Value* ASTProto::codegen() {
-	Function* mainFunc =
-		Function::Create(FunctionType::get(Type::getVoidTy(TheContext), false),
-			Function::ExternalLinkage, name, TheModule.get());
-	Builder.SetInsertPoint(BasicBlock::Create(TheContext, "", mainFunc));
-
-	return nullptr;
-}
-
 int main(int argc, char** argv) {
 #ifdef DEBUGG
 	std::chrono::system_clock::time_point start, end_toknize, end;
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-	if (load_source("if.nk") == 1)
+	if (load_source("while.nk") == 1)
 		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
@@ -117,12 +67,13 @@ int main(int argc, char** argv) {
 #ifdef DEBUGG
   end_toknize = std::chrono::system_clock::now();
 #endif
-  // Parser--->
-
-  TheModule = make_unique<Module>("top", TheContext);
-Sys::IO::CreateFunc();
-
+  // Parser--->  
   auto parser = Parser(tytokens);
+  parser.init_parse();
+  
+ Sys::IO::CreateFunc();
+
+
   parser.parse_codegen();
   
   std::cout << std::endl;
@@ -130,7 +81,8 @@ Sys::IO::CreateFunc();
 #ifdef DEBUGG
   end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;
-  TheModule->dump();
+
+  parser.dump();
   std::cout << "-----time-----" << std::endl;
   double all_time = static_cast<double>(
 	  std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() /

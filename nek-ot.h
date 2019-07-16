@@ -35,6 +35,8 @@ enum class TK {
 	tok_if = 3,
 	tok_elif = 4,
 	tok_else = 5,
+	tok_for = 6,
+	tok_while = 7,
 
 	tok_ret = 100,
 	tok_void = 101,
@@ -80,6 +82,16 @@ enum class TK {
 
 };
 
+class Sys {
+public:
+	class IO {
+	public:
+		static void CreateFunc();
+	};
+};
+
+
+
 // typedef----->
 typedef struct {
 	TK ty;
@@ -91,9 +103,6 @@ typedef struct {
 
 void error(std::string title, std::string message, int line, int column);
 
-LLVMContext& getContext();
-IRBuilder<>& getBuilder();
-Module* getModule();
 std::map<std::string, Value*>& getNamedValues_Local();
 
 
@@ -141,8 +150,8 @@ public:
 };
 class ASTIdentifier : public AST {
 public:
-	Value* value;
-	ASTIdentifier(Value* _value) : value(_value) {};
+	std::string name;
+	ASTIdentifier(std::string& _name) : name(_name) {};
 	Value* codegen() override;
 };
 class ASTValue : public AST {
@@ -195,26 +204,30 @@ public:
 class ASTFunc : public AST {
 public:
 	std::unique_ptr<ASTProto> proto;
-	std::unique_ptr<AST> body;
-	ASTFunc(std::unique_ptr<ASTProto> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	std::vector<std::unique_ptr<AST>> body;
+	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
+};
+class ASTElse : public AST {
+public:
+	std::vector<std::unique_ptr<AST>> body;
+	ASTElse(std::vector<std::unique_ptr<AST>> _body) : body(std::move(_body)) {};
 	Value* codegen() override;
 };
 class ASTIf : public AST {
-	std::unique_ptr<ASTBoolOp> proto;
-	std::unique_ptr<AST> body;
-
-	ASTIf(std::unique_ptr<ASTBoolOp> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+public:
+	std::unique_ptr<AST> proto; //BoolOp
+	std::vector<std::unique_ptr<AST>> body;
+	std::vector<std::unique_ptr<ASTIf>> ast_elif;
+	std::unique_ptr<ASTElse> ast_else;
+	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
-class ASTelIf : public AST {
-	std::unique_ptr<ASTBoolOp> proto;
-	std::unique_ptr<AST> body;
-	ASTelIf(std::unique_ptr<ASTBoolOp> _proto, std::unique_ptr<AST> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
-	Value* codegen() override;
-};
-class ASTelse : public AST {
-	std::unique_ptr<AST> body;
-	ASTelse(std::unique_ptr<AST> _body) : body(std::move(_body)) {};
+class ASTWhile : public AST {
+public:
+	std::unique_ptr<AST> proto; //BoolOp
+	std::vector<std::unique_ptr<AST>> body;
+	ASTWhile(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
 class Parser {
@@ -227,13 +240,20 @@ class Parser {
 	std::unique_ptr<AST> expr_primary();
 	std::unique_ptr<ASTInt> def_int();
 	std::unique_ptr<ASTFunc> def_func();
-	std::unique_ptr<AST> expr_block();
-	std::unique_ptr<AST> bool_statement();
+	std::vector<std::unique_ptr<AST>> expr_block();
+	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
+	std::unique_ptr<ASTWhile> while_statement();
+	//-----> LLVM functions
+
+	//<-----
+	
 	
 	bool consume(TK tk);
 	void Parser::getNextToken();
 public:
 	Parser(std::vector<Token_t> _tokens);
 	void parse_codegen();
+	void dump();
+	void init_parse();
 };

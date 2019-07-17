@@ -14,4 +14,5 @@ Functionの定義はRustに似ています。
 ## 今できていること  
 Functionのコンパイルができる。  
 int, stringの宣言、代入ができる。  
+whileができる。
 Hello worldが動かせる。

@@ -46,7 +46,11 @@ void Parser::dump() {
 }
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
-	return namedvalues_local[name];
+	auto value = namedvalues_local[name];
+	if (!value)
+		error("Unsolved value name", "Unsolved value name", 0, 0);
+	
+	return builder.CreateLoad(value);
 }
 
 Value* ASTValue::codegen() {
@@ -76,19 +80,22 @@ Value* ASTBoolOp::codegen() {
 	Value* r = rhs->codegen();
 	if (!l || !r)
 		return nullptr;
+	
+	//auto a = builder.CreateLoad(l);
+	//auto b = builder.CreateLoad(r);
 	switch (bop) {
 	case BOp::LThan:
-		return builder.CreateICmpSLT(l, r, "iftemp");
+		return builder.CreateICmpSLT(l, r);
 	case BOp::LThanEqual:
-		return builder.CreateICmpSLE(l, r, "iftemp");
+		return builder.CreateICmpSLE(l, r);
 	case BOp::RThan:
-		return builder.CreateICmpSGT(l, r, "iftemp");
+		return builder.CreateICmpSGT(l, r);
 	case BOp::RThanEqual:
-		return builder.CreateICmpSGE(l, r, "iftemp");
+		return builder.CreateICmpSGE(l, r);
 	case BOp::EqualEqual:
-		return builder.CreateICmpEQ(l, r, "iftemp");
+		return builder.CreateICmpEQ(l, r);
 	case BOp::NotEqual:
-		return builder.CreateICmpNE(l, r, "iftemp");
+		return builder.CreateICmpNE(l, r);
 	default:
 		return nullptr;
 	}
@@ -96,11 +103,12 @@ Value* ASTBoolOp::codegen() {
 
 Value* ASTInt::codegen() {
 	auto value = expr_p->codegen();
-	
 	if (!value)
 		return nullptr;
-	namedvalues_local[name] = value;
-	builder.CreateAlloca(builder.getInt32Ty(), value, name);
+	auto val = builder.CreateAlloca(builder.getInt32Ty());
+	builder.CreateStore(value,val);
+	namedvalues_local[name] = val;
+	//builder.CreateStore(value, builder.CreateAlloca(builder.getInt32Ty()));
 	return value;
 }
 Value* ASTProto::codegen() {
@@ -198,14 +206,19 @@ Value* ASTIf::codegen() {
 	}
 }
 Value* ASTWhile::codegen() {
-	auto astboolop = proto->codegen(); //--> BoolOp
-	if (!astboolop)
-		return nullptr;
+	
 
 	BasicBlock* while_block = BasicBlock::Create(context, "while_block", curfunc);
 	BasicBlock* body_block = BasicBlock::Create(context, "body_block", curfunc);
 	BasicBlock* cont_block = BasicBlock::Create(context, "cont", curfunc);
+	builder.CreateBr(while_block);
+	
 	builder.SetInsertPoint(while_block);
+
+	auto astboolop = proto->codegen(); //--> BoolOp
+	if (!astboolop)
+		return nullptr;
+	
 	builder.CreateCondBr(astboolop, body_block, cont_block);
 	builder.SetInsertPoint(body_block);
 	for (int i = 0; i < body.size(); i++) {
@@ -217,8 +230,11 @@ Value* ASTWhile::codegen() {
 	return astboolop;
 }
 Value* ASTSubst::codegen() {
-	auto value = id->codegen();
-	value = builder.CreateAlloca(value->getType(), expr->codegen(), id->name);
-	namedvalues_local[id->name] = value;
-	return value;
+	auto old_value = id->codegen();
+	//value = builder.CreateAlloca(value->getType(), expr->codegen(), id->name);
+	auto new_value = expr->codegen();
+	//builder.CreateStore(new_value,old_value);
+	builder.CreateAlloca(new_value->getType(), new_value, id->name);
+	namedvalues_local[id->name] = new_value;
+	return new_value;
 }

@@ -49,7 +49,6 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 	auto value = namedvalues_local[name];
 	if (!value)
 		error("Unsolved value name", "Unsolved value name", 0, 0);
-	
 	return builder.CreateLoad(value);
 }
 
@@ -230,11 +229,5 @@ Value* ASTWhile::codegen() {
 	return astboolop;
 }
 Value* ASTSubst::codegen() {
-	auto old_value = id->codegen();
-	//value = builder.CreateAlloca(value->getType(), expr->codegen(), id->name);
-	auto new_value = expr->codegen();
-	//builder.CreateStore(new_value,old_value);
-	builder.CreateAlloca(new_value->getType(), new_value, id->name);
-	namedvalues_local[id->name] = new_value;
-	return new_value;
+	return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
 }

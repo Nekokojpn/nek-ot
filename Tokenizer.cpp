@@ -11,6 +11,7 @@ std::vector<TK> tokens;
 std::vector<std::string> literals;
 std::vector<Token_t> tytokens;
 bool isdq_started = false;
+std::vector<Location_t> locs;
 //<-----
 
 //Tokenizer Funcs----->
@@ -31,6 +32,14 @@ void undo_char() {
 }
 void addToliteral() { literals.push_back(cs); }
 bool compare_cs(const char* str) { return cs == str; };
+void addToloc(int len) {
+	Location_t loc;
+	loc.location_begin_line = line;
+	loc.location_begin_column = column;
+	loc.location_end_line = line;
+	loc.location_end_column = line + len;
+	locs.push_back(loc);
+}
 //<-----
 
 // tokenizer----->
@@ -61,22 +70,22 @@ TK gettoken() {
 		}
 		undo_char();
 		addToliteral();
-		if (cs == "fn") { return TK::tok_fn; }
-		else if (cs == "int") { return TK::tok_int; }
-		else if (cs == "void") { return TK::tok_void; }
-		else if (cs == "ret") { return TK::tok_ret; }
-		else if (cs == "float") { return TK::tok_float; }
-		else if (cs == "double") { return TK::tok_double; }
-		else if (cs == "short") { return TK::tok_short; }
-		else if (cs == "long") { return TK::tok_long; }
-		else if (cs == "char") { return TK::tok_char; }
-		else if (cs == "string") { return TK::tok_string; }
-		else if (cs == "if") { return TK::tok_if; }
-		else if (cs == "elif") { return TK::tok_elif; }
-		else if (cs == "else") { return TK::tok_else; }
-		else if (cs == "for") { return TK::tok_for; }
-		else if (cs == "while") { return TK::tok_while; }
-		else { return TK::tok_identifier; }
+		if (cs == "fn") { addToloc(cs.length()); return TK::tok_fn; }
+		else if (cs == "int") { addToloc(cs.length()); return TK::tok_int; }
+		else if (cs == "void") { addToloc(cs.length()); return TK::tok_void; }
+		else if (cs == "ret") { addToloc(cs.length()); return TK::tok_ret; }
+		else if (cs == "float") { addToloc(cs.length()); return TK::tok_float; }
+		else if (cs == "double") { addToloc(cs.length()); return TK::tok_double; }
+		else if (cs == "short") { addToloc(cs.length()); return TK::tok_short; }
+		else if (cs == "long") { addToloc(cs.length()); return TK::tok_long; }
+		else if (cs == "char") { addToloc(cs.length()); return TK::tok_char; }
+		else if (cs == "string") { addToloc(cs.length()); return TK::tok_string; }
+		else if (cs == "if") { addToloc(cs.length()); return TK::tok_if; }
+		else if (cs == "elif") { addToloc(cs.length()); return TK::tok_elif; }
+		else if (cs == "else") { addToloc(cs.length()); return TK::tok_else; }
+		else if (cs == "for") { addToloc(cs.length()); return TK::tok_for; }
+		else if (cs == "while") { addToloc(cs.length()); return TK::tok_while; }
+		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
 		cs = cc;
@@ -90,6 +99,7 @@ TK gettoken() {
 		}
 		undo_char();
 		addToliteral();
+		addToloc(cs.length());
 		if (point) { // double.
 			return TK::tok_num_double;
 		}
@@ -101,6 +111,7 @@ TK gettoken() {
 		std::string s = "";
 		s += cc;
 		literals.push_back(s);
+		addToloc(1);
 		if (cc == '\0') return TK::tok_eof;
 		if (cc == '=') {
 			get_char();

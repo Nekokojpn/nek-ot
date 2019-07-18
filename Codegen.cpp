@@ -22,16 +22,6 @@ void Sys::IO::CreateFunc() {
 	functions_global["puts"] = putsFunc;
 }
 
-/*
-LLVMContext& context = getContext();
-IRBuilder<>& builder = getBuilder();
-Module* module = getModule();
-*/
-
-//Internal Library Classes----->
-
-
-//<-----
 
 
 Function* curfunc;
@@ -79,9 +69,6 @@ Value* ASTBoolOp::codegen() {
 	Value* r = rhs->codegen();
 	if (!l || !r)
 		return nullptr;
-	
-	//auto a = builder.CreateLoad(l);
-	//auto b = builder.CreateLoad(r);
 	switch (bop) {
 	case BOp::LThan:
 		return builder.CreateICmpSLT(l, r);
@@ -111,8 +98,21 @@ Value* ASTInt::codegen() {
 	return value;
 }
 Value* ASTProto::codegen() {
+	
+	std::vector<Type*> putsArgs;
+	for (int i = 0; i < args.size(); i++) {
+		if (args[i] == AType::Int)
+			putsArgs.push_back(builder.getInt32Ty());
+	}
+	ArrayRef<Type*>  argsRef(putsArgs);
+	
+	Type* ty;
+	if (ret == RType::Int)
+		ty = builder.getInt32Ty();
+	else if (ret == RType::Void)
+		ty = builder.getVoidTy();
 	Function* mainFunc =
-		Function::Create(FunctionType::get(Type::getVoidTy(context), false),
+		Function::Create(FunctionType::get(ty,argsRef,false),
 			Function::ExternalLinkage, name, module.get());
 	curfunc = mainFunc;
 	if (name == "main") {
@@ -130,10 +130,10 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
+	retast->codegen1();
+//	if (curfunc->getReturnType() != retast->codegen1())
+	//	error("Code generation failed", "unexpected ret type",0,0);
 	return pr;
-}
-Value* ASTArgProto::codegen() {
-	return nullptr; 
 }
 Value* ASTElse::codegen() {
 	for (int i = 0; i < body.size(); i++) {
@@ -230,4 +230,14 @@ Value* ASTWhile::codegen() {
 }
 Value* ASTSubst::codegen() {
 	return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+}
+Type* ASTRet::codegen1() {
+	if (ret_type == RType::Void) {
+		builder.CreateRetVoid();
+		return builder.getVoidTy();
+	}
+	return nullptr;
+}
+Value* ASTRet::codegen() {
+	return nullptr;
 }

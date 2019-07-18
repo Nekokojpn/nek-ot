@@ -11,6 +11,7 @@ extern std::string cs;
 extern std::vector<TK> tokens;
 extern std::vector<std::string> literals;
 extern std::vector<Token_t> tytokens;
+extern std::vector<Location_t> locs;
 
 int pos = 0;
 int curtok = 0;
@@ -55,9 +56,10 @@ int main(int argc, char** argv) {
     Token_t t;
     t.ty = tokens[i];
     t.val = literals[i];
+	t.loc = locs[i];
     tytokens.push_back(t);
 #ifdef  HIGH_DEBUGG
-	std::cout  << (int)tokens[i] << " " << literals[i] << std::endl;
+	std::cout  << (int)tokens[i] << " " << literals[i] << locs[i].location_begin_line << ":" << locs[i].location_begin_column << std::endl;
 #endif //  HIGHDEBUGG
   }
   Token_t t;

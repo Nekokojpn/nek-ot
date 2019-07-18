@@ -105,37 +105,80 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier)
 		error("Synatax error", "After fn must be an identifier", 0, 0);
-	std::vector<ASTArgProto> v;
-	auto proto = std::make_unique<ASTProto>(curtok.val, v);
+	auto str = curtok.val;
+
 	getNextToken();
 	if (curtok.ty != TK::tok_lp)
 		error("Expected", "Expected --> (", 0, 0);
-	/*
-		à¯êîñ¢é¿ëï
-	*/
 	getNextToken();
+	std::vector<AType> putsArgs;
+	std::vector<std::string> argsIdentifier;
+	while (true) {
+
+		if (curtok.ty == TK::tok_int)
+			putsArgs.push_back(AType::Int);
+		else if (curtok.ty == TK::tok_char)
+			putsArgs.push_back(AType::Char);
+		else if (curtok.ty == TK::tok_string)
+			putsArgs.push_back(AType::String);
+		else if (curtok.ty == TK::tok_float)
+			putsArgs.push_back(AType::Float);
+		else if (curtok.ty == TK::tok_double)
+			putsArgs.push_back(AType::Double);
+		else
+			error("Unexpected token", "Unexpected token --> " + curtok.val, 0, 0);
+		getNextToken();
+		if (curtok.ty != TK::tok_identifier)
+			error("Unexpected token", "Unexpected token --> " + curtok.val, 0, 0);
+		argsIdentifier.push_back(curtok.val);
+		getNextToken();
+		if (curtok.ty != TK::tok_comma)
+			break;
+		getNextToken();
+	}
 	if (curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", 0, 0);
 	getNextToken();
 	if (curtok.ty != TK::tok_arrow)
 		error("Expected", "Expected --> ->", 0, 0);
 	getNextToken();
-	if (curtok.ty != TK::tok_void)
-		error("", "", 0, 0);
+	RType ret;
+	if (curtok.ty == TK::tok_int) {
+		ret = RType::Int;
+	}
+	else if (curtok.ty == TK::tok_char) {
+		ret = RType::Char;
+	}
+	else if (curtok.ty == TK::tok_string){
+		ret = RType::String;
+	}
+	else if (curtok.ty == TK::tok_float){
+		ret = RType::Float;
+	}
+	else if (curtok.ty == TK::tok_double){
+		ret = RType::Double;
+	}
+	else if (curtok.ty == TK::tok_void) {
+		ret = RType::Void;
+	}
+	else
+		error("Unexpected token", "Unexpected token --> " + curtok.val, 0, 0);
+	auto proto = std::make_unique<ASTProto>(str, putsArgs, argsIdentifier,ret);
+	auto retast = std::make_unique<ASTRet>(ret);
 	getNextToken();
 	if (curtok.ty == TK::tok_lb) {
-		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), expr_block());
+		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), expr_block(), std::move(retast));
 		return std::move(ast_func);
 	}
 	else if (curtok.ty == TK::tok_semi) { // The function has no body
 		getNextToken();
-		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), expr_block());
+		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), expr_block(),std::move(retast));
 		return std::move(ast_func);
 	}
 	else {
 		error("Unexpected", "Unexpected token --> " + curtok.val, 0, 0);
 	}
-	auto ast = std::make_unique<ASTFunc>(std::move(proto), expr_block());
+	auto ast = std::make_unique<ASTFunc>(std::move(proto), expr_block(),std::move(retast));
 	return std::move(ast);
 }
 
@@ -161,6 +204,10 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 		}
 		else if (curtok.ty == TK::tok_identifier) {
 			auto ast = subst_expr();
+			asts.push_back(std::move(ast));
+		}
+		else if (curtok.ty == TK::tok_ret) {
+			auto ast = def_ret();
 			asts.push_back(std::move(ast));
 		}
 		else getNextToken();
@@ -272,6 +319,16 @@ std::unique_ptr<ASTSubst> Parser::subst_expr() {
 	}
 	else
 		error("Unexpected", "Unexpected token -->" + curtok.val, 0, 0);
+}
+std::unique_ptr<ASTRet> Parser::def_ret() {
+	getNextToken();
+	RType rty;
+	if (curtok.ty == TK::tok_semi) {//void
+		rty = RType::Void;
+	}
+	getNextToken();
+	auto ast = std::make_unique<ASTRet>(rty);
+	return std::move(ast);
 }
 
 Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {

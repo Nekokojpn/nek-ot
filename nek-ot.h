@@ -14,6 +14,12 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/GVN.h"
 
 #include <windows.h>				//Using at Console class
 #include <cctype>
@@ -27,6 +33,7 @@
 #include <stack>
 
 using namespace llvm;
+//using namespace llvm
 
 // TOKENS--------------->
 enum class TK {
@@ -95,12 +102,15 @@ public:
 
 // typedef----->
 typedef struct {
-	TK ty;
-	std::string val;
 	int location_begin_line;
 	int location_begin_column;
 	int location_end_line;
 	int location_end_column;
+} Location_t;
+typedef struct {
+	TK ty;
+	std::string val;
+	Location_t loc;
 } Token_t;
 //<-----
 
@@ -148,6 +158,7 @@ enum class AType { //ArgType
 	String
 };
 enum class RType { //RetType
+	Nop,
 	Void,
 	Int,
 	Float,
@@ -192,12 +203,20 @@ class ASTInt : public AST {
 public:
 	std::string name;
 	std::unique_ptr<AST> expr_p;
-	ASTInt(std::string _name) : name(_name) {};
+	ASTInt(std::string _name, std::unique_ptr<AST> _expr_p) : name(_name), expr_p(std::move(_expr_p)) {};
+	Value* codegen() override;
+};
+class ASTString : public AST {
+public:
+	std::string name;
+	std::unique_ptr<AST> expr_str;
+	ASTString(std::string _name, std::unique_ptr<AST> _expr_str) : name(_name), expr_str(std::move(_expr_str)) {};
 	Value* codegen() override;
 };
 class ASTRet : public AST {
 public:
 	RType ret_type;
+	std::unique_ptr<ASTIdentifier> identifier;
 	ASTRet(RType _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
 	Type* codegen1();
@@ -215,8 +234,7 @@ class ASTFunc : public AST {
 public:
 	std::unique_ptr<ASTProto> proto;
 	std::vector<std::unique_ptr<AST>> body;
-	std::unique_ptr<ASTRet> retast;
-	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body, std::unique_ptr<ASTRet> _retast) : proto(std::move(_proto)), body(std::move(_body)), retast(std::move(_retast)) {};
+	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
 class ASTElse : public AST {
@@ -275,5 +293,6 @@ public:
 	Parser(std::vector<Token_t> _tokens);
 	void parse_codegen();
 	void dump();
+	static RType getTypeByName(std::string _name);
 	void init_parse();
 };

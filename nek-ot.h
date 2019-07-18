@@ -68,6 +68,7 @@ enum class TK {
 	tok_eqeq = 313, // ==
 	tok_em = 314, // !
 	tok_emeq = 315, //!=
+	tok_comma = 316, // ,
 
 	// operator
 	tok_plus = 400,
@@ -144,6 +145,14 @@ enum class AType { //ArgType
 	Char,
 	String
 };
+enum class RType { //RetType
+	Void,
+	Int,
+	Float,
+	Double,
+	Char,
+	String
+};
 class AST {
 public:
 	virtual Value* codegen() = 0;
@@ -184,28 +193,28 @@ public:
 	ASTInt(std::string _name) : name(_name) {};
 	Value* codegen() override;
 };
-class ASTArgProto : public AST { // int 
+class ASTRet : public AST {
 public:
-	std::string identifier;
-	Value* userDefinedType;
-	AType type;
-	bool isUserDefined;
-	ASTArgProto(Value* _userDefinedType, std::string _identifier) : userDefinedType(_userDefinedType), identifier(_identifier) { isUserDefined = true; };
-	ASTArgProto(AType _type, std::string _identifier) : type(_type), identifier(_identifier) { isUserDefined = false; };
-	Value* codegen() override;
+	RType ret_type;
+	ASTRet(RType _ret_type) : ret_type(_ret_type) {};
+	Value* codegen();
+	Type* codegen1();
 };
 class ASTProto : public AST {
 public:
 	std::string name;
-	std::vector<ASTArgProto> args;
-	ASTProto(std::string _name, std::vector<ASTArgProto> _args) : name(_name), args(_args) {};
+	std::vector<AType> args;
+	std::vector<std::string> identifier;
+	RType ret;
+	ASTProto(std::string _name, std::vector<AType> _args, std::vector<std::string> _identifier, RType _ret) : name(_name), args(_args), identifier(_identifier), ret(_ret) {};
 	Value* codegen() override;
 };
 class ASTFunc : public AST {
 public:
 	std::unique_ptr<ASTProto> proto;
 	std::vector<std::unique_ptr<AST>> body;
-	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	std::unique_ptr<ASTRet> retast;
+	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body, std::unique_ptr<ASTRet> _retast) : proto(std::move(_proto)), body(std::move(_body)), retast(std::move(_retast)) {};
 	Value* codegen() override;
 };
 class ASTElse : public AST {
@@ -252,6 +261,7 @@ class Parser {
 	std::unique_ptr<AST> bool_expr();
 	std::unique_ptr<ASTWhile> while_statement();
 	std::unique_ptr<ASTSubst> subst_expr();
+	std::unique_ptr<ASTRet> def_ret();
 	//-----> LLVM functions
 
 	//<-----

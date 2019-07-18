@@ -1,6 +1,7 @@
-fn main() -> void{
+fn main(int unko,int unko2,int unko3) -> void{
 	int i = 0;
 	while(i < 1000000000){
 		i = i + 1;
 	}
+	ret;
 }

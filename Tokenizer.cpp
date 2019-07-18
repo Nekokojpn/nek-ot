@@ -169,6 +169,7 @@ TK gettoken() {
 			undo_char();
 			return TK::tok_em;
 		}
+		if (cc == ',')	return TK::tok_comma;
 
 	}
 	std::string s = "";

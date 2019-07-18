@@ -30,9 +30,13 @@ BasicBlock* curbb;
 
 void Parser::init_parse() {
 	module = make_unique<Module>("top", context);
+	
 }
 void Parser::dump() {
 	module->dump();
+}
+RType Parser::getTypeByName(std::string _name) { //INT‚Ì‚İ–ß‚è’lB
+		return RType::Int;
 }
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
@@ -130,7 +134,8 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	retast->codegen1();
+	//retast->codegen1();
+
 //	if (curfunc->getReturnType() != retast->codegen1())
 	//	error("Code generation failed", "unexpected ret type",0,0);
 	return pr;
@@ -232,12 +237,39 @@ Value* ASTSubst::codegen() {
 	return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
 }
 Type* ASTRet::codegen1() {
+	if(ret_type == RType::Nop)
+		ret_type = Parser::getTypeByName(identifier->name);
 	if (ret_type == RType::Void) {
 		builder.CreateRetVoid();
 		return builder.getVoidTy();
 	}
+	else if (!identifier)
+		error("fn ret type is invalid.","",0,0);
+	else if (ret_type == RType::Int) {
+		builder.CreateRet(identifier->codegen());
+		return builder.getInt32Ty();
+	}
+	else if (ret_type == RType::Char) {
+		builder.CreateRet(identifier->codegen());
+		return builder.getInt8Ty();
+	}
+	else if (ret_type == RType::String) {
+		builder.CreateRet(identifier->codegen());
+		return builder.getInt8PtrTy();
+	}
+	else if (ret_type == RType::Float) {
+		builder.CreateRet(identifier->codegen());
+		return builder.getFloatTy();
+	}
+	else if (ret_type == RType::Double) {
+		builder.CreateRet(identifier->codegen());
+		return builder.getDoubleTy();
+	}
+	else
+		error("Unexpected token -->", "", 0, 0);
 	return nullptr;
 }
 Value* ASTRet::codegen() {
+	codegen1();
 	return nullptr;
 }

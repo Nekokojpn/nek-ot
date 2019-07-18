@@ -38,3 +38,38 @@ void error(std::string title, std::string message, int line, int column) {
 	std::cerr << "  |";
 	exit(1);
 }
+void error(std::string title, std::string message, Token_t& curtok) {
+	std::cerr << std::endl;
+	Console::SetConsoleTextRed();
+	std::cerr << "error: " << title << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << " --> ";
+	Console::SetConsoleTextWhite();
+	std::cerr << source_filename << ":" << curtok.location_begin_line << ":" << curtok.location_begin_column << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |" << std::endl << curtok.location_begin_line << " |";
+	Console::SetConsoleTextWhite();
+	std::string t = source[curtok.location_begin_line - 1].substr(0, source[curtok.location_begin_line - 1].size() - 1);
+	int i = 0;
+	while (isspace(t[i++]));
+	t = t.substr(i - 1, t.size() - 1);
+	std::cerr << "     " << t << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |";
+	Console::SetConsoleTextWhite();
+	std::cerr << "     ";
+	for (int i = 0; i < curtok.location_begin_column - 1; i++)
+		std::cerr << " ";
+	Console::SetConsoleTextRed();
+	std::cerr << "^" << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |";
+	Console::SetConsoleTextWhite();
+	for (int i = 0; i < curtok.location_begin_column - 1; i++)
+		std::cerr << " ";
+	Console::SetConsoleTextRed();
+	std::cerr << message << std::endl;
+	Console::SetConsoleTextBlue();
+	std::cerr << "  |";
+	exit(1);
+}

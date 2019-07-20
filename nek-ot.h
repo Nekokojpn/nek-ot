@@ -20,6 +20,8 @@
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm\Transforms\Utils.h"
+#include "llvm\IR\DIBuilder.h"
 
 #include <windows.h>				//Using at Console class
 #include <cctype>
@@ -117,6 +119,8 @@ typedef struct {
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, int line, int column);
 
+void init_parse();
+AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);
 
 
 class Console {
@@ -151,6 +155,7 @@ enum class BOp {
 	NotEqual
 };
 enum class AType { //ArgType
+	Nop,
 	Int,
 	Float,
 	Double,
@@ -173,13 +178,19 @@ public:
 class ASTIdentifier : public AST {
 public:
 	std::string name;
-	ASTIdentifier(std::string& _name) : name(_name) {};
+	ASTIdentifier(const std::string& _name) : name(_name) {};
 	Value* codegen() override;
 };
 class ASTValue : public AST {
 public:
 	int value;
 	ASTValue(int _value) : value(_value) {};
+	Value* codegen() override;
+};
+class ASTStrLiteral : public AST {
+public:
+	std::string value;
+	ASTStrLiteral(std::string _value) : value(_value) {};
 	Value* codegen() override;
 };
 class ASTBinOp : public AST {
@@ -190,6 +201,8 @@ public:
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
 	Value* codegen() override;
 };
+
+
 class ASTBoolOp : public AST {
 public:
 	std::unique_ptr<AST> lhs;
@@ -216,7 +229,7 @@ public:
 class ASTRet : public AST {
 public:
 	RType ret_type;
-	std::unique_ptr<ASTIdentifier> identifier;
+	std::unique_ptr<AST> expr_p;
 	ASTRet(RType _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
 	Type* codegen1();
@@ -235,6 +248,13 @@ public:
 	std::unique_ptr<ASTProto> proto;
 	std::vector<std::unique_ptr<AST>> body;
 	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
+};
+class ASTCall : public AST {
+public:
+	std::string name;
+	std::vector<std::unique_ptr<AST>> args_expr;
+	ASTCall(std::string _name, std::vector<std::unique_ptr<AST>> _args_expr) : name(_name), args_expr(std::move(_args_expr)) {};
 	Value* codegen() override;
 };
 class ASTElse : public AST {
@@ -274,13 +294,22 @@ class Parser {
 	std::unique_ptr<AST> expr_add();
 	std::unique_ptr<AST> expr_mul();
 	std::unique_ptr<AST> expr_primary();
+
+	std::unique_ptr<AST> expr_str();
+	std::unique_ptr<AST> expr_add_str();
+	std::unique_ptr<AST> expr_mul_str();
+	std::unique_ptr<AST> expr_primary_str();
+
 	std::unique_ptr<ASTInt> def_int();
+	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
+	std::unique_ptr<ASTCall> func_call(const std::string& _id);
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
 	std::unique_ptr<ASTWhile> while_statement();
-	std::unique_ptr<ASTSubst> subst_expr();
+	std::unique_ptr<AST> expr_identifier();
+	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
 	//-----> LLVM functions
 
@@ -294,5 +323,6 @@ public:
 	void parse_codegen();
 	void dump();
 	static RType getTypeByName(std::string _name);
-	void init_parse();
+    RType getRTypeByCurtok();
+	AType getATypeByCurtok();
 };

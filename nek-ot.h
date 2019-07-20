@@ -78,6 +78,7 @@ enum class TK {
 	tok_em = 314, // !
 	tok_emeq = 315, //!=
 	tok_comma = 316, // ,
+	tok_under = 317, // _
 
 	// operator
 	tok_plus = 400,
@@ -96,7 +97,10 @@ class Sys {
 public:
 	class IO {
 	public:
-		static void CreateFunc();
+		class OutPuti8Ptr {
+		public:
+			static void CreateFunc();
+		};
 	};
 };
 
@@ -222,8 +226,8 @@ public:
 class ASTString : public AST {
 public:
 	std::string name;
-	std::unique_ptr<AST> expr_str;
-	ASTString(std::string _name, std::unique_ptr<AST> _expr_str) : name(_name), expr_str(std::move(_expr_str)) {};
+	std::unique_ptr<ASTStrLiteral> expr_str;
+	ASTString(std::string _name, std::unique_ptr<ASTStrLiteral> _expr_str) : name(_name), expr_str(std::move(_expr_str)) {};
 	Value* codegen() override;
 };
 class ASTRet : public AST {
@@ -295,10 +299,7 @@ class Parser {
 	std::unique_ptr<AST> expr_mul();
 	std::unique_ptr<AST> expr_primary();
 
-	std::unique_ptr<AST> expr_str();
-	std::unique_ptr<AST> expr_add_str();
-	std::unique_ptr<AST> expr_mul_str();
-	std::unique_ptr<AST> expr_primary_str();
+	std::unique_ptr<ASTStrLiteral> expr_str();
 
 	std::unique_ptr<ASTInt> def_int();
 	std::unique_ptr<ASTString> def_string();
@@ -316,8 +317,8 @@ class Parser {
 	//<-----
 	
 	
-	bool consume(TK tk);
-	void Parser::getNextToken();
+	bool consume(TK tk) noexcept;
+	void Parser::getNextToken() noexcept;
 public:
 	Parser(std::vector<Token_t> _tokens);
 	void parse_codegen();

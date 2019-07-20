@@ -1,7 +1,7 @@
 #include "nek-ot.h"
 
 //Read forward if the next token is expected.
-bool Parser::consume(TK tk) {
+bool Parser::consume(TK tk) noexcept {
 	if (tokens[index].ty == tk)
 	{
 		getNextToken();
@@ -10,7 +10,7 @@ bool Parser::consume(TK tk) {
 	return false;
 }
 //set the next token to curtok.
-void Parser::getNextToken() {
+void Parser::getNextToken() noexcept {
 	curtok = tokens[++index];
 }
 //get RType from curtok.
@@ -134,77 +134,18 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	
 }
 
-std::unique_ptr<AST> Parser::expr_str() {
-
-	std::unique_ptr<AST> ast = expr_add_str();
-	return ast;
-}
-std::unique_ptr<AST> Parser::expr_add_str() {
-	auto lhs = expr_mul_str();
-	while (true) {
-		Op op;
-		if (consume(TK::tok_plus)) {
-			op = Op::Plus;
-		}
-		else if (consume(TK::tok_minus)) {
-			op = Op::Minus;
-		}
-		else {
-			break;
-		}
-		auto rhs = expr_mul();
-		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
-	}
-	return std::move(lhs);
-}
-std::unique_ptr<AST> Parser::expr_mul_str() {
-	auto lhs = expr_primary_str();
-	while (true) {
-		Op op;
-		if (consume(TK::tok_star)) {
-			op = Op::Mul;
-		}
-		else if (consume(TK::tok_slash)) {
-			op = Op::Div;
-		}
-		else {
-			break;
-		}
-		auto rhs = expr_primary();
-		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
-	}
-	return std::move(lhs);
-}
-std::unique_ptr<AST> Parser::expr_primary_str() {
-
-	if (curtok.ty == TK::tok_str_string) {
-		auto value = std::make_unique<ASTStrLiteral>(curtok.val);
-		getNextToken(); //eat num
-		return std::move(value);
-	}
-	else if (curtok.ty == TK::tok_identifier) {
-		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
-		getNextToken();
-		if (curtok.ty == TK::tok_lp) { //Function call.
-			auto funccall = func_call(identifier->name);
-			return std::move(funccall);
-		}
-		return std::move(identifier);
-	}
-	else if (curtok.ty == TK::tok_lp) {
-		getNextToken();
-		auto ast = expr_str();
-		if (curtok.ty == TK::tok_rp)
-		{
-			getNextToken();
-			return std::move(ast);
-		}
-
-		error("Expected", "Expected --> )", curtok);
-	}
-	error("Unexpected", "must be a number.", curtok);
-	exit(1);
-
+std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
+	if (curtok.ty != TK::tok_dq)
+		error("Unexpected", "Unexpected token --> "+curtok.val, curtok);
+	getNextToken();
+	if(curtok.ty != TK::tok_str_string)
+		error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+	auto ast = std::make_unique<ASTStrLiteral>(curtok.val);
+	getNextToken();
+	if(curtok.ty != TK::tok_dq)
+		error("Expected", "Expected token --> \"", curtok);
+	getNextToken();
+	return std::move(ast);
 }
 
 std::unique_ptr<ASTInt> Parser::def_int() {

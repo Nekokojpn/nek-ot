@@ -52,9 +52,16 @@ TK gettoken() {
 	if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
 		cs = cc;
 		get_char();
-		while (isalnum(cc)) {
-			cs += cc;
-			get_char();
+		while (true) {
+			while (isalnum(cc)) {
+				cs += cc;
+				get_char();
+			}
+			if (cc == '_') {
+				cs += cc;
+				get_char();
+			}
+			else break;
 		}
 		if (isdq_started) {
 			while (cc != '\"' && cc != '\0') {
@@ -181,7 +188,7 @@ TK gettoken() {
 			return TK::tok_em;
 		}
 		if (cc == ',')	return TK::tok_comma;
-
+		if (cc == '_')	return TK::tok_under;
 	}
 	std::string s = "";
 	s += cc;

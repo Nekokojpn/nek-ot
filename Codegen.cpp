@@ -13,7 +13,7 @@ static std::map<std::string, AllocaInst*> namedvalues_local;
 
 
 
-void Sys::IO::CreateFunc() {
+void Sys::IO::OutPuti8Ptr::CreateFunc() {
 	//puts --標準出力
 	std::vector<Type*> putsArgs;
 	putsArgs.push_back(builder.getInt8Ty()->getPointerTo());
@@ -56,7 +56,10 @@ RType Parser::getTypeByName(std::string _name) { //INTのみ戻り値。
 Value* ASTIdentifier::codegen() { //globalとlocalの区別なし.
 	auto value = namedvalues_local[name];
 	if (!value) {
-		error("Unsolved value name", "Unsolved value name", 0, 0);
+		auto global = namedvalues_global[name];
+		if(!global)
+			error("Unsolved value name", "Unsolved value name", 0, 0);
+		return global;
 	}
 	return builder.CreateLoad(value, name);
 	//return value;
@@ -66,9 +69,6 @@ Value* ASTValue::codegen() {
 	return builder.getInt32(value);
 }
 
-Value* ASTStrLiteral::codegen() {
-	return nullptr;
-}
 
 Value* ASTBinOp::codegen() {
 	Value* l = lhs->codegen();
@@ -173,7 +173,8 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	//fpm->run(*curfunc);
+	fpm->run(*curfunc);
+
 	namedvalues_local.clear();
 
 	return pr;
@@ -323,7 +324,13 @@ Value* ASTRet::codegen() {
 	codegen1();
 	return nullptr;
 }
+Value* ASTStrLiteral::codegen() {
+	return builder.CreateGlobalStringPtr(value);
+}
 Value* ASTString::codegen() {
-	return nullptr;
+	auto str = expr_str->value;
+	auto ptr = builder.CreateGlobalStringPtr(str, name);
+	namedvalues_global[name] = ptr;
+	return ptr;
 }
 

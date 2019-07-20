@@ -4,10 +4,12 @@
 LLVMContext context;
 IRBuilder<> builder(context);
 std::unique_ptr<Module> module;
+std::unique_ptr<DIBuilder> dbuilder;
+std::unique_ptr<legacy::FunctionPassManager> fpm;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, Value*> namedvalues_global;
-static std::map<std::string, Value*> namedvalues_local;
+static std::map<std::string, AllocaInst*> namedvalues_local;
 
 
 
@@ -28,10 +30,22 @@ Function* curfunc;
 BasicBlock* curbb;
 
 
-void Parser::init_parse() {
+void init_parse() {
 	module = make_unique<Module>("top", context);
+	fpm = llvm::make_unique<legacy::FunctionPassManager>(module.get());
+	fpm->add(createPromoteMemoryToRegisterPass());
+	fpm->add(createInstructionCombiningPass());
+	fpm->add(createReassociatePass());
+	fpm->add(createGVNPass());
+	fpm->add(createCFGSimplificationPass());
 	
+	fpm->doInitialization();
 }
+AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) {
+	IRBuilder<> tmpB(&function->getEntryBlock(), function->getEntryBlock().begin());
+	return tmpB.CreateAlloca(Type::getInt32Ty(context), nullptr, name.c_str());
+}
+
 void Parser::dump() {
 	module->dump();
 }
@@ -41,13 +55,19 @@ RType Parser::getTypeByName(std::string _name) { //INTÇÃÇ›ñﬂÇËílÅB
 
 Value* ASTIdentifier::codegen() { //globalÇ∆localÇÃãÊï Ç»Çµ.
 	auto value = namedvalues_local[name];
-	if (!value)
+	if (!value) {
 		error("Unsolved value name", "Unsolved value name", 0, 0);
-	return builder.CreateLoad(value);
+	}
+	return builder.CreateLoad(value, name);
+	//return value;
 }
 
 Value* ASTValue::codegen() {
 	return builder.getInt32(value);
+}
+
+Value* ASTStrLiteral::codegen() {
+	return nullptr;
 }
 
 Value* ASTBinOp::codegen() {
@@ -96,6 +116,7 @@ Value* ASTInt::codegen() {
 	if (!value)
 		return nullptr;
 	auto val = builder.CreateAlloca(builder.getInt32Ty());
+	//auto val = createEntryBlockAlloca(curfunc, name);
 	builder.CreateStore(value,val);
 	namedvalues_local[name] = val;
 	//builder.CreateStore(value, builder.CreateAlloca(builder.getInt32Ty()));
@@ -110,7 +131,7 @@ Value* ASTProto::codegen() {
 	}
 	ArrayRef<Type*>  argsRef(putsArgs);
 	
-	Type* ty;
+	Type* ty = builder.getVoidTy();
 	if (ret == RType::Int)
 		ty = builder.getInt32Ty();
 	else if (ret == RType::Void)
@@ -118,7 +139,7 @@ Value* ASTProto::codegen() {
 	Function* mainFunc =
 		Function::Create(FunctionType::get(ty,argsRef,false),
 			Function::ExternalLinkage, name, module.get());
-	curfunc = mainFunc;
+	
 	if (name == "main") {
 		curbb = BasicBlock::Create(context, "entry", mainFunc);
 		builder.SetInsertPoint(curbb);
@@ -127,19 +148,45 @@ Value* ASTProto::codegen() {
 		curbb = BasicBlock::Create(context, "", mainFunc);
 		builder.SetInsertPoint(curbb);
 	}
+	
+	unsigned idx = 0;
+	for (auto& arg : mainFunc->args())
+		arg.setName(identifier[idx++]);
+		
+	for (auto& arg : mainFunc->args()) {
+		//auto* alloca = createEntryBlockAlloca(mainFunc, arg.getName());
+		//DILocalVariable *di = dbuilder->createParameterVariable
+		auto alloca = builder.CreateAlloca(Type::getInt32Ty(context));
+		builder.CreateStore(&arg, alloca);
+		namedvalues_local[arg.getName()] = alloca;
+	}
+
+	curfunc = mainFunc;
+	functions_global[name] = mainFunc;
+	
+	
 	return nullptr;
 }
 Value* ASTFunc::codegen() {
 	auto pr = proto->codegen(); //Proto
+	
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	//retast->codegen1();
+	//fpm->run(*curfunc);
+	namedvalues_local.clear();
 
-//	if (curfunc->getReturnType() != retast->codegen1())
-	//	error("Code generation failed", "unexpected ret type",0,0);
 	return pr;
 }
+Value* ASTCall::codegen() {
+	std::vector<Value*> types;
+	for (int i = 0; i < args_expr.size(); i++) {
+		types.push_back(args_expr[i]->codegen());
+	}
+	ArrayRef<Value*> argsRef(types);
+	return builder.CreateCall(functions_global[name], argsRef,"calltmp");
+}
+
 Value* ASTElse::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
@@ -210,8 +257,6 @@ Value* ASTIf::codegen() {
 	}
 }
 Value* ASTWhile::codegen() {
-	
-
 	BasicBlock* while_block = BasicBlock::Create(context, "while_block", curfunc);
 	BasicBlock* body_block = BasicBlock::Create(context, "body_block", curfunc);
 	BasicBlock* cont_block = BasicBlock::Create(context, "cont", curfunc);
@@ -237,6 +282,10 @@ Value* ASTSubst::codegen() {
 	return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
 }
 Type* ASTRet::codegen1() {
+	if (expr_p)
+		builder.CreateRet(expr_p->codegen());
+	else builder.CreateRetVoid();
+	/*
 	if(ret_type == RType::Nop)
 		ret_type = Parser::getTypeByName(identifier->name);
 	if (ret_type == RType::Void) {
@@ -267,9 +316,14 @@ Type* ASTRet::codegen1() {
 	}
 	else
 		error("Unexpected token -->", "", 0, 0);
+		*/
 	return nullptr;
 }
 Value* ASTRet::codegen() {
 	codegen1();
 	return nullptr;
 }
+Value* ASTString::codegen() {
+	return nullptr;
+}
+

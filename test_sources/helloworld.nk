@@ -1,0 +1,5 @@
+fn main() -> void {
+	string str = "Hello nek-ot!";
+	puts(str);
+	ret;
+}

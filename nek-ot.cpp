@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-	if (load_source("./test_sources/while.nk") == 1)
+	if (load_source("./test_sources/helloworld.nk") == 1)
 		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	t.loc = locs[i];
     tytokens.push_back(t);
 #ifdef  HIGH_DEBUGG
-	std::cout  << (int)tokens[i] << " " << literals[i] << locs[i].location_begin_line << ":" << locs[i].location_begin_column << std::endl;
+	std::cout  << (int)tokens[i] << " " << literals[i] << "   " << locs[i].location_begin_line << ":" << locs[i].location_begin_column << std::endl;
 #endif //  HIGHDEBUGG
   }
   Token_t t;
@@ -68,8 +68,7 @@ int main(int argc, char** argv) {
   auto parser = Parser(tytokens);
   init_parse();
   
- Sys::IO::CreateFunc();
-
+ Sys::IO::OutPuti8Ptr::CreateFunc();
 
   parser.parse_codegen();
   

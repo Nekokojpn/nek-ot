@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	t.loc = locs[i];
     tytokens.push_back(t);
 #ifdef  HIGH_DEBUGG
-	std::cout  << (int)tokens[i] << " " << literals[i] << "   " << locs[i].location_begin_line << ":" << locs[i].location_begin_column << std::endl;
+	std::cout  << locs[i].location_begin_line << ":" << locs[i].location_begin_column << "     " << (int)tokens[i] << " " << literals[i] << "   " << std::endl;
 #endif //  HIGHDEBUGG
   }
   Token_t t;

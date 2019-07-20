@@ -16,11 +16,6 @@ extern std::vector<Location_t> locs;
 int pos = 0;
 int curtok = 0;
 
-
-static TK RetType; //戻り値の型
-std::stack<TK> stack;
-
-bool isinFunc = false;
 //<-----
 
 //Common Funcs----->
@@ -71,7 +66,7 @@ int main(int argc, char** argv) {
 #endif
   // Parser--->  
   auto parser = Parser(tytokens);
-  parser.init_parse();
+  init_parse();
   
  Sys::IO::CreateFunc();
 

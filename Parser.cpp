@@ -135,16 +135,37 @@ std::unique_ptr<AST> Parser::expr_primary() {
 }
 
 std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
-	if (curtok.ty != TK::tok_dq)
+	if (curtok.ty != TK::tok_dq && curtok.ty != TK::tok_num_int)
 		error("Unexpected", "Unexpected token --> "+curtok.val, curtok);
-	getNextToken();
-	if(curtok.ty != TK::tok_str_string)
-		error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
-	auto ast = std::make_unique<ASTStrLiteral>(curtok.val);
-	getNextToken();
-	if(curtok.ty != TK::tok_dq)
-		error("Expected", "Expected token --> \"", curtok);
-	getNextToken();
+	if(curtok.ty == TK::tok_dq)
+		getNextToken();
+	std::string str = "";
+	while (true) {
+		if (curtok.ty != TK::tok_str_string && curtok.ty != TK::tok_num_int)
+			error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+		if(curtok.ty == TK::tok_str_string)
+			str += curtok.val;
+		else if (curtok.ty == TK::tok_num_int) {
+			str += curtok.val;
+			/*
+			getNextToken();
+			if (curtok.ty != TK::tok_dot)
+				error("There must be no such like:", "num type and string type can not be combined.",curtok);
+			getNextToken();
+			if(curtok.ty != )
+			*/
+		}
+		getNextToken();
+		if (curtok.ty != TK::tok_dq)
+			error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+		getNextToken();
+		if (curtok.ty == TK::tok_plus) {
+			getNextToken();
+			continue;
+		}
+		break;
+	}
+	auto ast = std::make_unique<ASTStrLiteral>(str);
 	return std::move(ast);
 }
 
@@ -194,7 +215,7 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 	auto id = curtok.val;
 	getNextToken();
 	if (curtok.ty == TK::tok_semi) {
-
+		return nullptr;
 	}
 	else if (curtok.ty == TK::tok_equal) {
 		auto ast = subst_expr(id);
@@ -204,6 +225,7 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 		auto ast = func_call(id);
 		return std::move(ast);
 	}
+	return nullptr;
 }
 
 std::unique_ptr<ASTFunc> Parser::def_func() {
@@ -412,9 +434,6 @@ std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id) {
 	}
 	if (curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
-	getNextToken();
-	if (curtok.ty != TK::tok_semi)
-		error("Expected", "Expected --> ;", curtok);
 	auto ast = std::make_unique<ASTCall>(_id, std::move(argsIdentifier));
 	return std::move(ast);
 }

@@ -10,7 +10,8 @@ std::unique_ptr<legacy::FunctionPassManager> fpm;
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, Value*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
-
+Function* curfunc;
+BasicBlock* curbb;
 
 
 void Sys::IO::OutPuti8Ptr::CreateFunc() {
@@ -23,12 +24,44 @@ void Sys::IO::OutPuti8Ptr::CreateFunc() {
 	FunctionCallee putsFunc = module->getOrInsertFunction("puts", putsType);
 	functions_global["puts"] = putsFunc;
 }
+void Sys::Cast::CastInt32toInt8ptr::CreateFunc() {
+	//cast --i32 to i8*
+	std::vector<Type*> putsArgs;
+	putsArgs.push_back(builder.getInt32Ty());
+	ArrayRef<Type*>  argsRef(putsArgs);
 
+	Function* mainFunc =
+		Function::Create(FunctionType::get(builder.getInt8Ty()->getPointerTo(), argsRef, false),
+			Function::ExternalLinkage, "casti32toi8ptr", module.get());
+	curbb = BasicBlock::Create(context, "", mainFunc);
+	builder.SetInsertPoint(curbb);
+	for (auto& arg : mainFunc->args()) {
+		builder.CreateRet(builder.CreateIntToPtr(builder.CreateTruncOrBitCast(&arg, builder.getInt8Ty()), builder.getInt8Ty()->getPointerTo()));
+		break;
+	}
+	//fpm->run(*mainFunc);
+	functions_global["casti32toi8ptr"] = mainFunc;
+}
+void Sys::Cast::CastInt32toInt8Array::CreateFunc() {
+	//cast --i32 to i8[]
+	/*
+	std::vector<Type*> putsArgs;
+	putsArgs.push_back(builder.getInt32Ty());
+	ArrayRef<Type*>  argsRef(putsArgs);
 
-
-Function* curfunc;
-BasicBlock* curbb;
-
+	Function* mainFunc =
+		Function::Create(FunctionType::get(builder.getInt8Ty()->getArrayElementType(), argsRef, false),
+			Function::ExternalLinkage, "casti32toi8array", module.get());
+	curbb = BasicBlock::Create(context, "", mainFunc);
+	builder.SetInsertPoint(curbb);
+	for (auto& arg : mainFunc->args()) {
+		builder.CreateRet(builder.CreateIntCast(&arg.getType(), builder.getInt8Ty()->getArrayElementType()));
+		break;
+	}
+	fpm->run(*mainFunc);
+	functions_global["casti32toi8array"] = mainFunc;
+	*/
+}
 
 void init_parse() {
 	module = make_unique<Module>("top", context);
@@ -118,7 +151,7 @@ Value* ASTInt::codegen() {
 	auto val = builder.CreateAlloca(builder.getInt32Ty());
 	//auto val = createEntryBlockAlloca(curfunc, name);
 	builder.CreateStore(value,val);
-	namedvalues_local[name] = val;
+	namedvalues_local[name] = val; 
 	//builder.CreateStore(value, builder.CreateAlloca(builder.getInt32Ty()));
 	return value;
 }

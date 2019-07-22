@@ -14,6 +14,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
@@ -79,6 +80,7 @@ enum class TK {
 	tok_emeq = 315, //!=
 	tok_comma = 316, // ,
 	tok_under = 317, // _
+	tok_dot = 318,
 
 	// operator
 	tok_plus = 400,
@@ -98,6 +100,17 @@ public:
 	class IO {
 	public:
 		class OutPuti8Ptr {
+		public:
+			static void CreateFunc();
+		};
+	};
+	class Cast {
+	public:
+		class CastInt32toInt8ptr {
+		public:
+			static void CreateFunc();
+		};
+		class CastInt32toInt8Array {
 		public:
 			static void CreateFunc();
 		};

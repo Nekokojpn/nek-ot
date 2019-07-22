@@ -189,6 +189,7 @@ TK gettoken() {
 		}
 		if (cc == ',')	return TK::tok_comma;
 		if (cc == '_')	return TK::tok_under;
+		if (cc == '.')	return TK::tok_dot;
 	}
 	std::string s = "";
 	s += cc;

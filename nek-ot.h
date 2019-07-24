@@ -284,7 +284,7 @@ class ASTIf : public AST {
 public:
 	std::unique_ptr<AST> proto; //BoolOp
 	std::vector<std::unique_ptr<AST>> body;
-	std::vector<std::unique_ptr<ASTIf>> ast_elif;
+	std::unique_ptr<ASTIf> ast_elif;
 	std::unique_ptr<ASTElse> ast_else;
 	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;

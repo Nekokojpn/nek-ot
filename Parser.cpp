@@ -339,15 +339,16 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 	if(curtok.ty != TK::tok_elif&&curtok.ty != TK::tok_else)
 		return std::move(ast);
 	//ELIF or ELSE----->
-	while (curtok.ty == TK::tok_elif) { //ELIF
-		ast->ast_elif.push_back(std::move(bool_statement()));
-		getNextToken();
+	if (curtok.ty == TK::tok_elif) { //ELIF
+		ast->ast_elif = std::move(bool_statement());
+		return std::move(ast);
 	}
-	if(curtok.ty == TK::tok_else) { //ELSE
+	else if(curtok.ty == TK::tok_else) { //ELSE
 		getNextToken();
 		ast->ast_else = std::make_unique<ASTElse>(expr_block());
+		return std::move(ast);
 	}
-	return std::move(ast);
+	error("Unexpected", "Unexpected token--> " + curtok.val, curtok);
 }
 
 std::unique_ptr<AST> Parser::bool_expr() {
@@ -435,6 +436,7 @@ std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id) {
 	if (curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
 	auto ast = std::make_unique<ASTCall>(_id, std::move(argsIdentifier));
+	getNextToken();
 	return std::move(ast);
 }
 std::unique_ptr<ASTRet> Parser::def_ret() {

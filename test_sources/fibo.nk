@@ -2,10 +2,11 @@ fn fibo(int n) -> int{
  if(n < 2){
   ret n;
  }
- int i1 = fibo(n-1);
- int i2 = fibo(n-2);
- ret i1+i2;
- 
+ else{
+  int i1 = fibo(n-1) + fibo(n-2);
+  ret i1;
+ }
+ ret n;
 }
 fn main() -> int{
  int i = fibo(34);

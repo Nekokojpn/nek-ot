@@ -29,7 +29,6 @@ void Sys::Cast::CastInt32toInt8ptr::CreateFunc() {
 	std::vector<Type*> putsArgs;
 	putsArgs.push_back(builder.getInt32Ty());
 	ArrayRef<Type*>  argsRef(putsArgs);
-
 	Function* mainFunc =
 		Function::Create(FunctionType::get(builder.getInt8Ty()->getPointerTo(), argsRef, false),
 			Function::ExternalLinkage, "casti32toi8ptr", module.get());
@@ -91,10 +90,10 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 	if (!value) {
 		auto global = namedvalues_global[name];
 		if(!global)
-			error("Unsolved value name", "Unsolved value name", 0, 0);
+			error("Unsolved value name", "Unsolved value name --> "+name, 0, 0);
 		return global;
 	}
-	return builder.CreateLoad(value, name);
+	return builder.CreateLoad(value);
 	//return value;
 }
 
@@ -206,7 +205,7 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	fpm->run(*curfunc);
+	//fpm->run(*curfunc);
 
 	namedvalues_local.clear();
 
@@ -234,15 +233,15 @@ Value* ASTIf::codegen() {
 		return nullptr;
 
 	std::vector<BasicBlock*> blocks;
-	BasicBlock* if_block = BasicBlock::Create(context,"if_block",curfunc);
+	BasicBlock* if_block = BasicBlock::Create(context,"",curfunc);
 	builder.SetInsertPoint(if_block);
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
 	blocks.push_back(if_block);
 	builder.SetInsertPoint(curbb);
-	if (ast_elif.size() == 0 && ast_else == nullptr) {
-		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
+	if (ast_elif == nullptr && ast_else == nullptr) {
+		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
 		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
@@ -254,38 +253,45 @@ Value* ASTIf::codegen() {
 		return cont;
 	}
 	else {
-		
-		if (ast_elif.size() != 0) {
-			for (int i = 0; i < ast_elif.size(); i++) {
-				BasicBlock* elif_block = BasicBlock::Create(context, "elif_block", curfunc);
-				auto branch = builder.CreateCondBr(astboolop, if_block, elif_block);
+		//elif ‚ª‘¶Ý‚·‚é.
+		if (ast_elif != nullptr) {
+			BasicBlock* elif_block = BasicBlock::Create(context, "", curfunc);
+			builder.CreateCondBr(astboolop, if_block, elif_block);
+
+			builder.SetInsertPoint(elif_block);
+			curbb = elif_block;
+			//builder.CreateCondBr(ast_elif->proto->codegen(), if_block, elif_block);
+			ast_elif->codegen();
+			/*
+			if (ast_elif[i]->ast_else) {
+				BasicBlock* else_block = BasicBlock::Create(context, "else_block", curfunc);
+				auto branch = builder.CreateCondBr(astboolop, if_block, else_block);
+				builder.SetInsertPoint(else_block);
+				curbb = else_block;
+				ast_elif[i]->ast_else->codegen();
+				blocks.push_back(else_block);
 				builder.SetInsertPoint(elif_block);
-				curbb = elif_block;
-				
-				builder.CreateCondBr(ast_elif[i]->proto->codegen(), if_block, elif_block);
-				for (int j = 0; j < ast_elif[i]->body.size(); j++) {
-					ast_elif[i]->body[j]->codegen();
-					if (ast_elif[i]->ast_else) {
-						BasicBlock* else_block = BasicBlock::Create(context, "else_block", curfunc);
-						auto branch = builder.CreateCondBr(astboolop, if_block, else_block);
-						builder.SetInsertPoint(else_block);
-						curbb = else_block;
-						ast_elif[i]->ast_else->codegen();
-						blocks.push_back(else_block);
-						builder.SetInsertPoint(elif_block);
-					}
-				}
-				blocks.push_back(elif_block);
 			}
+			*/
+			blocks.push_back(elif_block);
+			
 		}
-		auto cont = BasicBlock::Create(context, "cont", curfunc);
-		if (ast_elif.size() != 0) {
-			for (int i = 0; i < blocks.size(); i++) {
-				builder.SetInsertPoint(blocks[i]);
-				curbb = blocks[i];
-				builder.CreateBr(cont);
-			}
+		if (ast_else != nullptr) {
+			BasicBlock* else_block = BasicBlock::Create(context, "", curfunc);
+			builder.CreateCondBr(astboolop, curbb, else_block);
+
+			builder.SetInsertPoint(else_block);
+			curbb = else_block;
+			ast_else->codegen();
+			blocks.push_back(else_block);
 		}
+		auto cont = BasicBlock::Create(context, "", curfunc);
+		for (int i = 0; i < blocks.size(); i++) {
+			builder.SetInsertPoint(blocks[i]);
+			curbb = blocks[i];
+			builder.CreateBr(cont);
+		}
+		
 		builder.SetInsertPoint(cont);
 		return cont; //—vŒŸ“¢
 	}

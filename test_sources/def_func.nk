@@ -1,10 +1,7 @@
-fn main() -> void { 
+fn main() -> int { 
 	int testMulExpr = (3+3)*(1+5); 
 	int testExpr = 3*3+1; 
 	int i = testMulExpr + 12; 
 	int m = (testMulExpr + i) * testExpr;
 	ret m;
 } 
-fn sub() -> void { 
-	
-}

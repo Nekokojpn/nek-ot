@@ -1,7 +1,5 @@
 fn main() -> void {
-	string str = "Hello nek-ot!";
+	string str = "Hello_nek-ot!";
 	puts(str);
-	int i = 32;
-	puts(casti32toi8ptr(i));
 	ret;
 }

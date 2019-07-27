@@ -61,6 +61,7 @@ enum class TK {
 	tok_long = 106,
 	tok_char = 107,
 	tok_string = 108,
+	tok_int_arr = 109,
 
 	tok_num_int = 200,
 	tok_num_double = 201,
@@ -85,6 +86,8 @@ enum class TK {
 	tok_comma = 316, // ,
 	tok_under = 317, // _
 	tok_dot = 318,
+	tok_lpb = 319, // [
+	tok_rpb = 320, // ]
 
 	// operator
 	tok_plus = 400,
@@ -245,6 +248,13 @@ public:
 	ASTInt(std::string _name, std::unique_ptr<AST> _expr_p) : name(_name), expr_p(std::move(_expr_p)) {};
 	Value* codegen() override;
 };
+class ASTIntArray : public AST {
+public:
+	std::string name;
+	std::unique_ptr<AST> expr_obj;
+	ASTIntArray(std::string _name, std::unique_ptr<AST> _expr_obj) : name(_name), expr_obj(std::move(_expr_obj)) {};
+	Value* codegen() override;
+};
 class ASTString : public AST {
 public:
 	std::string name;
@@ -324,6 +334,7 @@ class Parser {
 	std::unique_ptr<ASTStrLiteral> expr_str();
 
 	std::unique_ptr<ASTInt> def_int();
+	std::unique_ptr<ASTIntArray> def_int_arr();
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
 	std::unique_ptr<ASTCall> func_call(const std::string& _id);

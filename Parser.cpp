@@ -335,7 +335,7 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 		error("Expected", "Expected --> }", curtok);
 	getNextToken();
 	//<-----IF
-	/*		IF‚µ‚©‚È‚¢ê‡return		*/
+	/*		IF‚µ‚©‚È‚¢		*/
 	if(curtok.ty != TK::tok_elif&&curtok.ty != TK::tok_else)
 		return std::move(ast);
 	//ELIF or ELSE----->

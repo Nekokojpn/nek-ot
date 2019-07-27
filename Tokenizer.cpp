@@ -61,6 +61,25 @@ TK gettoken() {
 				cs += cc;
 				get_char();
 			}
+			if (cc == '[') {
+				get_char();
+				if (cc == ']') {
+					undo_char();
+					undo_char();
+					get_char();
+					cs += cc;
+					get_char();
+					cs += cc;
+					get_char();
+				}
+				else {
+					undo_char();
+					//get_char();
+					undo_char();
+					get_char();
+					break;
+				}
+			}
 			else break;
 		}
 		if (isdq_started) {
@@ -79,6 +98,7 @@ TK gettoken() {
 		addToliteral();
 		if (cs == "fn") { addToloc(cs.length()); return TK::tok_fn; }
 		else if (cs == "int") { addToloc(cs.length()); return TK::tok_int; }
+		else if (cs == "int[]") { addToloc(cs.length()); return TK::tok_int_arr; }
 		else if (cs == "void") { addToloc(cs.length()); return TK::tok_void; }
 		else if (cs == "ret") { addToloc(cs.length()); return TK::tok_ret; }
 		else if (cs == "float") { addToloc(cs.length()); return TK::tok_float; }
@@ -190,6 +210,8 @@ TK gettoken() {
 		if (cc == ',')	return TK::tok_comma;
 		if (cc == '_')	return TK::tok_under;
 		if (cc == '.')	return TK::tok_dot;
+		if (cc == '[')	return TK::tok_lpb;
+		if (cc == ']')	return TK::tok_rpb;
 	}
 	std::string s = "";
 	s += cc;

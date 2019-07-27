@@ -1,7 +1,8 @@
-fn main() -> void{
+fn main() -> int{
 	int a = 3+3;
 	if(a < 7){
 		int b = 3*3;
 	}
 	int d = 2*2;
+	ret d;
 }

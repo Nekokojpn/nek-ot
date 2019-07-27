@@ -12,7 +12,11 @@ static std::map<std::string, Value*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 Function* curfunc;
 BasicBlock* curbb;
+bool isRetcodegen = false;
 
+Module* getModule() {
+	return module.get();
+}
 
 void Sys::IO::OutPuti8Ptr::CreateFunc() {
 	//puts --•W€o—Í
@@ -60,6 +64,131 @@ void Sys::Cast::CastInt32toInt8Array::CreateFunc() {
 	fpm->run(*mainFunc);
 	functions_global["casti32toi8array"] = mainFunc;
 	*/
+}
+void Sys::IO::Printf::CreateFunc() {
+	// create function
+	llvm::Function* func;
+	{
+		// void writefln(const char*, ...)
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		bool is_var_args = true;
+		func = Function::Create(
+			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "writefln", module.get());
+		func->setCallingConv(llvm::CallingConv::C);
+	}
+	llvm::Argument* args_[1];
+	assert(func->arg_size() == 1);
+	int i = 0;
+	for (llvm::Function::arg_iterator itr = func->arg_begin(); itr != func->arg_end(); itr++) {
+		args_[i++] = itr;
+	}
+
+	llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "", func);
+	builder.SetInsertPoint(entry);
+	functions_global["writefln"] = func;
+
+	// declare wvsprintfA
+	llvm::Function* wvsprintf_func;
+	{
+		// int32 wvsprintfA(char*, const char*, va_list)
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		args.push_back(builder.getInt8PtrTy());
+		args.push_back(builder.getInt8PtrTy());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
+		wvsprintf_func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "wvsprintfA", module.get());
+		wvsprintf_func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["wvsprintfA"] = wvsprintf_func;
+	// declare GetStdHandle
+	llvm::Function* getstdhandle_func;
+	{
+		// void* GetStdHandle(uint32)
+		llvm::FunctionType* func_type = llvm::FunctionType::get(
+			builder.getInt8PtrTy(), llvm::ArrayRef<llvm::Type*>{builder.getInt32Ty()}, false);
+		getstdhandle_func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "GetStdHandle", module.get());
+		getstdhandle_func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["GetStdHandle"] = getstdhandle_func;
+	// declare WriteConsoleA
+	llvm::Function* writeconsolea_func;
+	{
+		// int32 WriteConsoleA(void*, const char*, uint32, uint32*, void*)
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		args.push_back(builder.getInt8PtrTy());
+		args.push_back(builder.getInt32Ty());
+		args.push_back(builder.getInt32Ty()->getPointerTo());
+		args.push_back(builder.getInt8PtrTy());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(
+			builder.getInt32Ty(), args, false);
+		writeconsolea_func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "WriteConsoleA", module.get());
+		writeconsolea_func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["WriteConsoleA"] = writeconsolea_func;
+	// char buf[256];
+	llvm::Value* buf = builder.CreateAlloca(builder.getInt8Ty(), builder.getInt32(256));
+	// int32 len_out[1];
+	llvm::Value* len_out = builder.CreateAlloca(builder.getInt32Ty());
+	// va_list ap[1];
+	llvm::Value* ap_ = builder.CreateAlloca(builder.getInt8PtrTy());
+	llvm::Value* ap = builder.CreateBitCast(ap_, builder.getInt8PtrTy());
+
+	// va_start(ap);
+	llvm::Function* vastart = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vastart);
+	builder.CreateCall(vastart, ap);
+
+	// len = wvsprintfA(buf, fmt, ap);
+	llvm::Value* len;
+	{
+		std::vector<llvm::Value*> args;
+		args.push_back(buf);
+		args.push_back(args_[0]);
+		args.push_back(builder.CreateLoad(ap_));
+		llvm::CallInst* inst = builder.CreateCall(wvsprintf_func, args);
+		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
+		len = inst;
+	}
+
+	// va_end(ap);
+	llvm::Function* vaend = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vaend);
+	builder.CreateCall(vaend, ap);
+
+	// buf[len++] = '\r';
+	// buf[len++] = '\n';
+	builder.CreateStore(builder.getInt8('\r'), builder.CreateGEP(buf, len));
+	len = builder.CreateAdd(len, builder.getInt32(1));
+	builder.CreateStore(builder.getInt8('\n'), builder.CreateGEP(buf, len));
+	len = builder.CreateAdd(len, builder.getInt32(1));
+
+	// handle = GetStdHandle(-11);//stdout
+	llvm::Value* handle;
+	{
+		llvm::CallInst* inst = builder.CreateCall(getstdhandle_func, builder.getInt32(-11));
+		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
+		handle = inst;
+	}
+
+	// WriteConsoleA(handle, buf, len, len_out, null);
+	{
+		std::vector<llvm::Value*> args;
+		args.push_back(handle);
+		args.push_back(buf);
+		args.push_back(len);
+		args.push_back(len_out);
+		args.push_back(llvm::ConstantPointerNull::getNullValue(builder.getInt8PtrTy()));
+		llvm::CallInst* inst = builder.CreateCall(writeconsolea_func, args);
+		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+
+	// return;
+	builder.CreateRetVoid();
+	fpm->run(*func);
 }
 
 void init_parse() {
@@ -205,7 +334,7 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	//fpm->run(*curfunc);
+	fpm->run(*curfunc);
 
 	namedvalues_local.clear();
 
@@ -233,15 +362,17 @@ Value* ASTIf::codegen() {
 		return nullptr;
 
 	std::vector<BasicBlock*> blocks;
-	BasicBlock* if_block = BasicBlock::Create(context,"",curfunc);
+	BasicBlock* if_block = BasicBlock::Create(context,"if",curfunc);
 	builder.SetInsertPoint(if_block);
+	isRetcodegen = false;
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	blocks.push_back(if_block);
+	if(isRetcodegen)
+		blocks.push_back(if_block);
 	builder.SetInsertPoint(curbb);
 	if (ast_elif == nullptr && ast_else == nullptr) {
-		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
+		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
 		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
@@ -255,7 +386,7 @@ Value* ASTIf::codegen() {
 	else {
 		//elif ‚ª‘¶Ý‚·‚é.
 		if (ast_elif != nullptr) {
-			BasicBlock* elif_block = BasicBlock::Create(context, "", curfunc);
+			BasicBlock* elif_block = BasicBlock::Create(context, "elif", curfunc);
 			builder.CreateCondBr(astboolop, if_block, elif_block);
 
 			builder.SetInsertPoint(elif_block);
@@ -277,15 +408,17 @@ Value* ASTIf::codegen() {
 			
 		}
 		if (ast_else != nullptr) {
-			BasicBlock* else_block = BasicBlock::Create(context, "", curfunc);
+			BasicBlock* else_block = BasicBlock::Create(context, "el", curfunc);
 			builder.CreateCondBr(astboolop, curbb, else_block);
 
 			builder.SetInsertPoint(else_block);
 			curbb = else_block;
+			isRetcodegen = false;
 			ast_else->codegen();
-			blocks.push_back(else_block);
+			if(isRetcodegen)
+				blocks.push_back(else_block);
 		}
-		auto cont = BasicBlock::Create(context, "", curfunc);
+		auto cont = BasicBlock::Create(context, "cont", curfunc);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
 			curbb = blocks[i];

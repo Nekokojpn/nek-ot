@@ -23,6 +23,10 @@
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm\Transforms\Utils.h"
 #include "llvm\IR\DIBuilder.h"
+#include "llvm/Support/TargetRegistry.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
+#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/Bitcode/BitcodeReader.h"
 
 #include <windows.h>				//Using at Console class
 #include <cctype>
@@ -103,6 +107,10 @@ public:
 		public:
 			static void CreateFunc();
 		};
+		class Printf {
+		public:
+			static void CreateFunc();
+		};
 	};
 	class Cast {
 	public:
@@ -139,6 +147,7 @@ void error(std::string title, std::string message, int line, int column);
 void init_parse();
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);
 
+Module* getModule();
 
 class Console {
 public:

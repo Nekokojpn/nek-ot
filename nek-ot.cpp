@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	start = std::chrono::system_clock::now();
 #endif
 #ifdef DEBUGG
-	if (load_source("./test_sources/fibo.nk") == 1)
+	if (load_source(argv[1]) == 1)
 		exit(1);
 #else
   if (load_source(static_cast<std::string>(argv[1])) == 1)
@@ -71,11 +71,32 @@ int main(int argc, char** argv) {
  Sys::IO::OutPuti8Ptr::CreateFunc();
  Sys::Cast::CastInt32toInt8ptr::CreateFunc();
  Sys::Cast::CastInt32toInt8Array::CreateFunc();
+ //Sys::IO::Printf::CreateFunc();
 
   parser.parse_codegen();
   
   std::cout << std::endl;
-
+  /*
+  auto targetTriple = sys::getDefaultTargetTriple();
+  InitializeAllTargetInfos();
+  InitializeAllTargets();
+  InitializeAllTargetMCs();
+  InitializeAllAsmParsers();
+  InitializeAllAsmPrinters();
+  std::string err;
+  auto target = TargetRegistry::lookupTarget(targetTriple, err);
+  auto CPU = "generic";
+  auto features = "";
+  TargetOptions opt;
+  auto rm = Optional<Reloc::Model>();
+  auto targetMachine = target->createTargetMachine(targetTriple, CPU, features, opt, rm);
+  getModule()->setDataLayout(targetMachine->createDataLayout());
+  getModule()->setTargetTriple(targetTriple);
+  */
+  std::error_code ec;
+  raw_fd_ostream os("out.bc", ec, sys::fs::OpenFlags::F_None);
+  WriteBitcodeToFile(*getModule(), os);
+  
 #ifdef DEBUGG
   end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;

@@ -283,6 +283,10 @@ Value* ASTInt::codegen() {
 	//builder.CreateStore(value, builder.CreateAlloca(builder.getInt32Ty()));
 	return value;
 }
+Value* ASTIntArray::codegen() {
+	return nullptr;
+}
+
 Value* ASTProto::codegen() {
 	
 	std::vector<Type*> putsArgs;

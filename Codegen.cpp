@@ -284,6 +284,9 @@ Value* ASTInt::codegen() {
 	return value;
 }
 Value* ASTIntArray::codegen() {
+	auto proto = builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),size));
+	//builder.CreateConstInBoundsGEP1_32(builder.getInt32Ty(), proto,0);
+	//builder.CreateStore(proto->)
 	return nullptr;
 }
 
@@ -338,7 +341,7 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	fpm->run(*curfunc);
+	//fpm->run(*curfunc);
 
 	namedvalues_local.clear();
 

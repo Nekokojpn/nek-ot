@@ -120,12 +120,33 @@ std::unique_ptr<ASTInt> Parser::def_int() {
 }
 std::unique_ptr<ASTIntArray> Parser::def_int_arr() {
 	getNextToken();
-	if (curtok.ty != TK::tok_int_arr)
+	if(curtok.ty != TK::tok_identifier)
 		error("Syntax error", "Unexpected token --> " + curtok.val, curtok);
+	auto name = curtok.val;
 	getNextToken();
 	if (curtok.ty == TK::tok_equal) {
 		getNextToken();
-
+		if (curtok.ty != TK::tok_new)
+			error("", "", curtok);
+		getNextToken();
+		if(curtok.ty != TK::tok_int)
+			error("", "", curtok);
+		getNextToken();
+		if(curtok.ty != TK::tok_lpb)
+			error("", "", curtok);
+		getNextToken();
+		if(curtok.ty != TK::tok_num_int)
+			error("", "", curtok);
+		auto size = std::atoi(curtok.val.c_str());
+		getNextToken();
+		if(curtok.ty != TK::tok_rpb)
+			error("", "", curtok);
+		getNextToken();
+		if(curtok.ty != TK::tok_semi)
+			error("", "", curtok);
+		auto ast = std::make_unique<ASTIntArray>(name, size);
+		getNextToken();
+		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_semi) {
 

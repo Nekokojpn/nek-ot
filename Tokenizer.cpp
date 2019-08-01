@@ -30,6 +30,17 @@ void undo_char() {
 		column = source[line].size() - 1;
 	}
 }
+void skip_line() {
+	while (true) {
+		cc = source[line][column++];
+		if (cc == '\n'  || cc == '\0') {
+			line++;
+			column = 0;
+			cc = source[line][column++];
+			break;
+		}
+	}
+}
 void addToliteral() { literals.push_back(cs); }
 bool compare_cs(const char* str) { return cs == str; };
 void addToloc(int len) {
@@ -173,11 +184,8 @@ TK gettoken() {
 		if (cc == '/') {
 			get_char();
 			if (cc == '/') {
-				get_char();
-				while (cc != '\n' && cc != '\0') {
-					get_char();
-				}
-				return TK::tok_nope;
+				skip_line();
+				return gettoken();
 			}
 			else {
 				undo_char();

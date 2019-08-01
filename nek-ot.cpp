@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
   if (load_source(static_cast<std::string>(argv[1])) == 1)
     return 1;
 #endif
-
   TK tok = gettoken();
   while (tok != TK::tok_eof) {
 	if(tok!=TK::tok_nope)

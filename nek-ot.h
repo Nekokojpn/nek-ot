@@ -253,8 +253,8 @@ public:
 class ASTIntArray : public AST {
 public:
 	std::string name;
-	std::unique_ptr<AST> expr_obj;
-	ASTIntArray(std::string _name, std::unique_ptr<AST> _expr_obj) : name(_name), expr_obj(std::move(_expr_obj)) {};
+	int size;
+	ASTIntArray(std::string _name, int _size) : name(_name), size(_size) {};
 	Value* codegen() override;
 };
 class ASTString : public AST {

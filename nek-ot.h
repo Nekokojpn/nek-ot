@@ -52,6 +52,7 @@ enum class TK {
 	tok_else = 5,
 	tok_for = 6,
 	tok_while = 7,
+	tok_new = 8,
 
 	tok_ret = 100,
 	tok_void = 101,

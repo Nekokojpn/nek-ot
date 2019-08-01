@@ -120,8 +120,17 @@ std::unique_ptr<ASTInt> Parser::def_int() {
 }
 std::unique_ptr<ASTIntArray> Parser::def_int_arr() {
 	getNextToken();
-	if (curtok.ty != TK::tok_lb)
+	if (curtok.ty != TK::tok_int_arr)
 		error("Syntax error", "Unexpected token --> " + curtok.val, curtok);
+	getNextToken();
+	if (curtok.ty == TK::tok_equal) {
+		getNextToken();
+
+	}
+	else if (curtok.ty == TK::tok_semi) {
+
+	}
+	error("Syntax error", "Unexpected token--> " + curtok.val, curtok);
 	return nullptr;
 }
 

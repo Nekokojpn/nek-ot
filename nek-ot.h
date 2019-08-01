@@ -27,6 +27,7 @@
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Bitcode/BitcodeReader.h"
+#include "llvm/Linker/Linker.h"
 
 #include <windows.h>				//Using at Console class
 #include <cctype>

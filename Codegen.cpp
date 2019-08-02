@@ -194,7 +194,7 @@ void Sys::IO::Printf::CreateFunc() {
 
 	// return;
 	builder.CreateRetVoid();
-	fpm->run(*func);
+	//fpm->run(*func);
 }
 
 void init_parse() {
@@ -213,7 +213,7 @@ AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) 
 	return tmpB.CreateAlloca(Type::getInt32Ty(context), nullptr, name.c_str());
 }
 
-void Parser::call_writefln(llvm::ArrayRef<llvm::Value*> args)
+void Codegen::call_writefln(llvm::ArrayRef<llvm::Value*> args)
 {
 	llvm::Module* module = builder.GetInsertBlock()->getParent()->getParent();
 	llvm::Function* func = module->getFunction("writefln");
@@ -370,17 +370,13 @@ Value* ASTProto::codegen() {
 		arg.setName(identifier[idx++]);
 		
 	for (auto& arg : mainFunc->args()) {
-		//auto* alloca = createEntryBlockAlloca(mainFunc, arg.getName());
-		//DILocalVariable *di = dbuilder->createParameterVariable
 		auto alloca = builder.CreateAlloca(Type::getInt32Ty(context));
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
 	}
-
+	mainFunc->setCallingConv(CallingConv::X86_StdCall);
 	curfunc = mainFunc;
 	functions_global[name] = mainFunc;
-	
-	
 	return nullptr;
 }
 Value* ASTFunc::codegen() {
@@ -389,8 +385,8 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	//fpm->run(*curfunc);
-
+	fpm->run(*curfunc);
+	
 	namedvalues_local.clear();
 
 	return pr;
@@ -401,7 +397,12 @@ Value* ASTCall::codegen() {
 		types.push_back(args_expr[i]->codegen());
 	}
 	ArrayRef<Value*> argsRef(types);
-	return builder.CreateCall(functions_global[name], argsRef,"calltmp");
+	if (name == "writefln") {
+		Codegen::call_writefln(argsRef);
+		return nullptr;
+	}
+	else
+		return builder.CreateCall(functions_global[name], argsRef,"calltmp");
 }
 
 Value* ASTElse::codegen() {

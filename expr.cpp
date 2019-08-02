@@ -55,6 +55,15 @@ std::unique_ptr<AST> Parser::expr_primary() {
 			auto funccall = func_call(identifier->name);
 			return std::move(funccall);
 		}
+		else if (curtok.ty == TK::tok_lpb) { //Array
+			getNextToken();
+			auto expr_ = expr();
+			if (curtok.ty != TK::tok_rpb)
+				error_unexpected(curtok);
+			getNextToken();
+			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_));
+			return std::move(ast);
+		}
 		return std::move(identifier);
 	}
 	else if (curtok.ty == TK::tok_lp) {

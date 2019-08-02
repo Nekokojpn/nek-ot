@@ -1,5 +1,6 @@
 fn main() -> void {
 	string str = "Hello_nek-ot!";
 	puts(str);
+	writefln(str);
 	ret;
 }

@@ -8,14 +8,20 @@ std::unique_ptr<DIBuilder> dbuilder;
 std::unique_ptr<legacy::FunctionPassManager> fpm;
 
 static std::map<std::string, FunctionCallee> functions_global;
-static std::map<std::string, Value*> namedvalues_global;
+static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
+static std::map<std::string, Value*> namedvalues_str;
 Function* curfunc;
 BasicBlock* curbb;
 bool isRetcodegen = false;
 
 Module* getModule() {
 	return module.get();
+}
+
+
+void Test::CreateFunc() {
+	
 }
 
 void Sys::IO::OutPuti8Ptr::CreateFunc() {
@@ -207,6 +213,24 @@ AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) 
 	return tmpB.CreateAlloca(Type::getInt32Ty(context), nullptr, name.c_str());
 }
 
+void Parser::call_writefln(llvm::ArrayRef<llvm::Value*> args)
+{
+	llvm::Module* module = builder.GetInsertBlock()->getParent()->getParent();
+	llvm::Function* func = module->getFunction("writefln");
+	if (func == nullptr) {
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		bool is_var_args = true;
+		func = llvm::Function::Create(
+			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "writefln", module);
+		func->setCallingConv(llvm::CallingConv::C);
+	}
+
+	llvm::CallInst* inst = builder.CreateCall(func, args);
+	inst->setCallingConv(func->getCallingConv());
+}
+
 void Parser::dump() {
 	module->dump();
 }
@@ -218,12 +242,37 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 	auto value = namedvalues_local[name];
 	if (!value) {
 		auto global = namedvalues_global[name];
-		if(!global)
-			error("Unsolved value name", "Unsolved value name --> "+name, 0, 0);
+		if (!global) {
+			auto str = namedvalues_str[name];
+			if(!str)
+				error("Unsolved value name", "Unsolved value name --> "+name, 0, 0);
+			return str;
+		}
 		return global;
 	}
 	return builder.CreateLoad(value);
 	//return value;
+}
+
+Value* ASTIdentifierArrayElement::codegen() {
+	auto value = namedvalues_local[name];
+	Value* val;
+	if (!value) {
+		value = namedvalues_global[name];
+		if (!value) {
+			val = namedvalues_str[name];
+			if (!val)
+				error("Unsolved value name", "Unsolved value name --> " + name, 0, 0);
+		}
+	}
+	std::vector<Value*> p;
+	p.push_back(builder.getInt64(0));
+	p.push_back(expr->codegen());
+	ArrayRef<Value*> pp(p);
+	if(!val)
+		return builder.CreateLoad(builder.CreateInBoundsGEP(value, pp));
+	else
+		return builder.CreateLoad(builder.CreateInBoundsGEP(val, pp));
 }
 
 Value* ASTValue::codegen() {
@@ -284,10 +333,9 @@ Value* ASTInt::codegen() {
 	return value;
 }
 Value* ASTIntArray::codegen() {
-	auto proto = builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),size));
-	//builder.CreateConstInBoundsGEP1_32(builder.getInt32Ty(), proto,0);
-	//builder.CreateStore(proto->)
-	return nullptr;
+	auto value = builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),size));
+	namedvalues_local[name] = value;
+	return value;
 }
 
 Value* ASTProto::codegen() {
@@ -459,7 +507,17 @@ Value* ASTWhile::codegen() {
 	return astboolop;
 }
 Value* ASTSubst::codegen() {
-	return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+	if (id)
+		return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+	else if (id2) {
+		std::vector<Value*> p;
+		p.push_back(builder.getInt64(0));
+		p.push_back(id2->expr->codegen());
+		ArrayRef<Value*> pp(p);
+		return builder.CreateStore(expr->codegen(), builder.CreateInBoundsGEP(namedvalues_local[id2->name], pp));
+	}
+	else
+		return nullptr;
 }
 Type* ASTRet::codegen1() {
 	if (expr_p)
@@ -506,10 +564,10 @@ Value* ASTRet::codegen() {
 Value* ASTStrLiteral::codegen() {
 	return builder.CreateGlobalStringPtr(value);
 }
-Value* ASTString::codegen() {
+Value* ASTString::codegen() { //—vC³
 	auto str = expr_str->value;
 	auto ptr = builder.CreateGlobalStringPtr(str, name);
-	namedvalues_global[name] = ptr;
+	namedvalues_str[name] = ptr;
 	return ptr;
 }
 

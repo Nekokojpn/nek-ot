@@ -103,6 +103,10 @@ enum class TK {
 	tok_unknown = 0
 
 };
+class Test {
+public:
+	static void CreateFunc();
+};
 
 class Sys {
 public:
@@ -148,6 +152,7 @@ typedef struct {
 
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, int line, int column);
+void error_unexpected(Token_t& curtok);
 
 void init_parse();
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);
@@ -211,6 +216,13 @@ public:
 	std::string name;
 	ASTIdentifier(const std::string& _name) : name(_name) {};
 	Value* codegen() override;
+};
+class ASTIdentifierArrayElement : public AST {
+public:
+	std::string name;
+	std::unique_ptr<AST> expr;
+	ASTIdentifierArrayElement(std::string _name, std::unique_ptr<AST> _expr) : name(_name), expr(std::move(_expr)) {};
+	Value* codegen();
 };
 class ASTValue : public AST {
 public:
@@ -320,8 +332,10 @@ public:
 class ASTSubst : public AST {
 public:
 	std::unique_ptr<ASTIdentifier> id;
+	std::unique_ptr<ASTIdentifierArrayElement> id2;
 	std::unique_ptr<AST> expr;
 	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
+	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::unique_ptr<AST> _expr) :id2(std::move(_id2)), expr(std::move(_expr)) {};
 	Value* codegen() override;
 };
 class Parser {
@@ -347,8 +361,9 @@ class Parser {
 	std::unique_ptr<AST> expr_identifier();
 	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
-	//-----> LLVM functions
 
+	//-----> LLVM functions
+	void call_writefln(llvm::ArrayRef<llvm::Value*> args);
 	//<-----
 	
 	

@@ -182,7 +182,7 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 	if (curtok.ty == TK::tok_semi) {
 		return nullptr;
 	}
-	else if (curtok.ty == TK::tok_equal) {
+	else if (curtok.ty == TK::tok_equal || curtok.ty == TK::tok_lpb) {
 		auto ast = subst_expr(id);
 		return std::move(ast);
 	}
@@ -334,14 +334,30 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 
 std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 	auto id = std::make_unique<ASTIdentifier>(_id);
-
-	if (curtok.ty == TK::tok_equal) {
+	std::unique_ptr<ASTIdentifierArrayElement> id2;
+	if (curtok.ty == TK::tok_lpb) {
 		getNextToken();
-		auto ast = std::make_unique<ASTSubst>(std::move(id),std::move(expr()));
-		//getNextToken();
-		if(curtok.ty != TK::tok_semi)
-			error("Expected", "Expected token --> ;" , curtok);
-		return ast;
+		auto expr_ = expr();
+		if (curtok.ty != TK::tok_rpb)
+			error_unexpected(curtok);
+		id2 = std::make_unique<ASTIdentifierArrayElement>(_id, std::move(expr_));
+		getNextToken();
+	}
+	if (curtok.ty == TK::tok_equal) {
+		if (!id2) {
+			getNextToken();
+			auto ast = std::make_unique<ASTSubst>(std::move(id), std::move(expr()));
+			if (curtok.ty != TK::tok_semi)
+				error_unexpected(curtok);
+			return std::move(ast);
+		}
+		else {
+			getNextToken();
+			auto ast = std::make_unique<ASTSubst>(std::move(id2), std::move(expr()));
+			if (curtok.ty != TK::tok_semi)
+				error_unexpected(curtok);
+			return std::move(ast);
+		}
 	}
 	else if (curtok.ty == TK::tok_semi) {
 		return nullptr;

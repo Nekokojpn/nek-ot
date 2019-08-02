@@ -80,3 +80,6 @@ void error(std::string title, std::string message, Token_t& curtok) {
 	std::cerr << "  |";
 	exit(1);
 }
+void error_unexpected(Token_t& curtok) {
+	error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+}

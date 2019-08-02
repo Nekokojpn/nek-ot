@@ -90,6 +90,7 @@ enum class TK {
 	tok_dot = 318,
 	tok_lpb = 319, // [
 	tok_rpb = 320, // ]
+	tok_percent = 321,
 
 	// operator
 	tok_plus = 400,
@@ -207,6 +208,14 @@ enum class RType { //RetType
 	Char,
 	String
 };
+
+class Codegen {
+public:
+	//-----> LLVM functions
+	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
+	//<-----
+};
+
 class AST {
 public:
 	virtual Value* codegen() = 0;
@@ -362,9 +371,7 @@ class Parser {
 	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
 
-	//-----> LLVM functions
-	void call_writefln(llvm::ArrayRef<llvm::Value*> args);
-	//<-----
+	
 	
 	
 	bool consume(TK tk) noexcept;

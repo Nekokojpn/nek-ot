@@ -67,10 +67,11 @@ int main(int argc, char** argv) {
   auto parser = Parser(tytokens);
   init_parse();
   
- Sys::IO::OutPuti8Ptr::CreateFunc();
- Sys::Cast::CastInt32toInt8ptr::CreateFunc();
- Sys::Cast::CastInt32toInt8Array::CreateFunc();
- //Sys::IO::Printf::CreateFunc();
+  Test::CreateFunc();
+  Sys::IO::OutPuti8Ptr::CreateFunc();
+  Sys::Cast::CastInt32toInt8ptr::CreateFunc();
+  Sys::Cast::CastInt32toInt8Array::CreateFunc();
+  Sys::IO::Printf::CreateFunc();
 
   parser.parse_codegen();
   

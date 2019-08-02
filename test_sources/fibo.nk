@@ -2,10 +2,11 @@ fn fibo(int n) -> int{
  if(n < 2){
   ret n;
  }
-  int i1 = fibo(n-1) + fibo(n-2);
-  ret i1;
+  ret fibo(n-1) + fibo(n-2); TODO, unreachable return statement only one in the function
 }
 fn main() -> int{
  int i = fibo(34);
+ string d = "%d";
+ writefln(d, i);
  ret i;
 }

@@ -56,9 +56,31 @@ void addToloc(int len) {
 // tokenizer----->
 TK gettoken() {
 	get_char();
+	cs = "";
 	//skip any spaces.
 	while (isspace(cc)) {
 		get_char();
+	}
+	if (cc == '\"') {
+		addToliteral();
+		addToloc(1);
+		if (!isdq_started) isdq_started = true;
+		else isdq_started = false;
+		return TK::tok_dq;
+	}
+	if (isdq_started) { // string
+		while (cc != '\"' && cc != '\0') {
+			cs += cc;
+			get_char();
+			if (cc == ' ') { cs += cc; get_char(); }
+		}
+		if (cc == '\0') {
+			error("Expected", "Expected --> \"", line, column);
+		}
+		undo_char();
+		addToliteral();
+		addToloc(cs.length());
+		return TK::tok_str_string;
 	}
 	if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
 		cs = cc;
@@ -92,18 +114,6 @@ TK gettoken() {
 				}
 			}
 			else break;
-		}
-		if (isdq_started) {
-			while (cc != '\"' && cc != '\0') {
-				cs += cc;
-				get_char();
-			}
-			if (cc == '\0') {
-				error("Expected", "Expected --> \"", line, column);
-			}
-			undo_char();
-			addToliteral();
-			return TK::tok_str_string;
 		}
 		undo_char();
 		addToliteral();
@@ -166,11 +176,6 @@ TK gettoken() {
 		if (cc == '{')	return TK::tok_lb;
 		if (cc == '}')	return TK::tok_rb;
 		if (cc == '\'')	return TK::tok_sq;
-		if (cc == '\"') {
-			if (!isdq_started) isdq_started = true;
-			else isdq_started = false;
-			return TK::tok_dq;
-		}
 		if (cc == '-') {
 			get_char();
 			if (cc == '>') { // arrow
@@ -221,6 +226,7 @@ TK gettoken() {
 		if (cc == '.')	return TK::tok_dot;
 		if (cc == '[')	return TK::tok_lpb;
 		if (cc == ']')	return TK::tok_rpb;
+		if (cc == '%') return TK::tok_percent;
 	}
 	std::string s = "";
 	s += cc;

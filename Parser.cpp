@@ -269,11 +269,13 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 	//ELIF or ELSE----->
 	if (curtok.ty == TK::tok_elif) { //ELIF
 		ast->ast_elif = std::move(bool_statement());
+		getNextToken();
 		return std::move(ast);
 	}
 	else if(curtok.ty == TK::tok_else) { //ELSE
 		getNextToken();
 		ast->ast_else = std::make_unique<ASTElse>(expr_block());
+		getNextToken();
 		return std::move(ast);
 	}
 	error("Unexpected", "Unexpected token--> " + curtok.val, curtok);

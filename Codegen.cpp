@@ -13,7 +13,6 @@ static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
 Function* curfunc;
 BasicBlock* curbb;
-bool isRetcodegen = false;
 
 Module* getModule() {
 	return module.get();
@@ -420,12 +419,10 @@ Value* ASTIf::codegen() {
 	std::vector<BasicBlock*> blocks;
 	BasicBlock* if_block = BasicBlock::Create(context,"if",curfunc);
 	builder.SetInsertPoint(if_block);
-	isRetcodegen = false;
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	if(isRetcodegen)
-		blocks.push_back(if_block);
+	blocks.push_back(if_block);
 	builder.SetInsertPoint(curbb);
 	if (ast_elif == nullptr && ast_else == nullptr) {
 		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
@@ -465,14 +462,12 @@ Value* ASTIf::codegen() {
 		}
 		if (ast_else != nullptr) {
 			BasicBlock* else_block = BasicBlock::Create(context, "el", curfunc);
-			builder.CreateCondBr(astboolop, curbb, else_block);
+			builder.CreateCondBr(astboolop, if_block, else_block);
 
 			builder.SetInsertPoint(else_block);
 			curbb = else_block;
-			isRetcodegen = false;
 			ast_else->codegen();
-			if(isRetcodegen)
-				blocks.push_back(else_block);
+			blocks.push_back(else_block);
 		}
 		auto cont = BasicBlock::Create(context, "cont", curfunc);
 		for (int i = 0; i < blocks.size(); i++) {

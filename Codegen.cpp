@@ -255,7 +255,7 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 
 Value* ASTIdentifierArrayElement::codegen() {
 	auto value = namedvalues_local[name];
-	Value* val;
+	Value* val = nullptr;
 	if (!value) {
 		value = namedvalues_global[name];
 		if (!value) {
@@ -384,8 +384,7 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	fpm->run(*curfunc);
-	
+	//fpm->run(*curfunc);
 	namedvalues_local.clear();
 
 	return pr;

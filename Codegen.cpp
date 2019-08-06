@@ -244,7 +244,7 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		if (!global) {
 			auto str = namedvalues_str[name];
 			if(!str)
-				error("Unsolved value name", "Unsolved value name --> "+name, 0, 0);
+				error("Unsolved value name", "Unsolved value name --> "+name, this->loc);
 			return str;
 		}
 		return global;
@@ -261,7 +261,7 @@ Value* ASTIdentifierArrayElement::codegen() {
 		if (!value) {
 			val = namedvalues_str[name];
 			if (!val)
-				error("Unsolved value name", "Unsolved value name --> " + name, 0, 0);
+				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
 		}
 	}
 	std::vector<Value*> p;

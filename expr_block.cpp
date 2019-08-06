@@ -24,6 +24,12 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 			auto ast = bool_statement();
 			asts.push_back(std::move(ast));
 		}
+		/*
+		else if (curtok.ty == TK::tok_for) {
+			auto ast = for_statement();
+			asts.push_back(std::move(ast));
+		}
+		*/
 		else if (curtok.ty == TK::tok_while) {
 			auto ast = while_statement();
 			asts.push_back(std::move(ast));

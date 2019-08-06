@@ -151,6 +151,7 @@ typedef struct {
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);
+void error(std::string title, std::string message, Location_t& loc);
 void error(std::string title, std::string message, int line, int column);
 void error_unexpected(Token_t& curtok);
 
@@ -217,6 +218,7 @@ public:
 
 class AST {
 public:
+	Location_t loc;
 	virtual Value* codegen() = 0;
 };
 class ASTIdentifier : public AST {

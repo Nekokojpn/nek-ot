@@ -20,6 +20,7 @@ std::unique_ptr<AST> Parser::expr_add() {
 		}
 		auto rhs = expr_mul();
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
+		lhs->loc = curtok.loc;
 	}
 	return std::move(lhs);
 }
@@ -38,6 +39,7 @@ std::unique_ptr<AST> Parser::expr_mul() {
 		}
 		auto rhs = expr_primary();
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
+		lhs->loc = curtok.loc;
 	}
 	return std::move(lhs);
 }
@@ -45,11 +47,13 @@ std::unique_ptr<AST> Parser::expr_primary() {
 
 	if (curtok.ty == TK::tok_num_int) {
 		auto value = std::make_unique<ASTValue>(std::atoi(curtok.val.c_str()));
+		value->loc = curtok.loc;
 		getNextToken(); //eat num
 		return std::move(value);
 	}
 	else if (curtok.ty == TK::tok_identifier) {
 		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
+		identifier->loc = curtok.loc;
 		getNextToken();
 		if (curtok.ty == TK::tok_lp) { //Function call.
 			auto funccall = func_call(identifier->name);
@@ -62,6 +66,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 				error_unexpected(curtok);
 			getNextToken();
 			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_));
+			ast->loc = curtok.loc;
 			return std::move(ast);
 		}
 		return std::move(identifier);

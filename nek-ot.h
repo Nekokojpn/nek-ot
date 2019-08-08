@@ -55,14 +55,14 @@ enum class TK {
 
 	tok_ret = 100,
 	tok_void = 101,
-	tok_int = 102,
+	tok_i32 = 102,
 	tok_float = 103,
 	tok_double = 104,
 	tok_short = 105,
-	tok_long = 106,
+	tok_i64 = 106,
 	tok_char = 107,
 	tok_string = 108,
-	tok_int_arr = 109,
+	tok_i32_arr = 109,
 
 	tok_num_int = 200,
 	tok_num_double = 201,
@@ -89,7 +89,8 @@ enum class TK {
 	tok_dot = 318,
 	tok_lpb = 319, // [
 	tok_rpb = 320, // ]
-	tok_percent = 321,
+	tok_percent = 321, // %
+	tok_darrow = 322, // =>
 
 	// operator
 	tok_plus = 400,
@@ -265,7 +266,7 @@ public:
 	Value* codegen() override;
 };
 
-class ASTInt : public AST {
+class ASTInt : public AST { //èCê≥
 public:
 	std::string name;
 	std::unique_ptr<AST> expr_p;
@@ -323,6 +324,14 @@ public:
 	ASTElse(std::vector<std::unique_ptr<AST>> _body) : body(std::move(_body)) {};
 	Value* codegen() override;
 };
+/*
+class ASTIfExpr : public AST {
+public:
+	std::unique_ptr<AST> cond, then, els;
+	ASTIfExpr(std::unique_ptr<AST> _cond, std::unique_ptr<AST> _then, std::unique_ptr<AST> _els) : cond(std::move(_cond)), then(std::move(_then)), els(std::move(_els)) {};
+	Value* codegen() override;
+};
+*/
 class ASTIf : public AST {
 public:
 	std::unique_ptr<AST> proto; //BoolOp
@@ -332,11 +341,27 @@ public:
 	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
+class ASTFor : public AST {
+public:
+	std::unique_ptr<AST> proto;
+	std::vector<std::unique_ptr<AST>> body;
+	//ASTFor()
+	
+};
 class ASTWhile : public AST {
 public:
 	std::unique_ptr<AST> proto; //BoolOp
 	std::vector<std::unique_ptr<AST>> body;
 	ASTWhile(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	Value* codegen() override;
+};
+class ASTDSubst : public AST {
+public:
+	std::unique_ptr<ASTIdentifier> id;
+	std::unique_ptr<ASTIdentifierArrayElement> id2;
+	std::vector<std::unique_ptr<AST>> body;
+	ASTDSubst(std::unique_ptr<ASTIdentifier> _id, std::vector<std::unique_ptr<AST>> _body) : id(std::move(_id)), body(std::move(_body)) {};
+	ASTDSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::vector<std::unique_ptr<AST>> _body) : id2(std::move(_id2)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
 class ASTSubst : public AST {
@@ -346,6 +371,8 @@ public:
 	std::unique_ptr<AST> expr;
 	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
 	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::unique_ptr<AST> _expr) :id2(std::move(_id2)), expr(std::move(_expr)) {};
+	ASTSubst(std::unique_ptr<ASTIdentifier> _id) : id(std::move(_id)) {};
+	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2) : id2(std::move(_id2)) {};
 	Value* codegen() override;
 };
 class Parser {
@@ -367,9 +394,10 @@ class Parser {
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
+	std::unique_ptr<ASTFor> for_statement();
 	std::unique_ptr<ASTWhile> while_statement();
 	std::unique_ptr<AST> expr_identifier();
-	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
+	std::unique_ptr<AST> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
 
 	

@@ -118,14 +118,14 @@ TK gettoken() {
 		undo_char();
 		addToliteral();
 		if (cs == "fn") { addToloc(cs.length()); return TK::tok_fn; }
-		else if (cs == "int") { addToloc(cs.length()); return TK::tok_int; }
-		else if (cs == "int[]") { addToloc(cs.length()); return TK::tok_int_arr; }
+		else if (cs == "i32") { addToloc(cs.length()); return TK::tok_i32; }
+		else if (cs == "i32[]") { addToloc(cs.length()); return TK::tok_i32_arr; }
 		else if (cs == "void") { addToloc(cs.length()); return TK::tok_void; }
 		else if (cs == "ret") { addToloc(cs.length()); return TK::tok_ret; }
 		else if (cs == "float") { addToloc(cs.length()); return TK::tok_float; }
 		else if (cs == "double") { addToloc(cs.length()); return TK::tok_double; }
 		else if (cs == "short") { addToloc(cs.length()); return TK::tok_short; }
-		else if (cs == "long") { addToloc(cs.length()); return TK::tok_long; }
+		else if (cs == "long") { addToloc(cs.length()); return TK::tok_i64; }
 		else if (cs == "char") { addToloc(cs.length()); return TK::tok_char; }
 		else if (cs == "string") { addToloc(cs.length()); return TK::tok_string; }
 		else if (cs == "if") { addToloc(cs.length()); return TK::tok_if; }
@@ -166,6 +166,9 @@ TK gettoken() {
 			get_char();
 			if (cc == '=') { // ==
 				return TK::tok_eqeq;
+			}
+			else if (cc == '>') { // =>
+				return TK::tok_darrow;
 			}
 			undo_char();
 			return TK::tok_equal;

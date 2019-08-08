@@ -8,12 +8,8 @@ i32 val = 0;
   }
   ret val;
 }
-fn main() {
-i32 i = 1;
- while(i < 35){
- string f = "fibo(%d) -> %d";
- writefln(f, i, fibo(i));
- i = i + 1;
- }
+fn main() -> void{
+string f = "%d";
+writefln(f, fibo(35));
  ret;
 }

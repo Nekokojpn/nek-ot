@@ -1,0 +1,15 @@
+fn main() -> i32{
+	i32 i = 3;
+	i32 j = 100;
+	j => {
+		i32 tmp = 0;
+		if(i == 3){
+			tmp = 5;
+		}
+		else{
+			tmp = 1;
+		} 
+		ret tmp;
+	};
+	ret j;
+}

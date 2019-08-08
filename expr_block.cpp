@@ -7,12 +7,12 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 	std::vector<std::unique_ptr<AST>> asts;
 	while (curtok.ty != TK::tok_rb)
 	{
-		if (curtok.ty == TK::tok_int)
+		if (curtok.ty == TK::tok_i32)
 		{
 			auto ast = def_int();
 			asts.push_back(std::move(ast));
 		}
-		else if (curtok.ty == TK::tok_int_arr) {
+		else if (curtok.ty == TK::tok_i32_arr) {
 			auto ast = def_int_arr();
 			asts.push_back(std::move(ast));
 		}
@@ -24,12 +24,10 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 			auto ast = bool_statement();
 			asts.push_back(std::move(ast));
 		}
-		/*
 		else if (curtok.ty == TK::tok_for) {
 			auto ast = for_statement();
 			asts.push_back(std::move(ast));
 		}
-		*/
 		else if (curtok.ty == TK::tok_while) {
 			auto ast = while_statement();
 			asts.push_back(std::move(ast));

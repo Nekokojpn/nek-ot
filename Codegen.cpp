@@ -11,8 +11,8 @@ static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
-Function* curfunc;
-BasicBlock* curbb;
+
+Value* lambdavalue;
 
 Module* getModule() {
 	return module.get();
@@ -41,8 +41,7 @@ void Sys::Cast::CastInt32toInt8ptr::CreateFunc() {
 	Function* mainFunc =
 		Function::Create(FunctionType::get(builder.getInt8Ty()->getPointerTo(), argsRef, false),
 			Function::ExternalLinkage, "casti32toi8ptr", module.get());
-	curbb = BasicBlock::Create(context, "", mainFunc);
-	builder.SetInsertPoint(curbb);
+	builder.SetInsertPoint(BasicBlock::Create(context, "", mainFunc));
 	for (auto& arg : mainFunc->args()) {
 		builder.CreateRet(builder.CreateIntToPtr(builder.CreateTruncOrBitCast(&arg, builder.getInt8Ty()), builder.getInt8Ty()->getPointerTo()));
 		break;
@@ -354,14 +353,11 @@ Value* ASTProto::codegen() {
 	Function* mainFunc =
 		Function::Create(FunctionType::get(ty,argsRef,false),
 			Function::ExternalLinkage, name, module.get());
-	
 	if (name == "main") {
-		curbb = BasicBlock::Create(context, "entry", mainFunc);
-		builder.SetInsertPoint(curbb);
+		builder.SetInsertPoint(BasicBlock::Create(context, "entry", mainFunc));
 	}
 	else {
-		curbb = BasicBlock::Create(context, "", mainFunc);
-		builder.SetInsertPoint(curbb);
+		builder.SetInsertPoint(BasicBlock::Create(context, "", mainFunc));
 	}
 	
 	unsigned idx = 0;
@@ -374,7 +370,6 @@ Value* ASTProto::codegen() {
 		namedvalues_local[arg.getName()] = alloca;
 	}
 	mainFunc->setCallingConv(CallingConv::X86_StdCall);
-	curfunc = mainFunc;
 	functions_global[name] = mainFunc;
 	return nullptr;
 }
@@ -384,7 +379,7 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	//fpm->run(*curfunc);
+	//fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;
@@ -415,8 +410,11 @@ Value* ASTIf::codegen() {
 	if (!astboolop)
 		return nullptr;
 
+	auto curfunc = builder.GetInsertBlock()->getParent();
+
 	std::vector<BasicBlock*> blocks;
 	BasicBlock* if_block = BasicBlock::Create(context,"if",curfunc);
+	auto curbb = builder.GetInsertBlock();
 	builder.SetInsertPoint(if_block);
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
@@ -480,6 +478,9 @@ Value* ASTIf::codegen() {
 	}
 }
 Value* ASTWhile::codegen() {
+
+	auto curfunc = builder.GetInsertBlock()->getParent();
+
 	BasicBlock* while_block = BasicBlock::Create(context, "while_block", curfunc);
 	BasicBlock* body_block = BasicBlock::Create(context, "body_block", curfunc);
 	BasicBlock* cont_block = BasicBlock::Create(context, "cont", curfunc);
@@ -498,8 +499,17 @@ Value* ASTWhile::codegen() {
 	}
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
-	curbb = cont_block;
 	return astboolop;
+}
+Value* ASTDSubst::codegen() {
+	if (id) {
+		lambdavalue = namedvalues_local[this->id->name];
+		for (auto ast = body.begin(); ast != body.end(); ast++) {
+			ast->get()->codegen();
+		}
+		lambdavalue = nullptr;
+	}
+	return nullptr;
 }
 Value* ASTSubst::codegen() {
 	if (id)
@@ -515,9 +525,14 @@ Value* ASTSubst::codegen() {
 		return nullptr;
 }
 Type* ASTRet::codegen1() {
-	if (expr_p)
-		builder.CreateRet(expr_p->codegen());
-	else builder.CreateRetVoid();
+	if (!lambdavalue) {
+		if (expr_p)
+			builder.CreateRet(expr_p->codegen());
+		else builder.CreateRetVoid();
+	}
+	else {
+		builder.CreateStore(this->expr_p->codegen(), lambdavalue);
+	}
 	/*
 	if(ret_type == RType::Nop)
 		ret_type = Parser::getTypeByName(identifier->name);

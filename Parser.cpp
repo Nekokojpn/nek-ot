@@ -16,7 +16,7 @@ void Parser::getNextToken() noexcept {
 //get RType from curtok.
 RType Parser::getRTypeByCurtok() {
 	RType ret;
-	if (curtok.ty == TK::tok_int) {
+	if (curtok.ty == TK::tok_i32) {
 		ret = RType::Int;
 	}
 	else if (curtok.ty == TK::tok_char) {
@@ -41,7 +41,7 @@ RType Parser::getRTypeByCurtok() {
 //get AType from curtok.
 AType Parser::getATypeByCurtok() {
 	AType ret;
-	if (curtok.ty == TK::tok_int) {
+	if (curtok.ty == TK::tok_i32) {
 		ret = AType::Int;
 	}
 	else if (curtok.ty == TK::tok_char) {
@@ -101,6 +101,10 @@ std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
 
 std::unique_ptr<ASTInt> Parser::def_int() {
 	getNextToken();
+	if (curtok.ty == TK::tok_rp) {
+		getNextToken();
+
+	}
 	if (curtok.ty != TK::tok_identifier)
 		error("Syntax error", "After type must be an identifier.",curtok);
 	auto str = curtok.val;
@@ -132,7 +136,7 @@ std::unique_ptr<ASTIntArray> Parser::def_int_arr() {
 		if (curtok.ty != TK::tok_new)
 			error("", "", curtok);
 		getNextToken();
-		if(curtok.ty != TK::tok_int)
+		if(curtok.ty != TK::tok_i32)
 			error("", "", curtok);
 		getNextToken();
 		if(curtok.ty != TK::tok_lpb)
@@ -188,7 +192,7 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 	if (curtok.ty == TK::tok_semi) {
 		return nullptr;
 	}
-	else if (curtok.ty == TK::tok_equal || curtok.ty == TK::tok_lpb) {
+	else if (curtok.ty == TK::tok_equal || curtok.ty == TK::tok_lpb || curtok.ty == TK::tok_darrow) {
 		auto ast = subst_expr(id);
 		return std::move(ast);
 	}
@@ -227,15 +231,20 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 	if (curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
 	getNextToken();
-	if (curtok.ty != TK::tok_arrow)
-		error("Expected", "Expected --> ->", curtok);
-	getNextToken();
 
-	RType ret = getRTypeByCurtok();
+	RType ret;
+
+	if (curtok.ty == TK::tok_arrow) {
+		getNextToken();
+		ret = getRTypeByCurtok();
+		getNextToken();
+	}
+	else {
+		ret = RType::Void;
+	}
 
 	auto proto = std::make_unique<ASTProto>(str, putsArgs, argsIdentifier,ret);
 	proto->loc = curtok.loc;
-	getNextToken();
 	if (curtok.ty == TK::tok_lb) {
 		auto ast_func = std::make_unique<ASTFunc>(std::move(proto), expr_block());
 		ast_func->loc = curtok.loc;
@@ -325,6 +334,10 @@ std::unique_ptr<AST> Parser::bool_expr() {
 	return std::move(lhs);
 }
 
+std::unique_ptr<ASTFor> Parser::for_statement() {
+	return nullptr;
+}
+
 std::unique_ptr<ASTWhile> Parser::while_statement() {
 	getNextToken();
 	if (curtok.ty != TK::tok_lp)
@@ -348,7 +361,7 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 	return std::move(ast);
 }
 
-std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
+std::unique_ptr<AST> Parser::subst_expr(const std::string& _id) {
 	auto id = std::make_unique<ASTIdentifier>(_id);
 	id->loc = curtok.loc;
 	std::unique_ptr<ASTIdentifierArrayElement> id2;
@@ -378,6 +391,15 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 				error_unexpected(curtok);
 			return std::move(ast);
 		}
+	}
+	else if (curtok.ty == TK::tok_darrow) {
+		getNextToken();
+		auto ast = std::make_unique<ASTDSubst>(std::move(id), std::move(expr_block()));
+		getNextToken();
+		if (curtok.ty != TK::tok_semi)
+			error("Expected", "Expected token --> ;", curtok);
+		getNextToken();
+		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_semi) {
 		return nullptr;

@@ -4,7 +4,6 @@
 LLVMContext context;
 IRBuilder<> builder(context);
 std::unique_ptr<Module> module;
-std::unique_ptr<DIBuilder> dbuilder;
 std::unique_ptr<legacy::FunctionPassManager> fpm;
 
 static std::map<std::string, FunctionCallee> functions_global;
@@ -13,6 +12,11 @@ static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
 
 Value* lambdavalue;
+
+AllocaInst* retvalue;
+std::vector<BasicBlock*> retbbs;
+
+bool retcodegen = false;
 
 Module* getModule() {
 	return module.get();
@@ -85,7 +89,7 @@ void Sys::IO::Printf::CreateFunc() {
 	llvm::Argument* args_[1];
 	assert(func->arg_size() == 1);
 	int i = 0;
-	for (llvm::Function::arg_iterator itr = func->arg_begin(); itr != func->arg_end(); itr++) {
+	for (auto itr = func->arg_begin(); itr != func->arg_end(); itr++) {
 		args_[i++] = itr;
 	}
 
@@ -232,8 +236,33 @@ void Codegen::call_writefln(llvm::ArrayRef<llvm::Value*> args)
 void Parser::dump() {
 	module->dump();
 }
-RType Parser::getTypeByName(std::string _name) { //INT‚Ì‚Ý–ß‚è’lB
-		return RType::Int;
+Type* Codegen::getTypebyAType(AType ty) {
+	switch (ty)
+	{
+	case AType::Nop:
+		return nullptr;
+		break;
+	case AType::I32:
+		return builder.getInt32Ty();
+		break;
+	case AType::Float:
+		return builder.getFloatTy();
+		break;
+	case AType::Double:
+		return builder.getDoubleTy();
+		break;
+	case AType::Char:
+		return builder.getInt8Ty();
+		break;
+	case AType::String:
+		return builder.getInt8PtrTy();
+		break;
+	case AType::Void:
+		return builder.getVoidTy();
+		break;
+	default:
+		break;
+	}
 }
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
@@ -285,51 +314,42 @@ Value* ASTBinOp::codegen() {
 		return nullptr;
 	switch (op) {
 	case Op::Plus:
-		return builder.CreateAdd(l, r, "addtmp");
+		return builder.CreateAdd(l, r);
 	case Op::Minus:
-		return builder.CreateSub(l, r, "subtmp");
+		return builder.CreateSub(l, r);
 	case Op::Mul:
-		return builder.CreateMul(l, r, "multmp");
+		return builder.CreateMul(l, r);
 	case Op::Div:
-		return builder.CreateSDiv(l, r, "divtmp");
-	default:
-		return nullptr;
-	}
-}
-Value* ASTBoolOp::codegen() {
-	Value* l = lhs->codegen();
-	Value* r = rhs->codegen();
-	if (!l || !r)
-		return nullptr;
-	switch (bop) {
-	case BOp::LThan:
+		return builder.CreateSDiv(l, r);
+	case Op::LThan:
 		return builder.CreateICmpSLT(l, r);
-	case BOp::LThanEqual:
+	case Op::LThanEqual:
 		return builder.CreateICmpSLE(l, r);
-	case BOp::RThan:
+	case Op::RThan:
 		return builder.CreateICmpSGT(l, r);
-	case BOp::RThanEqual:
+	case Op::RThanEqual:
 		return builder.CreateICmpSGE(l, r);
-	case BOp::EqualEqual:
+	case Op::EqualEqual:
 		return builder.CreateICmpEQ(l, r);
-	case BOp::NotEqual:
+	case Op::NotEqual:
 		return builder.CreateICmpNE(l, r);
 	default:
 		return nullptr;
 	}
 }
 
-Value* ASTInt::codegen() {
-	auto value = expr_p->codegen();
-	if (!value)
-		return nullptr;
-	auto val = builder.CreateAlloca(builder.getInt32Ty());
-	//auto val = createEntryBlockAlloca(curfunc, name);
-	builder.CreateStore(value,val);
-	namedvalues_local[name] = val; 
-	//builder.CreateStore(value, builder.CreateAlloca(builder.getInt32Ty()));
-	return value;
+Value* ASTType::codegen() {
+	auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
+	namedvalues_local[this->name] = allocainst;
+	if (this->expr) {
+		auto value = this->expr->codegen();
+		if (!value)
+			return nullptr;
+		return value;
+	}
+	return allocainst;
 }
+
 Value* ASTIntArray::codegen() {
 	auto value = builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),size));
 	namedvalues_local[name] = value;
@@ -339,19 +359,15 @@ Value* ASTIntArray::codegen() {
 Value* ASTProto::codegen() {
 	
 	std::vector<Type*> putsArgs;
-	for (int i = 0; i < args.size(); i++) {
-		if (args[i] == AType::Int)
-			putsArgs.push_back(builder.getInt32Ty());
-	}
+
+	for (int i = 0; i < args.size(); i++) putsArgs.push_back(Codegen::getTypebyAType(args[i]));
+
 	ArrayRef<Type*>  argsRef(putsArgs);
 	
-	Type* ty = builder.getVoidTy();
-	if (ret == RType::Int)
-		ty = builder.getInt32Ty();
-	else if (ret == RType::Void)
-		ty = builder.getVoidTy();
+	Type* return_type = Codegen::getTypebyAType(this->ret);
+
 	Function* mainFunc =
-		Function::Create(FunctionType::get(ty,argsRef,false),
+		Function::Create(FunctionType::get(return_type,argsRef,false),
 			Function::ExternalLinkage, name, module.get());
 	if (name == "main") {
 		builder.SetInsertPoint(BasicBlock::Create(context, "entry", mainFunc));
@@ -374,11 +390,24 @@ Value* ASTProto::codegen() {
 	return nullptr;
 }
 Value* ASTFunc::codegen() {
-	auto pr = proto->codegen(); //Proto
 	
+	auto pr = proto->codegen(); //Proto
+	retvalue = builder.CreateAlloca(builder.GetInsertBlock()->getParent()->getReturnType());
+
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
+	auto retbb = BasicBlock::Create(context, "ret", builder.GetInsertBlock()->getParent());
+	builder.SetInsertPoint(retbb);
+
+	builder.CreateRet(builder.CreateLoad(retvalue));
+	for (auto bb : retbbs) {
+		builder.SetInsertPoint(bb);
+		builder.CreateBr(retbb);
+	}
+
+	retvalue = nullptr;
+	retbbs.clear();
 	//fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
@@ -419,9 +448,13 @@ Value* ASTIf::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	blocks.push_back(if_block);
+	if(!retcodegen)
+		blocks.push_back(if_block);
+	retcodegen = false;
+
 	builder.SetInsertPoint(curbb);
 	if (ast_elif == nullptr && ast_else == nullptr) {
+
 		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
 		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
 		for (int i = 0; i < blocks.size(); i++) {
@@ -441,20 +474,12 @@ Value* ASTIf::codegen() {
 
 			builder.SetInsertPoint(elif_block);
 			curbb = elif_block;
-			//builder.CreateCondBr(ast_elif->proto->codegen(), if_block, elif_block);
+
 			ast_elif->codegen();
-			/*
-			if (ast_elif[i]->ast_else) {
-				BasicBlock* else_block = BasicBlock::Create(context, "else_block", curfunc);
-				auto branch = builder.CreateCondBr(astboolop, if_block, else_block);
-				builder.SetInsertPoint(else_block);
-				curbb = else_block;
-				ast_elif[i]->ast_else->codegen();
-				blocks.push_back(else_block);
-				builder.SetInsertPoint(elif_block);
-			}
-			*/
-			blocks.push_back(elif_block);
+
+			if(!retcodegen)
+				blocks.push_back(elif_block);
+			retcodegen = false;
 			
 		}
 		if (ast_else != nullptr) {
@@ -464,17 +489,21 @@ Value* ASTIf::codegen() {
 			builder.SetInsertPoint(else_block);
 			curbb = else_block;
 			ast_else->codegen();
-			blocks.push_back(else_block);
+			if (!retcodegen)
+				blocks.push_back(else_block);
+			retcodegen = false;
 		}
-		auto cont = BasicBlock::Create(context, "cont", curfunc);
-		for (int i = 0; i < blocks.size(); i++) {
-			builder.SetInsertPoint(blocks[i]);
-			curbb = blocks[i];
-			builder.CreateBr(cont);
+		if (blocks.size() != 0) {
+			auto cont = BasicBlock::Create(context, "cont", curfunc);
+			for (int i = 0; i < blocks.size(); i++) {
+				builder.SetInsertPoint(blocks[i]);
+				curbb = blocks[i];
+				builder.CreateBr(cont);
+			}
+
+			builder.SetInsertPoint(cont);
 		}
-		
-		builder.SetInsertPoint(cont);
-		return cont; //—vŒŸ“¢
+		return nullptr; 
 	}
 }
 Value* ASTWhile::codegen() {
@@ -501,19 +530,20 @@ Value* ASTWhile::codegen() {
 	builder.SetInsertPoint(cont_block);
 	return astboolop;
 }
-Value* ASTDSubst::codegen() {
-	if (id) {
-		lambdavalue = namedvalues_local[this->id->name];
-		for (auto ast = body.begin(); ast != body.end(); ast++) {
-			ast->get()->codegen();
-		}
-		lambdavalue = nullptr;
-	}
-	return nullptr;
-}
+
 Value* ASTSubst::codegen() {
-	if (id)
-		return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+	if (this->id) {
+		if(this->expr)
+			return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+		else {
+			lambdavalue = namedvalues_local[this->id->name];
+			for (auto ast = body.begin(); ast != body.end(); ast++) {
+				ast->get()->codegen();
+			}
+			lambdavalue = nullptr;
+			return nullptr;
+		}
+	}
 	else if (id2) {
 		std::vector<Value*> p;
 		p.push_back(builder.getInt64(0));
@@ -524,51 +554,20 @@ Value* ASTSubst::codegen() {
 	else
 		return nullptr;
 }
-Type* ASTRet::codegen1() {
+Value* ASTRet::codegen() {
+	retcodegen = true;
 	if (!lambdavalue) {
-		if (expr_p)
-			builder.CreateRet(expr_p->codegen());
-		else builder.CreateRetVoid();
+		if (expr_p) {
+			builder.CreateStore(expr_p->codegen(), retvalue);
+			retbbs.push_back(builder.GetInsertBlock());
+		}
+		else {
+			retbbs.push_back(builder.GetInsertBlock());
+		}
 	}
 	else {
 		builder.CreateStore(this->expr_p->codegen(), lambdavalue);
 	}
-	/*
-	if(ret_type == RType::Nop)
-		ret_type = Parser::getTypeByName(identifier->name);
-	if (ret_type == RType::Void) {
-		builder.CreateRetVoid();
-		return builder.getVoidTy();
-	}
-	else if (!identifier)
-		error("fn ret type is invalid.","",0,0);
-	else if (ret_type == RType::Int) {
-		builder.CreateRet(identifier->codegen());
-		return builder.getInt32Ty();
-	}
-	else if (ret_type == RType::Char) {
-		builder.CreateRet(identifier->codegen());
-		return builder.getInt8Ty();
-	}
-	else if (ret_type == RType::String) {
-		builder.CreateRet(identifier->codegen());
-		return builder.getInt8PtrTy();
-	}
-	else if (ret_type == RType::Float) {
-		builder.CreateRet(identifier->codegen());
-		return builder.getFloatTy();
-	}
-	else if (ret_type == RType::Double) {
-		builder.CreateRet(identifier->codegen());
-		return builder.getDoubleTy();
-	}
-	else
-		error("Unexpected token -->", "", 0, 0);
-		*/
-	return nullptr;
-}
-Value* ASTRet::codegen() {
-	codegen1();
 	return nullptr;
 }
 Value* ASTStrLiteral::codegen() {

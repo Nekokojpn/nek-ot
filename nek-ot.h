@@ -182,9 +182,7 @@ enum class Op{
 	Plus,
 	Minus,
 	Mul,
-	Div
-};
-enum class BOp {
+	Div,
 	LThan,
 	LThanEqual,
 	RThan,
@@ -192,30 +190,30 @@ enum class BOp {
 	EqualEqual,
 	NotEqual
 };
-enum class AType { //ArgType
+enum class AType { //AllType
 	Nop,
-	Int,
+	I32,
 	Float,
 	Double,
 	Char,
-	String
+	String,
+	Void
 };
-enum class RType { //RetType
-	Nop,
-	Void,
-	Int,
-	Float,
-	Double,
-	Char,
-	String
+enum class ATypeArr {
+
 };
+
+
 
 class Codegen {
 public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
+	static Type* getTypebyAType(AType ty);
 	//<-----
 };
+
+class ASTSubst;
 
 class AST {
 public:
@@ -257,20 +255,20 @@ public:
 };
 
 
-class ASTBoolOp : public AST {
+class ASTType : public AST { // i32 i = 0;
 public:
-	std::unique_ptr<AST> lhs;
-	std::unique_ptr<AST> rhs;
-	BOp bop;
-	ASTBoolOp(std::unique_ptr<AST> _lhs, BOp _bop, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), bop(_bop), rhs(std::move(_rhs)) {};
+	AType ty;
+	std::string name;
+	std::unique_ptr<ASTSubst> expr;
+	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
 	Value* codegen() override;
 };
 
 class ASTInt : public AST { //èCê≥
 public:
 	std::string name;
-	std::unique_ptr<AST> expr_p;
-	ASTInt(std::string _name, std::unique_ptr<AST> _expr_p) : name(_name), expr_p(std::move(_expr_p)) {};
+	std::unique_ptr<ASTSubst> expr_p;
+	ASTInt(std::string _name, std::unique_ptr<ASTSubst> _expr_p) : name(_name), expr_p(std::move(_expr_p)) {};
 	Value* codegen() override;
 };
 class ASTIntArray : public AST {
@@ -289,19 +287,18 @@ public:
 };
 class ASTRet : public AST {
 public:
-	RType ret_type;
+	AType ret_type;
 	std::unique_ptr<AST> expr_p;
-	ASTRet(RType _ret_type) : ret_type(_ret_type) {};
+	ASTRet(AType _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
-	Type* codegen1();
 };
 class ASTProto : public AST {
 public:
 	std::string name;
 	std::vector<AType> args;
 	std::vector<std::string> identifier;
-	RType ret;
-	ASTProto(std::string _name, std::vector<AType> _args, std::vector<std::string> _identifier, RType _ret) : name(_name), args(_args), identifier(_identifier), ret(_ret) {};
+	AType ret;
+	ASTProto(std::string _name, std::vector<AType> _args, std::vector<std::string> _identifier, AType _ret) : name(_name), args(_args), identifier(_identifier), ret(_ret) {};
 	Value* codegen() override;
 };
 class ASTFunc : public AST {
@@ -355,22 +352,17 @@ public:
 	ASTWhile(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
-class ASTDSubst : public AST {
-public:
-	std::unique_ptr<ASTIdentifier> id;
-	std::unique_ptr<ASTIdentifierArrayElement> id2;
-	std::vector<std::unique_ptr<AST>> body;
-	ASTDSubst(std::unique_ptr<ASTIdentifier> _id, std::vector<std::unique_ptr<AST>> _body) : id(std::move(_id)), body(std::move(_body)) {};
-	ASTDSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::vector<std::unique_ptr<AST>> _body) : id2(std::move(_id2)), body(std::move(_body)) {};
-	Value* codegen() override;
-};
+
 class ASTSubst : public AST {
 public:
 	std::unique_ptr<ASTIdentifier> id;
 	std::unique_ptr<ASTIdentifierArrayElement> id2;
 	std::unique_ptr<AST> expr;
+	std::vector<std::unique_ptr<AST>> body;
 	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
 	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::unique_ptr<AST> _expr) :id2(std::move(_id2)), expr(std::move(_expr)) {};
+	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
+	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::vector<std::unique_ptr<AST>> _body) :id2(std::move(_id2)), body(std::move(_body)) {};
 	ASTSubst(std::unique_ptr<ASTIdentifier> _id) : id(std::move(_id)) {};
 	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2) : id2(std::move(_id2)) {};
 	Value* codegen() override;
@@ -386,7 +378,7 @@ class Parser {
 
 	std::unique_ptr<ASTStrLiteral> expr_str();
 
-	std::unique_ptr<ASTInt> def_int();
+	std::unique_ptr<ASTType> def_type();
 	std::unique_ptr<ASTIntArray> def_int_arr();
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
@@ -397,7 +389,7 @@ class Parser {
 	std::unique_ptr<ASTFor> for_statement();
 	std::unique_ptr<ASTWhile> while_statement();
 	std::unique_ptr<AST> expr_identifier();
-	std::unique_ptr<AST> subst_expr(const std::string& _id);
+	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
 
 	
@@ -409,7 +401,5 @@ public:
 	Parser(std::vector<Token_t> _tokens);
 	void parse_codegen();
 	void dump();
-	static RType getTypeByName(std::string _name);
-    RType getRTypeByCurtok();
 	AType getATypeByCurtok();
 };

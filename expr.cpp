@@ -51,6 +51,9 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		getNextToken(); //eat num
 		return std::move(value);
 	}
+	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
+		
+	}
 	else if (curtok.ty == TK::tok_identifier) {
 		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
 		identifier->loc = curtok.loc;
@@ -82,7 +85,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 
 		error("Expected", "Expected --> )", curtok);
 	}
-	error("Unexpected", "must be a number.", curtok);
+	error_unexpected(curtok);
 	exit(1);
 
 }

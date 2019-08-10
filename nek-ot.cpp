@@ -65,6 +65,9 @@ int main(int argc, char** argv) {
 #endif
   // Parser--->  
   auto parser = Parser(tytokens);
+  if (argc >= 3 && argv[2] == "-O")
+	  parser.setOpt(true);
+
   init_parse();
   
   Test::CreateFunc();

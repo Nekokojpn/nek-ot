@@ -16,7 +16,9 @@ Value* lambdavalue;
 AllocaInst* retvalue;
 std::vector<BasicBlock*> retbbs;
 
+bool opt = false;
 bool retcodegen = false;
+
 
 Module* getModule() {
 	return module.get();
@@ -25,6 +27,12 @@ Module* getModule() {
 
 void Test::CreateFunc() {
 	
+}
+bool Parser::getOpt() {
+	return opt;
+}
+void Parser::setOpt(bool b) {
+	opt = b;
 }
 
 void Sys::IO::OutPuti8Ptr::CreateFunc() {
@@ -261,6 +269,7 @@ Type* Codegen::getTypebyAType(AType ty) {
 		return builder.getVoidTy();
 		break;
 	default:
+		return nullptr;
 		break;
 	}
 }
@@ -366,8 +375,10 @@ Value* ASTProto::codegen() {
 	
 	Type* return_type = Codegen::getTypebyAType(this->ret);
 
+
+
 	Function* mainFunc =
-		Function::Create(FunctionType::get(return_type,argsRef,false),
+		Function::Create(FunctionType::get(return_type, argsRef, false),
 			Function::ExternalLinkage, name, module.get());
 	if (name == "main") {
 		builder.SetInsertPoint(BasicBlock::Create(context, "entry", mainFunc));
@@ -387,7 +398,8 @@ Value* ASTProto::codegen() {
 	}
 	mainFunc->setCallingConv(CallingConv::X86_StdCall);
 	functions_global[name] = mainFunc;
-	return nullptr;
+
+	return mainFunc;
 }
 Value* ASTFunc::codegen() {
 	
@@ -408,7 +420,8 @@ Value* ASTFunc::codegen() {
 
 	retvalue = nullptr;
 	retbbs.clear();
-	//fpm->run(*builder.GetInsertBlock()->getParent());
+
+	fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;
@@ -456,7 +469,7 @@ Value* ASTIf::codegen() {
 	if (ast_elif == nullptr && ast_else == nullptr) {
 
 		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
-		auto branch = builder.CreateCondBr(astboolop, if_block, cont);
+		builder.CreateCondBr(astboolop, if_block, cont);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
 			curbb = blocks[i];
@@ -528,6 +541,12 @@ Value* ASTWhile::codegen() {
 	}
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
+	
+	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(),false), "LFENCE;", "~{dirflag},~{fpsr},~{flags}", true, false);
+	std::vector<Value*> vec;
+	ArrayRef<Value*> arg(vec);
+	builder.CreateCall(IA, arg);
+	
 	return astboolop;
 }
 
@@ -555,8 +574,8 @@ Value* ASTSubst::codegen() {
 		return nullptr;
 }
 Value* ASTRet::codegen() {
-	retcodegen = true;
 	if (!lambdavalue) {
+		retcodegen = true;
 		if (expr_p) {
 			builder.CreateStore(expr_p->codegen(), retvalue);
 			retbbs.push_back(builder.GetInsertBlock());

@@ -28,6 +28,7 @@
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Linker/Linker.h"
+#include "llvm/IR/InlineAsm.h"
 
 #include <windows.h>				//Using at Console class
 #include <cctype>
@@ -97,6 +98,8 @@ enum class TK {
 	tok_minus = 401,
 	tok_star = 402,
 	tok_slash = 403,
+	tok_plpl = 404, //++
+	tok_mimi = 405, //--
 
 	tok_identifier = 500,
 
@@ -401,5 +404,7 @@ public:
 	Parser(std::vector<Token_t> _tokens);
 	void parse_codegen();
 	void dump();
+	void setOpt(bool b);
+	bool getOpt();
 	AType getATypeByCurtok();
 };

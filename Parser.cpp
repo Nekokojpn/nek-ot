@@ -165,7 +165,11 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 	if (curtok.ty == TK::tok_semi) {
 		return nullptr;
 	}
-	else if (curtok.ty == TK::tok_equal || curtok.ty == TK::tok_lpb || curtok.ty == TK::tok_darrow) {
+	else if (curtok.ty == TK::tok_equal || 
+				curtok.ty == TK::tok_lpb || 
+				curtok.ty == TK::tok_darrow ||
+				curtok.ty == TK::tok_plpl ||
+				curtok.ty == TK::tok_mimi) {
 		auto ast = subst_expr(id);
 		return std::move(ast);
 	}
@@ -369,6 +373,13 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 		getNextToken();
 		auto ast = std::make_unique<ASTSubst>(std::move(id), std::move(expr_block()));
 		getNextToken();
+		if (curtok.ty != TK::tok_semi)
+			error("Expected", "Expected token --> ;", curtok);
+		getNextToken();
+		return std::move(ast);
+	}
+	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
+		auto ast = std::make_unique<ASTSubst>(std::move(id), std::move(expr()));
 		if (curtok.ty != TK::tok_semi)
 			error("Expected", "Expected token --> ;", curtok);
 		getNextToken();

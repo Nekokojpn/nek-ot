@@ -1,5 +1,5 @@
-fn main() -> int{
-	int i = 0;
+fn main() -> i32{
+	i32 i = 0;
 	while(i < 1000000000){
 		i = i + 1;
 	}

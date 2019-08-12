@@ -134,6 +134,7 @@ TK gettoken() {
 		else if (cs == "for") { addToloc(cs.length()); return TK::tok_for; }
 		else if (cs == "while") { addToloc(cs.length()); return TK::tok_while; }
 		else if (cs == "new") { addToloc(cs.length()); return TK::tok_new; }
+		else if (cs == "action") { addToloc(cs.length()); return TK::tok_action; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

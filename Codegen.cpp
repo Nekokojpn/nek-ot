@@ -519,6 +519,9 @@ Value* ASTIf::codegen() {
 		return nullptr; 
 	}
 }
+Value* ASTFor::codegen() {
+	return nullptr;
+}
 Value* ASTWhile::codegen() {
 
 	auto curfunc = builder.GetInsertBlock()->getParent();

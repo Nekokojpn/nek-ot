@@ -64,6 +64,7 @@ enum class TK {
 	tok_char = 107,
 	tok_string = 108,
 	tok_i32_arr = 109,
+	tok_action = 110,
 
 	tok_num_int = 200,
 	tok_num_double = 201,
@@ -345,8 +346,9 @@ class ASTFor : public AST {
 public:
 	std::unique_ptr<AST> proto;
 	std::vector<std::unique_ptr<AST>> body;
-	//ASTFor()
-	
+	std::unique_ptr<ASTSubst> end;
+	ASTFor(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body, std::unique_ptr<ASTSubst> _end) : proto(std::move(_proto)), body(std::move(_body)), end(std::move(_end)) {};
+	Value* codegen() override;
 };
 class ASTWhile : public AST {
 public:

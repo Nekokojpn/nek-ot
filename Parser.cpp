@@ -312,6 +312,11 @@ std::unique_ptr<AST> Parser::bool_expr() {
 }
 
 std::unique_ptr<ASTFor> Parser::for_statement() {
+	getNextToken();
+	if (curtok.ty != TK::tok_lp)
+		error_unexpected(curtok);
+	getNextToken();
+	//TODO ‚±‚±‚©‚ç
 	return nullptr;
 }
 

@@ -40,6 +40,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <tuple>
 
 using namespace llvm;
 
@@ -213,7 +214,7 @@ class Codegen {
 public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
-	static Type* getTypebyAType(AType ty);
+	static std::tuple<std::string, Type*> getTypebyAType(AType ty);
 	//<-----
 };
 

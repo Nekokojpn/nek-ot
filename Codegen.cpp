@@ -244,7 +244,9 @@ void Codegen::call_writefln(llvm::ArrayRef<llvm::Value*> args)
 void Parser::dump() {
 	module->dump();
 }
-Type* Codegen::getTypebyAType(AType ty) {
+
+//std::string : TypeName, Type* : LLVM IR TYPE
+std::tuple<std::string, Type*> Codegen::getTypebyAType(AType ty) {
 	switch (ty)
 	{
 	case AType::Nop:
@@ -315,6 +317,12 @@ Value* ASTValue::codegen() {
 	return builder.getInt32(value);
 }
 
+Value* ASTString::codegen() { //—vC³
+	auto str = expr_str->value;
+	auto ptr = builder.CreateGlobalStringPtr(str, name);
+	namedvalues_str[name] = ptr;
+	return ptr;
+}
 
 Value* ASTBinOp::codegen() {
 	Value* l = lhs->codegen();
@@ -594,11 +602,5 @@ Value* ASTRet::codegen() {
 }
 Value* ASTStrLiteral::codegen() {
 	return builder.CreateGlobalStringPtr(value);
-}
-Value* ASTString::codegen() { //—vC³
-	auto str = expr_str->value;
-	auto ptr = builder.CreateGlobalStringPtr(str, name);
-	namedvalues_str[name] = ptr;
-	return ptr;
 }
 

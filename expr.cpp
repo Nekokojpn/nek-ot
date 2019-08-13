@@ -52,6 +52,9 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		return std::move(value);
 	}
 	// TODO string substination error; support str literals
+	else if (curtok.ty == TK::tok_str_string) {
+		auto ast = std::make_unique<ASTString>()
+	}
 	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
 		
 	}

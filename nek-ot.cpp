@@ -103,7 +103,6 @@ int main(int argc, char** argv) {
 #ifdef DEBUGG
   end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;
-
   parser.dump();
   std::cout << "-----time-----" << std::endl;
   double all_time = static_cast<double>(

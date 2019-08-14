@@ -246,7 +246,7 @@ void Parser::dump() {
 }
 
 //std::string : TypeName, Type* : LLVM IR TYPE
-std::tuple<std::string, Type*> Codegen::getTypebyAType(AType ty) {
+Type* Codegen::getTypebyAType(AType ty) {
 	switch (ty)
 	{
 	case AType::Nop:
@@ -275,6 +275,32 @@ std::tuple<std::string, Type*> Codegen::getTypebyAType(AType ty) {
 		break;
 	}
 }
+Type* Codegen::getTypebyAArrType(AArrType ty) {
+	switch (ty)
+	{
+	case AArrType::Nop:
+		return nullptr;
+		break;
+	case AArrType::I32:
+		return builder.getInt32Ty();
+		break;
+	case AArrType::Float:
+		return builder.getFloatTy();
+		break;
+	case AArrType::Double:
+		return builder.getDoubleTy();
+		break;
+	case AArrType::Char:
+		return builder.getInt8Ty();
+		break;
+	case AArrType::String:
+		return builder.getInt8PtrTy();
+		break;
+	default:
+		return nullptr;
+		break;
+	}
+}
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 	auto value = namedvalues_local[name];
@@ -289,7 +315,6 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		return global;
 	}
 	return builder.CreateLoad(value);
-	//return value;
 }
 
 Value* ASTIdentifierArrayElement::codegen() {
@@ -315,6 +340,10 @@ Value* ASTIdentifierArrayElement::codegen() {
 
 Value* ASTValue::codegen() {
 	return builder.getInt32(value);
+}
+
+Value* ASTStrLiteral::codegen() {
+	return builder.CreateGlobalStringPtr(value);
 }
 
 Value* ASTString::codegen() { //—vC³
@@ -366,11 +395,10 @@ Value* ASTType::codegen() {
 	}
 	return allocainst;
 }
-
-Value* ASTIntArray::codegen() {
-	auto value = builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),size));
-	namedvalues_local[name] = value;
-	return value;
+Value* ASTArrType::codegen() {
+	auto allocainst = builder.CreateAlloca(ArrayType::get(Codegen::getTypebyAArrType(this->ty), this->size));
+	namedvalues_local[name] = allocainst;
+	return allocainst;
 }
 
 Value* ASTProto::codegen() {
@@ -382,8 +410,6 @@ Value* ASTProto::codegen() {
 	ArrayRef<Type*>  argsRef(putsArgs);
 	
 	Type* return_type = Codegen::getTypebyAType(this->ret);
-
-
 
 	Function* mainFunc =
 		Function::Create(FunctionType::get(return_type, argsRef, false),
@@ -412,7 +438,8 @@ Value* ASTProto::codegen() {
 Value* ASTFunc::codegen() {
 	
 	auto pr = proto->codegen(); //Proto
-	retvalue = builder.CreateAlloca(builder.GetInsertBlock()->getParent()->getReturnType());
+	if(builder.GetInsertBlock()->getParent()->getReturnType() != builder.getVoidTy())
+		retvalue = builder.CreateAlloca(builder.GetInsertBlock()->getParent()->getReturnType());
 
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
@@ -420,16 +447,20 @@ Value* ASTFunc::codegen() {
 	auto retbb = BasicBlock::Create(context, "ret", builder.GetInsertBlock()->getParent());
 	builder.SetInsertPoint(retbb);
 
-	builder.CreateRet(builder.CreateLoad(retvalue));
+	if (retvalue) {
+		builder.CreateRet(builder.CreateLoad(retvalue));
+	}
+	else { //retun type is void
+		builder.CreateRetVoid();
+	}
 	for (auto bb : retbbs) {
 		builder.SetInsertPoint(bb);
 		builder.CreateBr(retbb);
 	}
-
 	retvalue = nullptr;
 	retbbs.clear();
 
-	fpm->run(*builder.GetInsertBlock()->getParent());
+	//fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;
@@ -599,8 +630,5 @@ Value* ASTRet::codegen() {
 		builder.CreateStore(this->expr_p->codegen(), lambdavalue);
 	}
 	return nullptr;
-}
-Value* ASTStrLiteral::codegen() {
-	return builder.CreateGlobalStringPtr(value);
 }
 

@@ -22,9 +22,6 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_char) {
 		return AType::Char;
 	}
-	else if (curtok.ty == TK::tok_string) {
-		return  AType::String;
-	}
 	else if (curtok.ty == TK::tok_float) {
 		return  AType::Float;
 	}
@@ -33,6 +30,23 @@ AType Parser::getATypeByCurtok() {
 	}
 	else {
 		return AType::Nop;
+	}
+}
+AArrType Parser::getAArrTypeByCurtok() {
+	if (curtok.ty == TK::tok_i32_arr) {
+		return AArrType::I32;
+	}
+	else if (curtok.ty == TK::tok_char_arr) {
+		return AArrType::Char;
+	}
+	else if (curtok.ty == TK::tok_float_arr) {
+		return  AArrType::Float;
+	}
+	else if (curtok.ty == TK::tok_double_arr) {
+		return AArrType::Double;
+	}
+	else {
+		return AArrType::Nop;
 	}
 }
 
@@ -98,43 +112,45 @@ std::unique_ptr<ASTType> Parser::def_type() {
 	return nullptr;
 }
 
-std::unique_ptr<ASTIntArray> Parser::def_int_arr() {
+std::unique_ptr<ASTArrType> Parser::def_arr_type() {
+	auto ty = this->getAArrTypeByCurtok();
 	getNextToken();
-	if(curtok.ty != TK::tok_identifier)
-		error("Syntax error", "Unexpected token --> " + curtok.val, curtok);
-	auto name = curtok.val;
+	if (curtok.ty != TK::tok_identifier)
+		error_unexpected(curtok);
+	auto id = curtok.val;
 	getNextToken();
 	if (curtok.ty == TK::tok_equal) {
 		getNextToken();
 		if (curtok.ty != TK::tok_new)
-			error("", "", curtok);
+			error_unexpected(curtok);
 		getNextToken();
-		if(curtok.ty != TK::tok_i32)
-			error("", "", curtok);
+		if (curtok.ty != TK::tok_lpb)
+			error_unexpected(curtok);
 		getNextToken();
-		if(curtok.ty != TK::tok_lpb)
-			error("", "", curtok);
+		if (curtok.ty != TK::tok_num_int)
+			error_unexpected(curtok);
+		auto size = std::atol(curtok.val.c_str());
 		getNextToken();
-		if(curtok.ty != TK::tok_num_int)
-			error("", "", curtok);
-		auto size = std::atoi(curtok.val.c_str());
+		if (curtok.ty != TK::tok_rpb)
+			error_unexpected(curtok);
 		getNextToken();
-		if(curtok.ty != TK::tok_rpb)
-			error("", "", curtok);
-		getNextToken();
-		if(curtok.ty != TK::tok_semi)
-			error("", "", curtok);
-		auto ast = std::make_unique<ASTIntArray>(name, size);
+		auto ast = std::make_unique<ASTArrType>(ty, id, size);
 		ast->loc = curtok.loc;
+		if (curtok.ty != TK::tok_semi)
+			error_unexpected(curtok);
 		getNextToken();
+
 		return std::move(ast);
 	}
-	else if (curtok.ty == TK::tok_semi) {
-
+	else if (consume(TK::tok_semi)) {
+		auto ast = std::make_unique<ASTArrType>(ty, id, 0);
+		ast->loc = curtok.loc;
+		return std::move(ast);
 	}
-	error("Syntax error", "Unexpected token--> " + curtok.val, curtok);
+	error_unexpected(curtok);
 	return nullptr;
 }
+
 
 std::unique_ptr<ASTString> Parser::def_string() {
 	getNextToken();

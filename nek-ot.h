@@ -46,67 +46,72 @@ using namespace llvm;
 
 // TOKENS--------------->
 enum class TK {
-	tok_nope = 0,
-	tok_fn = 2,
-	tok_if = 3,
-	tok_elif = 4,
-	tok_else = 5,
-	tok_for = 6,
-	tok_while = 7,
-	tok_new = 8,
+	tok_nope,
+	tok_fn,
+	tok_if,
+	tok_elif,
+	tok_else,
+	tok_for,
+	tok_while,
+	tok_new,
+	tok_class,
 
-	tok_ret = 100,
-	tok_void = 101,
-	tok_i32 = 102,
-	tok_float = 103,
-	tok_double = 104,
-	tok_short = 105,
-	tok_i64 = 106,
-	tok_char = 107,
-	tok_string = 108,
-	tok_i32_arr = 109,
-	tok_action = 110,
+	tok_ret,
+	tok_void,
+	tok_i32,
+	tok_float,
+	tok_double,
+	tok_short,
+	tok_i64,
+	tok_char,
+	tok_string,
+	tok_i32_arr,
+	tok_action,
+	tok_var,
+	tok_char_arr,
+	tok_float_arr,
+	tok_double_arr,
 
-	tok_num_int = 200,
-	tok_num_double = 201,
-	tok_str_string = 202,
+	tok_num_int,
+	tok_num_double,
+	tok_str_string,
 
-	tok_semi = 300, // ;
-	tok_equal = 301, // =
-	tok_lp = 302, // (
-	tok_rp = 303, // )
-	tok_lb = 304, // {
-	tok_rb = 305, // }
-	tok_arrow = 306, // ->
-	tok_sq = 307, // '
-	tok_dq = 308, // "
-	tok_lt = 309, // <
-	tok_lteq = 310, // <=
-	tok_rt = 311, // >
-	tok_rteq = 312, // >=
-	tok_eqeq = 313, // ==
-	tok_em = 314, // !
-	tok_emeq = 315, //!=
-	tok_comma = 316, // ,
-	tok_under = 317, // _
-	tok_dot = 318,
-	tok_lpb = 319, // [
-	tok_rpb = 320, // ]
-	tok_percent = 321, // %
-	tok_darrow = 322, // =>
+	tok_semi, // ;
+	tok_equal, // =
+	tok_lp, // (
+	tok_rp, // )
+	tok_lb, // {
+	tok_rb, // }
+	tok_arrow, // ->
+	tok_sq, // '
+	tok_dq, // "
+	tok_lt, // <
+	tok_lteq, // <=
+	tok_rt, // >
+	tok_rteq, // >=
+	tok_eqeq, // ==
+	tok_em, // !
+	tok_emeq, //!=
+	tok_comma, // ,
+	tok_under, // _
+	tok_dot,
+	tok_lpb, // [
+	tok_rpb, // ]
+	tok_percent, // %
+	tok_darrow, // =>
 
 	// operator
-	tok_plus = 400,
-	tok_minus = 401,
-	tok_star = 402,
-	tok_slash = 403,
-	tok_plpl = 404, //++
-	tok_mimi = 405, //--
+	tok_plus,
+	tok_minus,
+	tok_star,
+	tok_slash,
+	tok_plpl, //++
+	tok_mimi, //--
 
-	tok_identifier = 500,
+	tok_identifier,
 
-	tok_eof = -1,
-	tok_unknown = 0
+	tok_eof,
+	tok_unknown
 
 };
 class Test {
@@ -204,8 +209,13 @@ enum class AType { //AllType
 	String,
 	Void
 };
-enum class ATypeArr {
-
+enum class AArrType {
+	Nop,
+	I32,
+	Float,
+	Double,
+	Char,
+	String
 };
 
 
@@ -214,7 +224,8 @@ class Codegen {
 public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
-	static std::tuple<std::string, Type*> getTypebyAType(AType ty);
+	static Type* getTypebyAType(AType ty);
+	static Type* getTypebyAArrType(AArrType ty);
 	//<-----
 };
 
@@ -225,6 +236,7 @@ public:
 	Location_t loc;
 	virtual Value* codegen() = 0;
 };
+
 class ASTIdentifier : public AST {
 public:
 	std::string name;
@@ -269,20 +281,15 @@ public:
 	Value* codegen() override;
 };
 
-class ASTInt : public AST { //C³
+class ASTArrType : public AST {
 public:
+	AArrType ty;
 	std::string name;
-	std::unique_ptr<ASTSubst> expr_p;
-	ASTInt(std::string _name, std::unique_ptr<ASTSubst> _expr_p) : name(_name), expr_p(std::move(_expr_p)) {};
+	long size;
+	ASTArrType(AArrType _ty, std::string _name, long _size) : ty(_ty), name(_name), size(_size) {};
 	Value* codegen() override;
 };
-class ASTIntArray : public AST {
-public:
-	std::string name;
-	int size;
-	ASTIntArray(std::string _name, int _size) : name(_name), size(_size) {};
-	Value* codegen() override;
-};
+
 class ASTString : public AST {
 public:
 	std::string name;
@@ -345,10 +352,11 @@ public:
 };
 class ASTFor : public AST {
 public:
-	std::unique_ptr<AST> proto;
+	std::vector<std::unique_ptr<AST>> start;
+	std::unique_ptr<AST> proto; //BoolOp
 	std::vector<std::unique_ptr<AST>> body;
-	std::unique_ptr<ASTSubst> end;
-	ASTFor(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body, std::unique_ptr<ASTSubst> _end) : proto(std::move(_proto)), body(std::move(_body)), end(std::move(_end)) {};
+	std::vector<std::unique_ptr<AST>> end;
+	//ASTFor(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body, std::unique_ptr<ASTSubst> _end) : proto(std::move(_proto)), body(std::move(_body)), end(std::move(_end)) {};
 	Value* codegen() override;
 };
 class ASTWhile : public AST {
@@ -373,6 +381,7 @@ public:
 	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2) : id2(std::move(_id2)) {};
 	Value* codegen() override;
 };
+
 class Parser {
 	int index;
 	Token_t curtok;
@@ -385,7 +394,7 @@ class Parser {
 	std::unique_ptr<ASTStrLiteral> expr_str();
 
 	std::unique_ptr<ASTType> def_type();
-	std::unique_ptr<ASTIntArray> def_int_arr();
+	std::unique_ptr<ASTArrType> def_arr_type();
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
 	std::unique_ptr<ASTCall> func_call(const std::string& _id);
@@ -410,4 +419,5 @@ public:
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
+	AArrType getAArrTypeByCurtok();
 };

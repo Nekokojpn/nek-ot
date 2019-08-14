@@ -51,9 +51,11 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		getNextToken(); //eat num
 		return std::move(value);
 	}
-	// TODO string substination error; support str literals
 	else if (curtok.ty == TK::tok_str_string) {
-		auto ast = std::make_unique<ASTString>()
+		auto ast = std::make_unique<ASTStrLiteral>(curtok.val.substr(1, curtok.val.length() - 1));
+		ast->loc = curtok.loc;
+		getNextToken();
+		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
 		
@@ -81,6 +83,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	else if (curtok.ty == TK::tok_lp) {
 		getNextToken();
 		auto ast = expr();
+		ast->loc = curtok.loc;
 		if (curtok.ty == TK::tok_rp)
 		{
 			getNextToken();

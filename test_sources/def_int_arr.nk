@@ -1,5 +1,5 @@
-fn main() -> int {
-	int[] arr = new int[5];
+fn main() -> i32 {
+	i32[] arr = new[5];
 	arr[0] = 1;
 	arr[1] = 2;
 	arr[2] = 3;

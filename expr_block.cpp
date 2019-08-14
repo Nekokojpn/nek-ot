@@ -8,13 +8,13 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 	while (curtok.ty != TK::tok_rb)
 	{
 		auto ty = getATypeByCurtok();
-		if (ty != AType::Nop)
-		{
+		if (ty != AType::Nop) {
 			auto ast = def_type();
 			asts.push_back(std::move(ast));
 		}
-		else if (curtok.ty == TK::tok_i32_arr) {
-			auto ast = def_int_arr();
+		auto ty_arr = getAArrTypeByCurtok();
+		if (ty_arr != AArrType::Nop) {
+			auto ast = def_arr_type();
 			asts.push_back(std::move(ast));
 		}
 		else if (curtok.ty == TK::tok_string) {

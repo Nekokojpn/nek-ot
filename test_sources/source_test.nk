@@ -1,8 +1,6 @@
 fn main() -> i32{
-	i32 t = 0;
-	if(t == 0){
-	ret 3;
-	} else {
-	ret 2;
-	}
+	i32 f = 210+210;
+	string s = "%d";
+	writefln(s, f);
+	ret f;
 }

@@ -252,8 +252,8 @@ public:
 };
 class ASTValue : public AST {
 public:
-	int value;
-	ASTValue(int _value) : value(_value) {};
+	long value;
+	ASTValue(long  _value) : value(_value) {};
 	Value* codegen() override;
 };
 class ASTStrLiteral : public AST {

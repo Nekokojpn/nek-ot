@@ -11,8 +11,7 @@ static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
 
-double tmpvar;
-double curvar;
+AllocaInst* curvar;
 std::vector<double> curvar_v;
 
 Value* lambdavalue;
@@ -343,6 +342,12 @@ Value* ASTIdentifierArrayElement::codegen() {
 }
 
 Value* ASTValue::codegen() {
+	if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
+		if (value >= (signed long)2147483648L)
+			error("Compile error", "Exceeded i32 maximum.", this->loc);
+		else if (value < (signed long)-2147483648L)
+			error("Compile error", "Exceeded i32 minimum.", this->loc);
+	}
 	curvar_v.push_back(value);
 	return builder.getInt32(value);
 }
@@ -368,24 +373,28 @@ Value* ASTBinOp::codegen() {
 	case Op::Plus:
 		if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
+			if (l->getType() == builder.getInt32Ty()) {
+				if (curvar_v[curvar_v.size() - 2] > 2147483647)
+					error("Compile error", "Exceeded i32 maximum", this->loc);
+			}
 			curvar_v.pop_back();
 		}
 		return builder.CreateAdd(l, r);
 	case Op::Minus:
 		if (size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 1] = curvar_v[curvar_v.size() - 1] - curvar_v[curvar_v.size()];
+			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] - curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
 		}
 		return builder.CreateSub(l, r);
 	case Op::Mul:
 		if (size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 1] = curvar_v[curvar_v.size() - 1] * curvar_v[curvar_v.size()];
+			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] * curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
 		}
 		return builder.CreateMul(l, r);
 	case Op::Div:
 		if (size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 1] = curvar_v[curvar_v.size() - 1] / curvar_v[curvar_v.size()];
+			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] / curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
 		}
 		return builder.CreateSDiv(l, r);
@@ -411,7 +420,6 @@ Value* ASTType::codegen() {
 	namedvalues_local[this->name] = allocainst;
 	if (this->expr) {
 		auto value = this->expr->codegen();
-		std::cout << curvar_v[0] << std::endl;
 		curvar_v.clear();
 		if (!value)
 			return nullptr;
@@ -618,6 +626,7 @@ Value* ASTWhile::codegen() {
 
 Value* ASTSubst::codegen() {
 	if (this->id) {
+		curvar = namedvalues_local[id->name];
 		if(this->expr)
 			return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
 		else {

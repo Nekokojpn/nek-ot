@@ -11,6 +11,10 @@ static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
 
+double tmpvar;
+double curvar;
+std::vector<double> curvar_v;
+
 Value* lambdavalue;
 
 AllocaInst* retvalue;
@@ -339,6 +343,7 @@ Value* ASTIdentifierArrayElement::codegen() {
 }
 
 Value* ASTValue::codegen() {
+	curvar_v.push_back(value);
 	return builder.getInt32(value);
 }
 
@@ -354,18 +359,35 @@ Value* ASTString::codegen() { //—vC³
 }
 
 Value* ASTBinOp::codegen() {
+	long size = curvar_v.size();
 	Value* l = lhs->codegen();
 	Value* r = rhs->codegen();
 	if (!l || !r)
 		return nullptr;
 	switch (op) {
 	case Op::Plus:
+		if (size + 2 == curvar_v.size()) {
+			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
+			curvar_v.pop_back();
+		}
 		return builder.CreateAdd(l, r);
 	case Op::Minus:
+		if (size + 2 == curvar_v.size()) {
+			curvar_v[curvar_v.size() - 1] = curvar_v[curvar_v.size() - 1] - curvar_v[curvar_v.size()];
+			curvar_v.pop_back();
+		}
 		return builder.CreateSub(l, r);
 	case Op::Mul:
+		if (size + 2 == curvar_v.size()) {
+			curvar_v[curvar_v.size() - 1] = curvar_v[curvar_v.size() - 1] * curvar_v[curvar_v.size()];
+			curvar_v.pop_back();
+		}
 		return builder.CreateMul(l, r);
 	case Op::Div:
+		if (size + 2 == curvar_v.size()) {
+			curvar_v[curvar_v.size() - 1] = curvar_v[curvar_v.size() - 1] / curvar_v[curvar_v.size()];
+			curvar_v.pop_back();
+		}
 		return builder.CreateSDiv(l, r);
 	case Op::LThan:
 		return builder.CreateICmpSLT(l, r);
@@ -389,6 +411,8 @@ Value* ASTType::codegen() {
 	namedvalues_local[this->name] = allocainst;
 	if (this->expr) {
 		auto value = this->expr->codegen();
+		std::cout << curvar_v[0] << std::endl;
+		curvar_v.clear();
 		if (!value)
 			return nullptr;
 		return value;

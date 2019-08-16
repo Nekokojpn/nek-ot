@@ -343,9 +343,9 @@ Value* ASTIdentifierArrayElement::codegen() {
 
 Value* ASTValue::codegen() {
 	if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
-		if (value >= (signed long)2147483648L)
+		if (this->value >= 2147483648)
 			error("Compile error", "Exceeded i32 maximum.", this->loc);
-		else if (value < (signed long)-2147483648L)
+		else if (this->value < (long)-2147483648L)
 			error("Compile error", "Exceeded i32 minimum.", this->loc);
 	}
 	curvar_v.push_back(value);

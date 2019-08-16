@@ -46,7 +46,7 @@ std::unique_ptr<AST> Parser::expr_mul() {
 std::unique_ptr<AST> Parser::expr_primary() {
 
 	if (curtok.ty == TK::tok_num_int) {
-		auto value = std::make_unique<ASTValue>(std::atoi(curtok.val.c_str()));
+		auto value = std::make_unique<ASTValue>(std::atoll(curtok.val.c_str()));
 		value->loc = curtok.loc;
 		getNextToken(); //eat num
 		return std::move(value);

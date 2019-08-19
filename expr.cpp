@@ -19,8 +19,9 @@ std::unique_ptr<AST> Parser::expr_add() {
 			break;
 		}
 		auto rhs = expr_mul();
+		auto loc = curtok.loc;
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
-		lhs->loc = curtok.loc;
+		lhs->loc = loc;
 	}
 	return std::move(lhs);
 }
@@ -38,31 +39,34 @@ std::unique_ptr<AST> Parser::expr_mul() {
 			break;
 		}
 		auto rhs = expr_primary();
+		auto loc = curtok.loc;
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
-		lhs->loc = curtok.loc;
+		lhs->loc = loc;
 	}
 	return std::move(lhs);
 }
 std::unique_ptr<AST> Parser::expr_primary() {
 
 	if (curtok.ty == TK::tok_num_int) {
+		auto loc = curtok.loc;
 		auto value = std::make_unique<ASTValue>(std::atoll(curtok.val.c_str()));
-		value->loc = curtok.loc;
+		value->loc = loc;
 		getNextToken(); //eat num
 		return std::move(value);
 	}
-	else if (curtok.ty == TK::tok_str_string) {
-		auto ast = std::make_unique<ASTStrLiteral>(curtok.val.substr(1, curtok.val.length() - 1));
-		ast->loc = curtok.loc;
-		getNextToken();
+	else if (curtok.ty == TK::tok_dq) {
+		auto loc = curtok.loc;
+		auto ast = std::make_unique<ASTString>("", std::move(expr_str()));
+		ast->loc = loc;
 		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
 		
 	}
 	else if (curtok.ty == TK::tok_identifier) {
+		auto loc = curtok.loc;
 		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
-		identifier->loc = curtok.loc;
+		identifier->loc = loc;
 		getNextToken();
 		if (curtok.ty == TK::tok_lp) { //Function call.
 			auto funccall = func_call(identifier->name);
@@ -74,8 +78,9 @@ std::unique_ptr<AST> Parser::expr_primary() {
 			if (curtok.ty != TK::tok_rpb)
 				error_unexpected(curtok);
 			getNextToken();
+			auto loc = curtok.loc;
 			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_));
-			ast->loc = curtok.loc;
+			ast->loc = loc;
 			return std::move(ast);
 		}
 		return std::move(identifier);

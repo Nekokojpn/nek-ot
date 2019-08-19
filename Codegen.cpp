@@ -214,7 +214,7 @@ void init_parse() {
 	module = make_unique<Module>("top", context);
 	fpm = llvm::make_unique<legacy::FunctionPassManager>(module.get());
 	fpm->add(createPromoteMemoryToRegisterPass());
-	fpm->add(createInstructionCombiningPass());
+	//fpm->add(createInstructionCombiningPass());
 	fpm->add(createReassociatePass());
 	fpm->add(createGVNPass());
 	fpm->add(createCFGSimplificationPass());
@@ -342,11 +342,13 @@ Value* ASTIdentifierArrayElement::codegen() {
 }
 
 Value* ASTValue::codegen() {
-	if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
-		if (this->value >= 2147483648)
-			error("Compile error", "Exceeded i32 maximum.", this->loc);
-		else if (this->value < (long)-2147483648L)
-			error("Compile error", "Exceeded i32 minimum.", this->loc);
+	if (curvar) {
+		if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
+			if (this->value >= 2147483648)
+				error("Compile error", "Exceeded i32 maximum.", this->loc);
+			else if (this->value < -2147483648LL)
+				error("Compile error", "Exceeded i32 minimum.", this->loc);
+		}
 	}
 	curvar_v.push_back(value);
 	return builder.getInt32(value);
@@ -374,8 +376,8 @@ Value* ASTBinOp::codegen() {
 		if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
 			if (l->getType() == builder.getInt32Ty()) {
-				if (curvar_v[curvar_v.size() - 2] > 2147483647)
-					error("Compile error", "Exceeded i32 maximum", this->loc);
+				if (curvar_v[curvar_v.size() - 2] >= 2147483648)
+					error("Compile error", "Exceeded i32 maximum.", this->loc);
 			}
 			curvar_v.pop_back();
 		}
@@ -492,7 +494,7 @@ Value* ASTFunc::codegen() {
 	retvalue = nullptr;
 	retbbs.clear();
 
-	//fpm->run(*builder.GetInsertBlock()->getParent());
+	fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;

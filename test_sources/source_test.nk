@@ -1,6 +1,8 @@
 fn main() -> i32{
-	i32 f = 2147483647+1;
-	string s = "%d";
-	writefln(s, f);
-	ret f;
+	i32 i = 0;
+	while(i < 100){
+	
+	i = i + 1;
+	}
+	ret 0;
 }

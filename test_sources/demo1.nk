@@ -1,5 +1,4 @@
 fn main() -> i32 {
-	string s = "untitti";
-	writefln(s);
+	writefln("unti");
 	ret 0;
 }

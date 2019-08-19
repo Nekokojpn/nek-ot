@@ -9,10 +9,9 @@ i32 val = 0;
   ret val;
 }
 fn main() {
-i32 i = 1;
+i32 i = 1; 
  while(i < 35){
- string f = "fibo(%d) -> %d";
- writefln(f, i, fibo(i));
+ writefln("fibo(%d) -> %d", i, fibo(i));
  i = i + 1;
  }
  ret;

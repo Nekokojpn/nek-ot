@@ -19,15 +19,17 @@ void error(std::string title, std::string message, int line, int column) {
 		t.push_back(source[line - 1].substr(0, source[line - 1].size() - 1));
 	std::string t1 = source[line].substr(0, source[line].size() - 1);
 	t.push_back(t1);
-	int sp = -1;
-	while (isspace(t1[++sp]));
 	for (std::string s : t) {
 		std::cerr << "     " << s << std::endl;
 		Console::SetConsoleTextBlue();
 		std::cerr << "  |";
 		Console::SetConsoleTextWhite();
 	}
-	for (int i = 0; i < column-1; i++)
+	int tab = 0;
+	for (int i = 0; i < column - 1; i++) {
+		if (t1[i] == '	')tab++;
+	}
+	for (int i = 0; i < (column-1)-(tab*4); i++)
 		std::cerr << " ";
 	Console::SetConsoleTextRed();
 	std::cerr << "^" << std::endl;

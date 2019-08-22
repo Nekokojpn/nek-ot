@@ -11,7 +11,8 @@ bool Parser::consume(TK tk) noexcept {
 }
 //set the next token to curtok.
 void Parser::getNextToken() noexcept {
-	curtok = tokens[++index];
+	if(index+1 <= tokens.size())
+		curtok = tokens[++index];
 }
 
 //get AType from curtok.
@@ -156,6 +157,18 @@ std::unique_ptr<ASTArrType> Parser::def_arr_type() {
 	return nullptr;
 }
 
+std::unique_ptr<ASTAction> Parser::def_action() {
+	getNextToken();
+	if (curtok.ty != TK::tok_identifier)
+		error_unexpected(curtok);
+	auto name = curtok.val;
+	getNextToken();
+	if (curtok.ty != TK::tok_equal)
+		error_unexpected(curtok);
+
+	return nullptr;
+}
+
 
 std::unique_ptr<ASTString> Parser::def_string() {
 	getNextToken();
@@ -284,9 +297,6 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 	auto loc = curtok.loc;
 	auto ast = std::make_unique<ASTIf>(std::move(boolast), expr_block());
 	ast->loc = loc;
-	if (curtok.ty != TK::tok_rb)
-		error("Expected", "Expected --> }", curtok);
-	getNextToken();
 	//<-----IF
 	/*		IF‚µ‚©‚È‚¢		*/
 	if(curtok.ty != TK::tok_elif&&curtok.ty != TK::tok_else)
@@ -302,7 +312,6 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 		auto loc = curtok.loc;
 		ast->ast_else = std::make_unique<ASTElse>(expr_block());
 		ast->loc = loc;
-		getNextToken();
 		return std::move(ast);
 	}
 	error("Unexpected", "Unexpected token--> " + curtok.val, curtok);
@@ -365,11 +374,6 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 	auto loc = curtok.loc;
 	auto ast = std::make_unique<ASTWhile>(std::move(boolast), expr_block());
 	ast->loc = loc;
-	if (curtok.ty != TK::tok_rb)
-		error("Expected", "Expected --> }", curtok);
-	getNextToken();
-	//<-----IF
-
 	return std::move(ast);
 }
 
@@ -488,7 +492,6 @@ void Parser::parse_codegen() {
 	}
 	if (curtok.ty == TK::tok_eof)
 		return;
-	getNextToken();
 	parse_codegen();
 	return;
 }

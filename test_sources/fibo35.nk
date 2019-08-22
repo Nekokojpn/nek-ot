@@ -2,14 +2,14 @@ fn fibo(i32 n) -> i32{
 i32 val = 0;
  if(n < 2){
   val = n;
- }
+ };
  else {
    val = fibo(n-1) + fibo(n-2);
-  }
+  };
   ret val;
-}
-fn main() -> void{
-string f = "%d";
-writefln(f, fibo(35));
+};
+fn main() {
+i32 i = 35; 
+ writefln("fibo(%d) -> %d", i, fibo(i));
  ret;
-}
+};

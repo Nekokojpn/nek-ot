@@ -236,6 +236,7 @@ public:
 };
 
 class ASTSubst;
+class ASTFunc;
 
 class AST {
 public:
@@ -294,6 +295,14 @@ public:
 	long size;
 	ASTArrType(AArrType _ty, std::string _name, long _size) : ty(_ty), name(_name), size(_size) {};
 	Value* codegen() override;
+};
+
+class ASTAction : public AST {
+public:
+	std::string name;
+	std::unique_ptr<ASTFunc> lambda;
+	Value* codegen();
+	ASTAction(std::string _name, std::unique_ptr<ASTFunc> _lambda) : name(_name), lambda(std::move(_lambda)) {};
 };
 
 class ASTString : public AST {
@@ -403,6 +412,7 @@ class Parser {
 	std::unique_ptr<ASTArrType> def_arr_type();
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
+	std::unique_ptr<ASTAction> def_action();
 	std::unique_ptr<ASTCall> func_call(const std::string& _id);
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();

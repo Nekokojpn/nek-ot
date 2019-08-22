@@ -13,6 +13,7 @@ static std::map<std::string, Value*> namedvalues_str;
 
 AllocaInst* curvar;
 std::vector<double> curvar_v;
+std::map<std::string, double> constantfoldings;
 
 Value* lambdavalue;
 
@@ -214,7 +215,7 @@ void init_parse() {
 	module = make_unique<Module>("top", context);
 	fpm = llvm::make_unique<legacy::FunctionPassManager>(module.get());
 	fpm->add(createPromoteMemoryToRegisterPass());
-	//fpm->add(createInstructionCombiningPass());
+	fpm->add(createInstructionCombiningPass());
 	fpm->add(createReassociatePass());
 	fpm->add(createGVNPass());
 	fpm->add(createCFGSimplificationPass());
@@ -306,7 +307,9 @@ Type* Codegen::getTypebyAArrType(AArrType ty) {
 }
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
-	auto value = namedvalues_local[name];
+	auto value = namedvalues_local[name]; 
+	if(constantfoldings[name])
+		curvar_v.push_back(constantfoldings[name]);
 	if (!value) {
 		auto global = namedvalues_global[name];
 		if (!global) {
@@ -345,7 +348,7 @@ Value* ASTValue::codegen() {
 	if (curvar) {
 		if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
 			if (this->value >= 2147483648)
-				error("Compile error", "Exceeded i32 maximum.", this->loc);
+				error("Compile error", "Overflow occurs", this->loc);
 			else if (this->value < -2147483648LL)
 				error("Compile error", "Exceeded i32 minimum.", this->loc);
 		}
@@ -373,14 +376,16 @@ Value* ASTBinOp::codegen() {
 		return nullptr;
 	switch (op) {
 	case Op::Plus:
-		if (size + 2 == curvar_v.size()) {
+		
+		if (l->getType() && size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
-			if (l->getType() == builder.getInt32Ty()) {
+			if (l->getType() && l->getType() == builder.getInt32Ty()) {
 				if (curvar_v[curvar_v.size() - 2] >= 2147483648)
 					error("Compile error", "Exceeded i32 maximum.", this->loc);
 			}
 			curvar_v.pop_back();
 		}
+		
 		return builder.CreateAdd(l, r);
 	case Op::Minus:
 		if (size + 2 == curvar_v.size()) {
@@ -422,6 +427,7 @@ Value* ASTType::codegen() {
 	namedvalues_local[this->name] = allocainst;
 	if (this->expr) {
 		auto value = this->expr->codegen();
+		constantfoldings[this->name] = curvar_v[0];
 		curvar_v.clear();
 		if (!value)
 			return nullptr;
@@ -464,6 +470,7 @@ Value* ASTProto::codegen() {
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
 	}
+	mainFunc->setDSOLocal(true);
 	mainFunc->setCallingConv(CallingConv::X86_StdCall);
 	functions_global[name] = mainFunc;
 
@@ -509,8 +516,11 @@ Value* ASTCall::codegen() {
 		Codegen::call_writefln(argsRef);
 		return nullptr;
 	}
-	else
-		return builder.CreateCall(functions_global[name], argsRef,"calltmp");
+	else {
+		auto inst = builder.CreateCall(functions_global[name], argsRef, "calltmp");
+		inst->setCallingConv(CallingConv::X86_StdCall);
+		return inst;
+	}
 }
 
 Value* ASTElse::codegen() {
@@ -624,6 +634,9 @@ Value* ASTWhile::codegen() {
 	builder.CreateCall(IA, arg);
 	
 	return astboolop;
+}
+Value* ASTAction::codegen() {
+	return nullptr;
 }
 
 Value* ASTSubst::codegen() {

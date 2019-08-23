@@ -7,17 +7,7 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 	std::vector<std::unique_ptr<AST>> asts;
 	while (curtok.ty != TK::tok_rb)
 	{
-		auto ty = getATypeByCurtok();
-		if (ty != AType::Nop) {
-			auto ast = def_type();
-			asts.push_back(std::move(ast));
-		}
-		auto ty_arr = getAArrTypeByCurtok();
-		if (ty_arr != AArrType::Nop) {
-			auto ast = def_arr_type();
-			asts.push_back(std::move(ast));
-		}
-		else if (curtok.ty == TK::tok_string) {
+		if (curtok.ty == TK::tok_string) {
 			auto ast = def_string();
 			asts.push_back(std::move(ast));
 		}

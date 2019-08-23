@@ -65,8 +65,11 @@ int main(int argc, char** argv) {
 #endif
   // Parser--->  
   auto parser = Parser(tytokens);
-  if (argc >= 3 && argv[2] == "-O")
-	  parser.setOpt(true);
+  std::string uo = "-Uo\0";
+  char* up = &uo[0];
+  if (argc >= 3 && *argv[2] == *up) {
+	  parser.setOpt(false);
+  }
 
   init_parse();
   

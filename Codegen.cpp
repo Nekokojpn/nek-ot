@@ -5,6 +5,7 @@ LLVMContext context;
 IRBuilder<> builder(context);
 std::unique_ptr<Module> module;
 std::unique_ptr<legacy::FunctionPassManager> fpm;
+std::unique_ptr<PassManagerBuilder> pmbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, AllocaInst*> namedvalues_global;
@@ -214,12 +215,9 @@ void Sys::IO::Printf::CreateFunc() {
 void init_parse() {
 	module = make_unique<Module>("top", context);
 	fpm = llvm::make_unique<legacy::FunctionPassManager>(module.get());
-	fpm->add(createPromoteMemoryToRegisterPass());
-	fpm->add(createInstructionCombiningPass());
-	fpm->add(createReassociatePass());
-	fpm->add(createGVNPass());
-	fpm->add(createCFGSimplificationPass());
-	
+	pmbuilder = std::make_unique<PassManagerBuilder>();
+	pmbuilder->OptLevel = 2;
+	pmbuilder->populateFunctionPassManager(*fpm);
 	fpm->doInitialization();
 }
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) {
@@ -423,17 +421,24 @@ Value* ASTBinOp::codegen() {
 }
 
 Value* ASTType::codegen() {
-	auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
-	namedvalues_local[this->name] = allocainst;
-	if (this->expr) {
-		auto value = this->expr->codegen();
-		constantfoldings[this->name] = curvar_v[0];
-		curvar_v.clear();
-		if (!value)
-			return nullptr;
-		return value;
+	if (!this->arr_size) {
+		auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
+		namedvalues_local[this->name] = allocainst;
+		if (this->expr) {
+			auto value = this->expr->codegen();
+			constantfoldings[this->name] = curvar_v[0];
+			curvar_v.clear();
+			if (!value)
+				return nullptr;
+			return value;
+		}
+		return allocainst;
 	}
-	return allocainst;
+	else {
+		auto allocainst = builder.CreateAlloca(ArrayType::get(Codegen::getTypebyAType(this->ty), this->arr_size));
+		namedvalues_local[name] = allocainst;
+		return allocainst;
+	}
 }
 Value* ASTArrType::codegen() {
 	auto allocainst = builder.CreateAlloca(ArrayType::get(Codegen::getTypebyAArrType(this->ty), this->size));

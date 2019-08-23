@@ -21,7 +21,7 @@ Value* lambdavalue;
 AllocaInst* retvalue;
 std::vector<BasicBlock*> retbbs;
 
-bool opt = false;
+bool opt = true;
 bool retcodegen = false;
 
 
@@ -421,7 +421,7 @@ Value* ASTBinOp::codegen() {
 }
 
 Value* ASTType::codegen() {
-	if (!this->arr_size) {
+	if (this->arr_size == -1) {
 		auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
 		namedvalues_local[this->name] = allocainst;
 		if (this->expr) {
@@ -439,11 +439,6 @@ Value* ASTType::codegen() {
 		namedvalues_local[name] = allocainst;
 		return allocainst;
 	}
-}
-Value* ASTArrType::codegen() {
-	auto allocainst = builder.CreateAlloca(ArrayType::get(Codegen::getTypebyAArrType(this->ty), this->size));
-	namedvalues_local[name] = allocainst;
-	return allocainst;
 }
 
 Value* ASTProto::codegen() {
@@ -506,7 +501,8 @@ Value* ASTFunc::codegen() {
 	retvalue = nullptr;
 	retbbs.clear();
 
-	fpm->run(*builder.GetInsertBlock()->getParent());
+	if(opt)
+		fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;

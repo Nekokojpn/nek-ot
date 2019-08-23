@@ -283,7 +283,7 @@ public:
 	AType ty;
 	std::string name;
 	/* FOR ARRAY ATTRIBUTES*/
-	long long arr_size;
+	long long arr_size = -1;
 	//
 	std::unique_ptr<ASTSubst> expr;
 	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
@@ -291,14 +291,6 @@ public:
 	Value* codegen() override;
 };
 
-class ASTArrType : public AST {
-public:
-	AArrType ty;
-	std::string name;
-	long long size;
-	ASTArrType(AArrType _ty, std::string _name, long _size) : ty(_ty), name(_name), size(_size) {};
-	Value* codegen() override;
-};
 
 class ASTAction : public AST {
 public:

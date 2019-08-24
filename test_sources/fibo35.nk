@@ -8,8 +8,8 @@ i32 val = 0;
   }
   ret val;
 }
-fn main() -> void{
-string f = "%d";
-writefln(f, fibo(35));
+fn main() {
+ i32 i = 34;
+ writefln("%d", fibo(i));
  ret;
 }

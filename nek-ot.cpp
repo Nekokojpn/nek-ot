@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
   Sys::Cast::CastInt32toInt8ptr::CreateFunc();
   Sys::Cast::CastInt32toInt8Array::CreateFunc();
   Sys::IO::Printf::CreateFunc();
+  Sys::IO::Printfln::CreateFunc();
 
   parser.parse_codegen();
   

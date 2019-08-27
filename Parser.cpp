@@ -79,23 +79,27 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 		auto ty = getATypeByCurtok();
 		if (ty != AType::Nop) {
 			getNextToken();
-			if (curtok.ty == TK::tok_lpb) { //arr
-				getNextToken();
-				//Experimental 
-				if (curtok.ty != TK::tok_num_int)
-					error_unexpected(curtok);
-				auto size = std::atoll(curtok.val.c_str());
-				getNextToken();
-				if (curtok.ty != TK::tok_rpb)
-					error_unexpected(curtok);
-				getNextToken();
+
+			if (curtok.ty == TK::tok_lpb) {
+				std::vector<long long> size_v;
+				while (curtok.ty == TK::tok_lpb) {
+					getNextToken();
+					//Experimental 
+					if (curtok.ty != TK::tok_num_int)
+						error_unexpected(curtok);
+					size_v.push_back(std::atoll(curtok.val.c_str()));
+					getNextToken();
+					if (curtok.ty != TK::tok_rpb)
+						error_unexpected(curtok);
+					getNextToken();
+				}
 				if (curtok.ty == TK::tok_lp) { // The array declaration has a body.
-					
+
 				}
 				else if (curtok.ty == TK::tok_semi) { // The array declaration has no body.
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size);
+					auto ast = std::make_unique<ASTType>(ty, _id, size_v);
 					ast->loc = loc;
 					return std::move(ast);
 				}
@@ -355,14 +359,17 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 	id->loc = loc;
 	std::unique_ptr<ASTIdentifierArrayElement> id2;
 	if (curtok.ty == TK::tok_lpb) {
-		getNextToken();
-		auto expr_ = expr();
-		if (curtok.ty != TK::tok_rpb)
-			error_unexpected(curtok);
+		std::vector<std::unique_ptr<AST>> expr_v;
+		while (curtok.ty == TK::tok_lpb) { //Array
+			getNextToken();
+			expr_v.push_back(std::move(expr()));
+			if (curtok.ty != TK::tok_rpb)
+				error_unexpected(curtok);
+			getNextToken();
+		}
 		auto loc = curtok.loc;
-		id2 = std::make_unique<ASTIdentifierArrayElement>(_id, std::move(expr_));
+		id2 = std::make_unique<ASTIdentifierArrayElement>(_id, std::move(expr_v));
 		id2->loc = loc;
-		getNextToken();
 	}
 	if (curtok.ty == TK::tok_equal) {
 		if (!id2) {
@@ -374,7 +381,7 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 				error_unexpected(curtok);
 			return std::move(ast);
 		}
-		else {
+		else { // ArrayType
 			getNextToken();
 			auto loc = curtok.loc;
 			auto ast = std::make_unique<ASTSubst>(std::move(id2), std::move(expr()));

@@ -1,7 +1,7 @@
-fn main() -> int { 
-	int testMulExpr = (3+3)*(1+5); 
-	int testExpr = 3*3+1; 
-	int i = testMulExpr + 12; 
-	int m = (testMulExpr + i) * testExpr;
+fn main() -> i32 { 
+	testMulExpr := i32((3+3)*(1+5)); 
+	testExpr := i32(3*3+1); 
+	i := i32(testMulExpr + 12);
+	m := i32((testMulExpr + i) * testExpr);
 	ret m;
-} 
+};

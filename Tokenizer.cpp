@@ -61,6 +61,9 @@ TK gettoken() {
 	while (isspace(cc)) {
 		get_char();
 	}
+	while (cc == '\n') {
+		get_char();
+	}
 	if (cc == '\"') {
 		addToliteral();
 		addToloc(1);

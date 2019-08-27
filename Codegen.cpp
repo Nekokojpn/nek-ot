@@ -5,6 +5,7 @@ LLVMContext context;
 IRBuilder<> builder(context);
 std::unique_ptr<Module> module;
 std::unique_ptr<legacy::FunctionPassManager> fpm;
+std::unique_ptr<PassManagerBuilder> pmbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, AllocaInst*> namedvalues_global;
@@ -13,13 +14,14 @@ static std::map<std::string, Value*> namedvalues_str;
 
 AllocaInst* curvar;
 std::vector<double> curvar_v;
+std::map<std::string, double> constantfoldings;
 
 Value* lambdavalue;
 
 AllocaInst* retvalue;
 std::vector<BasicBlock*> retbbs;
 
-bool opt = false;
+bool opt = true;
 bool retcodegen = false;
 
 
@@ -27,16 +29,17 @@ Module* getModule() {
 	return module.get();
 }
 
-
-void Test::CreateFunc() {
-	
-}
 bool Parser::getOpt() {
 	return opt;
 }
 void Parser::setOpt(bool b) {
 	opt = b;
 }
+
+void Test::CreateFunc() {
+
+}
+
 
 void Sys::IO::OutPuti8Ptr::CreateFunc() {
 	//puts --•W€o—Í
@@ -94,7 +97,7 @@ void Sys::IO::Printf::CreateFunc() {
 		bool is_var_args = true;
 		func = Function::Create(
 			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
-			llvm::Function::ExternalLinkage, "writefln", module.get());
+			llvm::Function::ExternalLinkage, "writef", module.get());
 		func->setCallingConv(llvm::CallingConv::C);
 	}
 	llvm::Argument* args_[1];
@@ -106,7 +109,7 @@ void Sys::IO::Printf::CreateFunc() {
 
 	llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "", func);
 	builder.SetInsertPoint(entry);
-	functions_global["writefln"] = func;
+	functions_global["writef"] = func;
 
 	// declare wvsprintfA
 	llvm::Function* wvsprintf_func;
@@ -178,12 +181,6 @@ void Sys::IO::Printf::CreateFunc() {
 	llvm::Function* vaend = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vaend);
 	builder.CreateCall(vaend, ap);
 
-	// buf[len++] = '\r';
-	// buf[len++] = '\n';
-	builder.CreateStore(builder.getInt8('\r'), builder.CreateGEP(buf, len));
-	len = builder.CreateAdd(len, builder.getInt32(1));
-	builder.CreateStore(builder.getInt8('\n'), builder.CreateGEP(buf, len));
-	len = builder.CreateAdd(len, builder.getInt32(1));
 
 	// handle = GetStdHandle(-11);//stdout
 	llvm::Value* handle;
@@ -207,18 +204,104 @@ void Sys::IO::Printf::CreateFunc() {
 
 	// return;
 	builder.CreateRetVoid();
-	//fpm->run(*func);
+	if(opt)
+		fpm->run(*func);
+}
+
+void Sys::IO::Printfln::CreateFunc() {
+	// create function
+	llvm::Function* func;
+	{
+		// void writefln(const char*, ...)
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		bool is_var_args = true;
+		func = Function::Create(
+			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "writefln", module.get());
+		func->setCallingConv(llvm::CallingConv::C);
+	}
+	llvm::Argument* args_[1];
+	assert(func->arg_size() == 1);
+	int i = 0;
+	for (auto itr = func->arg_begin(); itr != func->arg_end(); itr++) {
+		args_[i++] = itr;
+	}
+
+	llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "", func);
+	builder.SetInsertPoint(entry);
+	functions_global["writefln"] = func;
+
+	
+	// char buf[256];
+	llvm::Value* buf = builder.CreateAlloca(builder.getInt8Ty(), builder.getInt32(256));
+	// int32 len_out[1];
+	llvm::Value* len_out = builder.CreateAlloca(builder.getInt32Ty());
+	// va_list ap[1];
+	llvm::Value* ap_ = builder.CreateAlloca(builder.getInt8PtrTy());
+	llvm::Value* ap = builder.CreateBitCast(ap_, builder.getInt8PtrTy());
+
+	// va_start(ap);
+	llvm::Function* vastart = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vastart);
+	builder.CreateCall(vastart, ap);
+
+	// len = wvsprintfA(buf, fmt, ap);
+	llvm::Value* len;
+	{
+		std::vector<llvm::Value*> args;
+		args.push_back(buf);
+		args.push_back(args_[0]);
+		args.push_back(builder.CreateLoad(ap_));
+		llvm::CallInst* inst = builder.CreateCall(functions_global["wvsprintfA"], args);
+		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
+		len = inst;
+	}
+
+	// va_end(ap);
+	llvm::Function* vaend = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vaend);
+	builder.CreateCall(vaend, ap);
+
+	// buf[len++] = '\r';
+	// buf[len++] = '\n';
+	
+	builder.CreateStore(builder.getInt8('\r'), builder.CreateGEP(buf, len));
+	len = builder.CreateAdd(len, builder.getInt32(1));
+	builder.CreateStore(builder.getInt8('\n'), builder.CreateGEP(buf, len));
+	len = builder.CreateAdd(len, builder.getInt32(1));
+	
+
+	// handle = GetStdHandle(-11);//stdout
+	llvm::Value* handle;
+	{
+		llvm::CallInst* inst = builder.CreateCall(functions_global["GetStdHandle"], builder.getInt32(-11));
+		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
+		handle = inst;
+	}
+
+	// WriteConsoleA(handle, buf, len, len_out, null);
+	{
+		std::vector<llvm::Value*> args;
+		args.push_back(handle);
+		args.push_back(buf);
+		args.push_back(len);
+		args.push_back(len_out);
+		args.push_back(llvm::ConstantPointerNull::getNullValue(builder.getInt8PtrTy()));
+		llvm::CallInst* inst = builder.CreateCall(functions_global["WriteConsoleA"], args);
+		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+
+	// return;
+	builder.CreateRetVoid();
+	if (opt)
+		fpm->run(*func);
 }
 
 void init_parse() {
 	module = make_unique<Module>("top", context);
 	fpm = llvm::make_unique<legacy::FunctionPassManager>(module.get());
-	fpm->add(createPromoteMemoryToRegisterPass());
-	//fpm->add(createInstructionCombiningPass());
-	fpm->add(createReassociatePass());
-	fpm->add(createGVNPass());
-	fpm->add(createCFGSimplificationPass());
-	
+	pmbuilder = std::make_unique<PassManagerBuilder>();
+	pmbuilder->OptLevel = 2;
+	pmbuilder->populateFunctionPassManager(*fpm);
 	fpm->doInitialization();
 }
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) {
@@ -242,6 +325,27 @@ void Codegen::call_writefln(llvm::ArrayRef<llvm::Value*> args)
 
 	llvm::CallInst* inst = builder.CreateCall(func, args);
 	inst->setCallingConv(func->getCallingConv());
+}
+void Codegen::call_writef(llvm::ArrayRef<llvm::Value*> args)
+{
+	llvm::Module* module = builder.GetInsertBlock()->getParent()->getParent();
+	llvm::Function* func = module->getFunction("writef");
+	if (func == nullptr) {
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		bool is_var_args = true;
+		func = llvm::Function::Create(
+			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "writef", module);
+		func->setCallingConv(llvm::CallingConv::C);
+	}
+
+	llvm::CallInst* inst = builder.CreateCall(func, args);
+	inst->setCallingConv(func->getCallingConv());
+}
+
+void Sys::Internal::Chkstk::CreateFunc() {
+
 }
 
 void Parser::dump() {
@@ -306,7 +410,9 @@ Type* Codegen::getTypebyAArrType(AArrType ty) {
 }
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
-	auto value = namedvalues_local[name];
+	auto value = namedvalues_local[name]; 
+	if(constantfoldings[name])
+		curvar_v.push_back(constantfoldings[name]);
 	if (!value) {
 		auto global = namedvalues_global[name];
 		if (!global) {
@@ -331,21 +437,31 @@ Value* ASTIdentifierArrayElement::codegen() {
 				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
 		}
 	}
+	Value* gep;
 	std::vector<Value*> p;
 	p.push_back(builder.getInt64(0));
-	p.push_back(expr->codegen());
+	p.push_back(expr_v[0]->codegen());
 	ArrayRef<Value*> pp(p);
-	if(!val)
-		return builder.CreateLoad(builder.CreateInBoundsGEP(value, pp));
+	if (value)
+		gep = builder.CreateInBoundsGEP(value,pp);
 	else
-		return builder.CreateLoad(builder.CreateInBoundsGEP(val, pp));
+		gep = builder.CreateInBoundsGEP(val, pp);
+	for (int i = 1; i < expr_v.size(); i++) {
+		std::vector<Value*> p;
+		p.push_back(builder.getInt64(0));
+		p.push_back(expr_v[i]->codegen());
+		ArrayRef<Value*> pp(p);
+		gep = builder.CreateInBoundsGEP(gep, pp);
+	}
+	return gep;
+	
 }
 
 Value* ASTValue::codegen() {
 	if (curvar) {
 		if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
 			if (this->value >= 2147483648)
-				error("Compile error", "Exceeded i32 maximum.", this->loc);
+				error("Compile error", "Overflow occurs", this->loc);
 			else if (this->value < -2147483648LL)
 				error("Compile error", "Exceeded i32 minimum.", this->loc);
 		}
@@ -371,16 +487,22 @@ Value* ASTBinOp::codegen() {
 	Value* r = rhs->codegen();
 	if (!l || !r)
 		return nullptr;
+	if (l->getType()->isPointerTy())
+		l = builder.CreateLoad(l);
+	if (r->getType()->isPointerTy())
+		r = builder.CreateLoad(r);
 	switch (op) {
 	case Op::Plus:
-		if (size + 2 == curvar_v.size()) {
+		
+		if (l->getType() && size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
-			if (l->getType() == builder.getInt32Ty()) {
+			if (l->getType() && l->getType() == builder.getInt32Ty()) {
 				if (curvar_v[curvar_v.size() - 2] >= 2147483648)
 					error("Compile error", "Exceeded i32 maximum.", this->loc);
 			}
 			curvar_v.pop_back();
 		}
+		
 		return builder.CreateAdd(l, r);
 	case Op::Minus:
 		if (size + 2 == curvar_v.size()) {
@@ -400,6 +522,8 @@ Value* ASTBinOp::codegen() {
 			curvar_v.pop_back();
 		}
 		return builder.CreateSDiv(l, r);
+	case Op::RDiv:
+		return builder.CreateSRem(l, r);
 	case Op::LThan:
 		return builder.CreateICmpSLT(l, r);
 	case Op::LThanEqual:
@@ -418,21 +542,30 @@ Value* ASTBinOp::codegen() {
 }
 
 Value* ASTType::codegen() {
-	auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
-	namedvalues_local[this->name] = allocainst;
-	if (this->expr) {
-		auto value = this->expr->codegen();
-		curvar_v.clear();
-		if (!value)
-			return nullptr;
-		return value;
+	if (this->arr_size_v.size() == 0) {
+		auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
+		namedvalues_local[this->name] = allocainst;
+		if (this->expr) {
+			auto value = this->expr->codegen();
+			constantfoldings[this->name] = curvar_v[0];
+			curvar_v.clear();
+			if (!value)
+				return nullptr;
+			return value;
+		}
+		return allocainst;
 	}
-	return allocainst;
-}
-Value* ASTArrType::codegen() {
-	auto allocainst = builder.CreateAlloca(ArrayType::get(Codegen::getTypebyAArrType(this->ty), this->size));
-	namedvalues_local[name] = allocainst;
-	return allocainst;
+	else {
+		ArrayType* ty = ArrayType::get(Codegen::getTypebyAType(this->ty), arr_size_v[arr_size_v.size() - 1]);
+		arr_size_v.pop_back();
+		while (arr_size_v.size() > 0) {
+			ty = ArrayType::get(ty, arr_size_v[arr_size_v.size() - 1]);
+			arr_size_v.pop_back();
+		}
+		auto allocainst = builder.CreateAlloca(ty);
+		namedvalues_local[name] = allocainst;
+		return allocainst;
+	}
 }
 
 Value* ASTProto::codegen() {
@@ -464,6 +597,7 @@ Value* ASTProto::codegen() {
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
 	}
+	mainFunc->setDSOLocal(true);
 	mainFunc->setCallingConv(CallingConv::X86_StdCall);
 	functions_global[name] = mainFunc;
 
@@ -494,7 +628,8 @@ Value* ASTFunc::codegen() {
 	retvalue = nullptr;
 	retbbs.clear();
 
-	fpm->run(*builder.GetInsertBlock()->getParent());
+	if(opt)
+		fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;
@@ -509,8 +644,15 @@ Value* ASTCall::codegen() {
 		Codegen::call_writefln(argsRef);
 		return nullptr;
 	}
-	else
-		return builder.CreateCall(functions_global[name], argsRef,"calltmp");
+	if (name == "writef") {
+		Codegen::call_writef(argsRef);
+		return nullptr;
+	}
+	else {
+		auto inst = builder.CreateCall(functions_global[name], argsRef, "calltmp");
+		inst->setCallingConv(CallingConv::X86_StdCall);
+		return inst;
+	}
 }
 
 Value* ASTElse::codegen() {
@@ -625,6 +767,9 @@ Value* ASTWhile::codegen() {
 	
 	return astboolop;
 }
+Value* ASTAction::codegen() {
+	return nullptr;
+}
 
 Value* ASTSubst::codegen() {
 	if (this->id) {
@@ -641,11 +786,7 @@ Value* ASTSubst::codegen() {
 		}
 	}
 	else if (id2) {
-		std::vector<Value*> p;
-		p.push_back(builder.getInt64(0));
-		p.push_back(id2->expr->codegen());
-		ArrayRef<Value*> pp(p);
-		return builder.CreateStore(expr->codegen(), builder.CreateInBoundsGEP(namedvalues_local[id2->name], pp));
+		return builder.CreateStore(this->expr->codegen(), id2->codegen());
 	}
 	else
 		return nullptr;

@@ -35,6 +35,7 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Support/raw_os_ostream.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
 #include <windows.h>				//Using at Console class
 #include <cctype>
@@ -71,12 +72,8 @@ enum class TK {
 	tok_i64,
 	tok_char,
 	tok_string,
-	tok_i32_arr,
 	tok_action,
 	tok_var,
-	tok_char_arr,
-	tok_float_arr,
-	tok_double_arr,
 
 	tok_num_int,
 	tok_num_double,
@@ -105,6 +102,8 @@ enum class TK {
 	tok_rpb, // ]
 	tok_percent, // %
 	tok_darrow, // =>
+	tok_colon,
+	tok_cleq,
 
 	// operator
 	tok_plus,
@@ -236,6 +235,7 @@ public:
 };
 
 class ASTSubst;
+class ASTFunc;
 
 class AST {
 public:
@@ -282,18 +282,22 @@ class ASTType : public AST { // i32 i = 0;
 public:
 	AType ty;
 	std::string name;
+	/* FOR ARRAY ATTRIBUTES*/
+	long long arr_size = -1;
+	//
 	std::unique_ptr<ASTSubst> expr;
 	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
+	ASTType(AType _ty, std::string _name, long long size) : ty(_ty), name(_name) {};
 	Value* codegen() override;
 };
 
-class ASTArrType : public AST {
+
+class ASTAction : public AST {
 public:
-	AArrType ty;
 	std::string name;
-	long size;
-	ASTArrType(AArrType _ty, std::string _name, long _size) : ty(_ty), name(_name), size(_size) {};
-	Value* codegen() override;
+	std::unique_ptr<ASTFunc> lambda;
+	Value* codegen();
+	ASTAction(std::string _name, std::unique_ptr<ASTFunc> _lambda) : name(_name), lambda(std::move(_lambda)) {};
 };
 
 class ASTString : public AST {
@@ -399,10 +403,10 @@ class Parser {
 
 	std::unique_ptr<ASTStrLiteral> expr_str();
 
-	std::unique_ptr<ASTType> def_type();
-	std::unique_ptr<ASTArrType> def_arr_type();
+	std::unique_ptr<ASTType> def_type(const std::string& _id);
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
+	std::unique_ptr<ASTAction> def_action();
 	std::unique_ptr<ASTCall> func_call(const std::string& _id);
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();
@@ -425,5 +429,4 @@ public:
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
-	AArrType getAArrTypeByCurtok();
 };

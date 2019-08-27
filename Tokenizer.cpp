@@ -94,32 +94,13 @@ TK gettoken() {
 				cs += cc;
 				get_char();
 			}
-			if (cc == '[') {
-				get_char();
-				if (cc == ']') {
-					undo_char();
-					undo_char();
-					get_char();
-					cs += cc;
-					get_char();
-					cs += cc;
-					get_char();
-				}
-				else {
-					undo_char();
-					//get_char();
-					undo_char();
-					get_char();
-					break;
-				}
-			}
+			
 			else break;
 		}
 		undo_char();
 		addToliteral();
 		if (cs == "fn") { addToloc(cs.length()); return TK::tok_fn; }
 		else if (cs == "i32") { addToloc(cs.length()); return TK::tok_i32; }
-		else if (cs == "i32[]") { addToloc(cs.length()); return TK::tok_i32_arr; }
 		else if (cs == "void") { addToloc(cs.length()); return TK::tok_void; }
 		else if (cs == "ret") { addToloc(cs.length()); return TK::tok_ret; }
 		else if (cs == "float") { addToloc(cs.length()); return TK::tok_float; }
@@ -135,7 +116,7 @@ TK gettoken() {
 		else if (cs == "while") { addToloc(cs.length()); return TK::tok_while; }
 		else if (cs == "new") { addToloc(cs.length()); return TK::tok_new; }
 		else if (cs == "action") { addToloc(cs.length()); return TK::tok_action; }
-		else if (cs == "tok_var") { addToloc(cs.length()); return TK::tok_var; }
+		else if (cs == "var") { addToloc(cs.length()); return TK::tok_var; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
@@ -232,6 +213,14 @@ TK gettoken() {
 		if (cc == '[')	return TK::tok_lpb;
 		if (cc == ']')	return TK::tok_rpb;
 		if (cc == '%') return TK::tok_percent;
+		if (cc == ':') {
+			get_char();
+			if (cc == '=') {
+				return TK::tok_cleq;
+			}
+			undo_char();
+			return TK::tok_colon;
+		}
 	}
 	std::string s = "";
 	s += cc;

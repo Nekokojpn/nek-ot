@@ -1,6 +1,6 @@
 #pragma once
 
-#define HIGH_DEBUGG			//ハイ・レベルデバッグ
+//#define HIGH_DEBUGG			//ハイ・レベルデバッグ
 #define DEBUGG						//デバッグモード.
 
 #include "llvm/ADT/APFloat.h"
@@ -133,8 +133,13 @@ public:
 			static void CreateFunc();
 		};
 		class Printf {
+			
 		public:
 			static void CreateFunc();
+		};
+		class Printfln {
+			public:
+				static void CreateFunc();
 		};
 	};
 	class Cast {
@@ -144,6 +149,13 @@ public:
 			static void CreateFunc();
 		};
 		class CastInt32toInt8Array {
+		public:
+			static void CreateFunc();
+		};
+	};
+	class Internal {
+	public:
+		class Chkstk {
 		public:
 			static void CreateFunc();
 		};
@@ -198,6 +210,7 @@ enum class Op{
 	Minus,
 	Mul,
 	Div,
+	RDiv,
 	LThan,
 	LThanEqual,
 	RThan,
@@ -229,6 +242,7 @@ class Codegen {
 public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
+	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
 	static Type* getTypebyAType(AType ty);
 	static Type* getTypebyAArrType(AArrType ty);
 	//<-----
@@ -252,8 +266,8 @@ public:
 class ASTIdentifierArrayElement : public AST {
 public:
 	std::string name;
-	std::unique_ptr<AST> expr;
-	ASTIdentifierArrayElement(std::string _name, std::unique_ptr<AST> _expr) : name(_name), expr(std::move(_expr)) {};
+	std::vector<std::unique_ptr<AST>> expr_v;
+	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v) : name(_name), expr_v(std::move(_expr_v)) {};
 	Value* codegen();
 };
 class ASTValue : public AST {
@@ -283,11 +297,11 @@ public:
 	AType ty;
 	std::string name;
 	/* FOR ARRAY ATTRIBUTES*/
-	long long arr_size = -1;
+	std::vector<long long> arr_size_v;
 	//
 	std::unique_ptr<ASTSubst> expr;
 	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
-	ASTType(AType _ty, std::string _name, long long size) : ty(_ty), name(_name) {};
+	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)) {};
 	Value* codegen() override;
 };
 
@@ -295,9 +309,9 @@ public:
 class ASTAction : public AST {
 public:
 	std::string name;
-	std::unique_ptr<ASTFunc> lambda;
-	Value* codegen();
+	std::unique_ptr<ASTFunc> lambda;	
 	ASTAction(std::string _name, std::unique_ptr<ASTFunc> _lambda) : name(_name), lambda(std::move(_lambda)) {};
+	Value* codegen();
 };
 
 class ASTString : public AST {

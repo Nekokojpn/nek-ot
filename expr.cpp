@@ -35,6 +35,9 @@ std::unique_ptr<AST> Parser::expr_mul() {
 		else if (consume(TK::tok_slash)) {
 			op = Op::Div;
 		}
+		else if (consume(TK::tok_percent)) {
+			op = Op::RDiv;
+		}
 		else {
 			break;
 		}
@@ -73,13 +76,16 @@ std::unique_ptr<AST> Parser::expr_primary() {
 			return std::move(funccall);
 		}
 		else if (curtok.ty == TK::tok_lpb) { //Array
-			getNextToken();
-			auto expr_ = expr();
-			if (curtok.ty != TK::tok_rpb)
-				error_unexpected(curtok);
-			getNextToken();
+			std::vector<std::unique_ptr<AST>> expr_v;
+			while (curtok.ty == TK::tok_lpb) { //Array
+				getNextToken();
+				expr_v.push_back(std::move(expr()));
+				if (curtok.ty != TK::tok_rpb)
+					error_unexpected(curtok);
+				getNextToken();
+			}
 			auto loc = curtok.loc;
-			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_));
+			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_v));
 			ast->loc = loc;
 			return std::move(ast);
 		}

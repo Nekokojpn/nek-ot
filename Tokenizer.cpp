@@ -58,8 +58,10 @@ TK gettoken() {
 	get_char();
 	cs = "";
 	//skip any spaces.
-	while (isspace(cc)) {
-		get_char();
+	if (!isdq_started) {
+		while (isspace(cc)) {
+			get_char();
+		}
 	}
 	while (cc == '\n') {
 		get_char();

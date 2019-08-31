@@ -673,6 +673,7 @@ Value* ASTIf::codegen() {
 	BasicBlock* if_block = BasicBlock::Create(context,"if",curfunc);
 	auto curbb = builder.GetInsertBlock();
 	builder.SetInsertPoint(if_block);
+	retcodegen = false;
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
@@ -695,7 +696,7 @@ Value* ASTIf::codegen() {
 		return cont;
 	}
 	else {
-		//elif ‚ª‘¶Ý‚·‚é.
+		//When exists elif
 		if (ast_elif != nullptr) {
 			BasicBlock* elif_block = BasicBlock::Create(context, "elif", curfunc);
 			builder.CreateCondBr(astboolop, if_block, elif_block);
@@ -710,6 +711,7 @@ Value* ASTIf::codegen() {
 			retcodegen = false;
 			
 		}
+		//When exists else
 		if (ast_else != nullptr) {
 			BasicBlock* else_block = BasicBlock::Create(context, "el", curfunc);
 			builder.CreateCondBr(astboolop, if_block, else_block);
@@ -737,6 +739,8 @@ Value* ASTIf::codegen() {
 Value* ASTFor::codegen() {
 	return nullptr;
 }
+
+/*	Unfinished function. This function generates ir of while. elif is not supported.*/
 Value* ASTWhile::codegen() {
 
 	auto curfunc = builder.GetInsertBlock()->getParent();
@@ -760,11 +764,12 @@ Value* ASTWhile::codegen() {
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
 	
+	/*  (Experimental) InlineAsm Implement LFENCE; for spectre.
 	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(),false), "LFENCE;", "~{dirflag},~{fpsr},~{flags}", true, false);
 	std::vector<Value*> vec;
 	ArrayRef<Value*> arg(vec);
 	builder.CreateCall(IA, arg);
-	
+	*/
 	return astboolop;
 }
 Value* ASTAction::codegen() {
@@ -791,6 +796,7 @@ Value* ASTSubst::codegen() {
 	else
 		return nullptr;
 }
+// This function prepares to generate a return IR, but does not generate a return IR. 
 Value* ASTRet::codegen() {
 	if (!lambdavalue) {
 		retcodegen = true;

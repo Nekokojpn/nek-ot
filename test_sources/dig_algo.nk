@@ -6,74 +6,93 @@ fn rand(i32 seed) -> i32{
 	ret rnd;
 };
 fn main() -> i32{
-	map := i32[51][51];
+	map := i32[25][51];
 	i := i32(0);
 	j := i32(0);
-	while(i < 51){
+	while(i < 25){
 		j = 0;
 		while(j < 51){
 			map[i][j] = 1;
+			if(i == 0){
+				map[i][j] = 0;
+			};
+			if(j == 0){
+				map[i][j] = 0;
+			};
+			if(i == 24){
+				map[i][j] = 0;
+			};
+			if(j == 50){
+				map[i][j] = 0;
+			};
 			j = j + 1;
 		};
 		i = i + 1;
 	};
+	x := i32(1);
+	y := i32(1);
+	map[y][x] = 0;
+	rand_v := i32(0);
 	judge := i32(0);
-	x := i32(2);
-	y := i32(2);
+	exp := i32(0);
+	rand_ret := i32(0);
 	while(judge == 0){
-		dir := i32[4];
-		dir[0] = 0;
-		dir[1] = 0;
-		dir[2] = 0;
-		dir[3] = 0;
-		if(map[y][x - 1] == 1){
-			if(map[y][x-2] == 1){
-				dir[0] = 1;
-			};
-		};
-		if(map[y-1][x] == 1){
-			if(map[y-2][x] == 1){
-				dir[1] = 1;
-			};
-		};
-		if(map[y][x + 1] == 1){
-			if(map[y][x+2] == 1){
-				dir[2] = 1;
-			};
-		};
-		if(map[y+1][x] == 1){
-			if(map[y+2][x] == 1){
-				dir[3] = 1;
-			};
-		};
-		l := i32(0);
-		ind := i32(0);
-		while(ind < 4){
-			if(dir[ind] == 1){
-				l = l + 1;
-			};
-			ind = ind + 1;
-		};
-		if(l == 0){
+		exp = exp + 1;
+		if(exp == 100){
 			judge = 1;
 		};
-		if(judge == 0){
-			writefln("OK");
+		rand_ret = rand(rand_v) % 4;
+		if(rand_ret == 0){
+			if((y-1) > 0){
+				if(map[y-1][x] == 0){
+					if(map[y-2][x] == 1){
+						map[y-2][x] = 0;
+					};
+				};
+			};
 		};
+		if(rand_ret == 1){
+			if((x-1) > 0){
+				if(map[y][x-1] == 0){
+					if(map[y][x-2] == 1){
+						map[y][x-2] = 0;
+					};
+				};
+			};
+		};
+		if(rand_ret == 2){
+			if((y+1) < 24){
+				if(map[y+1][x] == 0){
+					if(map[y+2][x] == 1){
+						map[y+2][x] = 0;
+					};
+				};
+			};
+		};
+		if(rand_ret == 3){
+			if((x+1) < 50){
+				if(map[y][x+1] == 0){
+					if(map[y][x+2] == 1){
+						map[y][x+2] = 0;
+					};
+				};
+			};
+		};
+		rand_v = rand_v + 1;
 	};
 	i = 0;
 	while(i < 25){
 		j = 0;
-		while(j < 59){
+		while(j < 51){
 			if(map[i][j] == 0){
-				writef("*");
+				writef(" ");
 			};
 			else{
 				writef(".");
 			};
 			j = j + 1;
 		};
-		writefln(".");
+		writefln(" ");
 		i = i + 1;
 	};
 	ret i;

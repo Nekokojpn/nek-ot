@@ -1,6 +1,6 @@
 #pragma once
 
-//#define HIGH_DEBUGG			//ハイ・レベルデバッグ
+#define HIGH_DEBUGG			//ハイ・レベルデバッグ
 #define DEBUGG						//デバッグモード.
 
 #include "llvm/ADT/APFloat.h"

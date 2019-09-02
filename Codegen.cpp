@@ -677,15 +677,20 @@ Value* ASTIf::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	if(!retcodegen)
-		blocks.push_back(if_block);
-	retcodegen = false;
 
+
+	if(!retcodegen)
+		//blocks.push_back(if_block);
+	retcodegen = false;
+	auto before = builder.GetInsertBlock();
 	builder.SetInsertPoint(curbb);
+	//When exsists only if
 	if (ast_elif == nullptr && ast_else == nullptr) {
 
 		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
 		builder.CreateCondBr(astboolop, if_block, cont);
+		builder.SetInsertPoint(before);
+		builder.CreateBr(cont);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
 			curbb = blocks[i];
@@ -725,6 +730,8 @@ Value* ASTIf::codegen() {
 		}
 		if (blocks.size() != 0) {
 			auto cont = BasicBlock::Create(context, "cont", curfunc);
+			builder.SetInsertPoint(before);
+			builder.CreateBr(cont);
 			for (int i = 0; i < blocks.size(); i++) {
 				builder.SetInsertPoint(blocks[i]);
 				curbb = blocks[i];

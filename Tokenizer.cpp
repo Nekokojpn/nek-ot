@@ -16,11 +16,21 @@ std::vector<Location_t> locs;
 
 //Tokenizer Funcs----->
 void get_char() {
-	cc = source[line][column++];
+	if(column < source[line].size() - 1)
+		cc = source[line][column++];
+	else {
+		line++;
+		column = 0;
+		cc = source[line][column++];
+	}
 	if (cc == '\n') {
 		line++;
 		column = 0;
 		cc = source[line][column++];
+	}
+	if (cc == '\0') {
+		if (line < source.size())
+			get_char();
 	}
 }
 void undo_char() {
@@ -59,7 +69,7 @@ TK gettoken() {
 	cs = "";
 	//skip any spaces.
 	if (!isdq_started) {
-		while (isspace(cc)) {
+		while (isspace(cc)){
 			get_char();
 		}
 	}

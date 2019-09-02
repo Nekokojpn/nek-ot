@@ -1,7 +1,7 @@
 #include "nek-ot.h"
 
-int line;
-int column;
+uint32_t line;
+uint32_t column;
 
 // Tokenizer globals----->
 std::vector<std::string> source;
@@ -16,21 +16,11 @@ std::vector<Location_t> locs;
 
 //Tokenizer Funcs----->
 void get_char() {
-	if(column < source[line].size() - 1)
-		cc = source[line][column++];
-	else {
-		line++;
-		column = 0;
-		cc = source[line][column++];
-	}
+	cc = source[line][column++];
 	if (cc == '\n') {
 		line++;
 		column = 0;
 		cc = source[line][column++];
-	}
-	if (cc == '\0') {
-		if (line < source.size())
-			get_char();
 	}
 }
 void undo_char() {
@@ -52,7 +42,7 @@ void skip_line() {
 	}
 }
 void addToliteral() { literals.push_back(cs); }
-bool compare_cs(const char* str) { return cs == str; };
+bool compare_cs(const char* str) { return cs == str; }
 void addToloc(int len) {
 	Location_t loc;
 	loc.location_begin_line = line;
@@ -69,7 +59,7 @@ TK gettoken() {
 	cs = "";
 	//skip any spaces.
 	if (!isdq_started) {
-		while (isspace(cc)){
+		while (isspace(cc)) {
 			get_char();
 		}
 	}
@@ -191,6 +181,8 @@ TK gettoken() {
 			get_char();
 			if (cc == '/') {
 				skip_line();
+				literals.pop_back();
+				locs.pop_back();
 				return gettoken();
 			}
 			else {

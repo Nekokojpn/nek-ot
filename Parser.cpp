@@ -11,7 +11,7 @@ bool Parser::consume(TK tk) noexcept {
 }
 //set the next token to curtok.
 void Parser::getNextToken() noexcept {
-	if(index+1 <= tokens.size())
+	if(index+1 < tokens.size())
 		curtok = tokens[++index];
 }
 

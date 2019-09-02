@@ -35,16 +35,6 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 		std::cerr << "  |";
 		Console::SetConsoleTextWhite();
 	}
-	int tab = 0;
-	for (int i = 0; i < column - 1; i++) {
-		if (t1[i] == '	')tab++;
-	}
-	for (int i = 0; i < (column-1)-(tab*4); i++)
-		std::cerr << " ";
-	Console::SetConsoleTextRed();
-	std::cerr << "^" << std::endl;
-	Console::SetConsoleTextBlue();
-	std::cerr << "  |";
 	Console::SetConsoleTextWhite();
 	for (int i = 0; i < column - 1; i++)
 		std::cerr << " ";

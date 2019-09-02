@@ -3,7 +3,17 @@
 extern std::string source_filename;
 extern std::vector<std::string> source;
 
-void error(std::string title, std::string message, int line, int column) {
+void error(std::string title, std::string message, uint32_t line, uint32_t column) {
+	std::cerr << std::endl;
+	Console::SetConsoleTextWhite();
+	std::cerr << "nek-ot compiler error repoting:" << std::endl;
+
+	if (!line && !column) {
+		std::cerr << std::endl;
+		Console::SetConsoleTextRed();
+		std::cerr << "Serious error: unknown error." << title << std::endl;
+	}
+
 	std::cerr << std::endl;
 	Console::SetConsoleTextRed();
 	std::cerr << "error: " << title << std::endl;

@@ -166,10 +166,10 @@ public:
 
 // typedef----->
 typedef struct {
-	int location_begin_line;
-	int location_begin_column;
-	int location_end_line;
-	int location_end_column;
+	uint32_t location_begin_line;
+	uint32_t location_begin_column;
+	uint32_t location_end_line;
+	uint32_t location_end_column;
 } Location_t;
 typedef struct {
 	TK ty;
@@ -180,7 +180,7 @@ typedef struct {
 
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, Location_t& loc);
-void error(std::string title, std::string message, int line, int column);
+void error(std::string title, std::string message, uint32_t line, uint32_t column);
 void error_unexpected(Token_t& curtok);
 
 void init_parse();

@@ -74,6 +74,7 @@ enum class TK {
 	tok_string,
 	tok_action,
 	tok_var,
+	tok_stct, //struct
 
 	tok_num_int,
 	tok_num_double,
@@ -97,13 +98,15 @@ enum class TK {
 	tok_emeq, //!=
 	tok_comma, // ,
 	tok_under, // _
-	tok_dot,
+	tok_dot, //.
 	tok_lpb, // [
 	tok_rpb, // ]
 	tok_percent, // %
 	tok_darrow, // =>
-	tok_colon,
-	tok_cleq,
+	tok_colon, // :
+	tok_cleq, //:=
+	tok_dtdt, //..
+
 
 	// operator
 	tok_plus,

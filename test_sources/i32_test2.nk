@@ -1,5 +1,0 @@
-fn main() -> i32{
-	i := i32(10*10);
-	writefln("%d", i);
-	ret i;
-};

@@ -1,6 +1,0 @@
-fn main(){
-	writefln("|||||  |");
-	writefln("|||||  |");
-	writefln("||||||||");
-	ret;
-};

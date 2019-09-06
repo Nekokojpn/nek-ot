@@ -1,4 +1,4 @@
-#include "nek-ot.h"
+#include "../nek-ot.h"
 
 std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block} 
 	if (curtok.ty != TK::tok_lb)
@@ -38,6 +38,7 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 		else getNextToken();
 	}
 	if (curtok.ty == TK::tok_eof) {
+		add_err_msg("Have you forgotten } ?");
 		error_expected("}", curtok);
 	}
 	getNextToken();

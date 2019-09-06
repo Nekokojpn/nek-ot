@@ -1,4 +1,4 @@
-#include "nek-ot.h"
+#include "../nek-ot.h"
 
 //Read forward if the next token is expected.
 bool Parser::consume(TK tk) noexcept {
@@ -39,7 +39,7 @@ AType Parser::getATypeByCurtok() {
 
 std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
 	if (curtok.ty != TK::tok_dq && curtok.ty != TK::tok_num_int)
-		error("Unexpected", "Unexpected token --> "+curtok.val, curtok);
+		error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
 	if(curtok.ty == TK::tok_dq)
 		getNextToken();
 	std::string str = "";

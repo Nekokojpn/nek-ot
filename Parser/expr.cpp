@@ -1,4 +1,4 @@
-#include "nek-ot.h"
+#include "../nek-ot.h"
 
 std::unique_ptr<AST> Parser::expr() {
 
@@ -101,8 +101,11 @@ std::unique_ptr<AST> Parser::expr_primary() {
 			return std::move(ast);
 		}
 
-		error("Expected", "Expected --> )", curtok);
+		add_err_msg("Have you forgotten ) ?");
+		add_err_msg("Hint: You specified nested expression must begin a ( to be end ).");
+		error_expected(")", curtok);
 	}
+	add_err_msg("You specified token is unkown for expression.");
 	error_unexpected(curtok);
 	exit(1);
 

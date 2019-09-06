@@ -181,7 +181,10 @@ typedef struct {
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, Location_t& loc);
 void error(std::string title, std::string message, uint32_t line, uint32_t column);
+void error_expected(std::string lit, Token_t& curtok);
 void error_unexpected(Token_t& curtok);
+
+void add_err_msg(std::string _errmsg);
 
 void init_parse();
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);

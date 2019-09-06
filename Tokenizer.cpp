@@ -122,6 +122,7 @@ TK gettoken() {
 		else if (cs == "new") { addToloc(cs.length()); return TK::tok_new; }
 		else if (cs == "action") { addToloc(cs.length()); return TK::tok_action; }
 		else if (cs == "var") { addToloc(cs.length()); return TK::tok_var; }
+		else if (cs == "stct") { addToloc(cs.length()); return TK::tok_stct; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
@@ -216,7 +217,14 @@ TK gettoken() {
 		}
 		if (cc == ',')	return TK::tok_comma;
 		if (cc == '_')	return TK::tok_under;
-		if (cc == '.')	return TK::tok_dot;
+		if (cc == '.') {
+			get_char();
+			if (cc == '.') {
+				return TK::tok_dtdt;
+			}
+			undo_char();
+			return TK::tok_dot;
+		}
 		if (cc == '[')	return TK::tok_lpb;
 		if (cc == ']')	return TK::tok_rpb;
 		if (cc == '%') return TK::tok_percent;

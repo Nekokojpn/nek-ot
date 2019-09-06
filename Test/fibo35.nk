@@ -1,15 +1,16 @@
 fn fibo(i32 n) -> i32{
-val := i32(0);
- if(n < 2){
-  val = n;
- };
- else {
-   val = fibo(n-1) + fibo(n-2);
-  };
-  ret val;
+	val := i32(0);
+	if(n < 2){
+		val = n;
+	}
+	else {
+		val = fibo(n-1) + fibo(n-2);
+	}
+	ret val;
+}
 fn main() -> i32 {
-i := i32(35); 
-res := i32(fibo(i));
- writefln("%d", res);
- ret res;
-};
+	i := i32(35); 
+	res := i32(fibo(i));
+	writefln("%d", res);
+	ret res;
+}

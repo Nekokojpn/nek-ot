@@ -2,6 +2,11 @@
 
 extern std::string source_filename;
 extern std::vector<std::string> source;
+std::string errmsg = "";
+
+void add_err_msg(std::string& _errmsg) {
+	errmsg += _errmsg + '\n';
+}
 
 void error(std::string title, std::string message, uint32_t line, uint32_t column) {
 	std::cerr << std::endl;
@@ -41,7 +46,10 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextRed();
 	std::cerr << message << std::endl;
 	Console::SetConsoleTextBlue();
-	std::cerr << "  |";
+	std::cerr << "  |" << std::endl;
+	Console::SetConsoleTextRed();
+	std::cerr << errmsg << std::endl;
+	Console::SetConsoleTextGray();
 	exit(1);
 }
 void error(std::string title, std::string message, Location_t& loc) {
@@ -53,4 +61,7 @@ void error(std::string title, std::string message, Token_t& curtok) {
 
 void error_unexpected(Token_t& curtok) {
 	error("Compile error", "Unexpected token --> " + curtok.val, curtok);
+}
+void error_expected(std::string lit,Token_t& curtok) {
+	error("Compile error", "Expected token --> " + lit, curtok);
 }

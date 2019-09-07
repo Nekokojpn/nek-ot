@@ -80,8 +80,12 @@ std::unique_ptr<AST> Parser::expr_primary() {
 			while (curtok.ty == TK::tok_lpb) { //Array
 				getNextToken();
 				expr_v.push_back(std::move(expr()));
-				if (curtok.ty != TK::tok_rpb)
+				if (curtok.ty != TK::tok_rpb) {
+					add_err_msg("Have you forgotten ] ?");
+					add_err_msg("Hint: Hint: The specified array accessor is invalid! Starts with [ and ends with ].");
 					error_unexpected(curtok);
+				}
+					
 				getNextToken();
 			}
 			auto loc = curtok.loc;
@@ -102,10 +106,10 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		}
 
 		add_err_msg("Have you forgotten ) ?");
-		add_err_msg("Hint: You specified nested expression must begin a ( to be end ).");
+		add_err_msg("Hint: You specified nested expression must start with ( and end with ).");
 		error_expected(")", curtok);
 	}
-	add_err_msg("You specified token is unkown for expression.");
+	add_err_msg("You specified token is unkown for the expression.");
 	error_unexpected(curtok);
 	exit(1);
 

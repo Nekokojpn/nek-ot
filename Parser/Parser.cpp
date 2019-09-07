@@ -39,13 +39,13 @@ AType Parser::getATypeByCurtok() {
 
 std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
 	if (curtok.ty != TK::tok_dq && curtok.ty != TK::tok_num_int)
-		error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+		error_unexpected(curtok);
 	if(curtok.ty == TK::tok_dq)
 		getNextToken();
 	std::string str = "";
 	while (true) {
 		if (curtok.ty != TK::tok_str_string && curtok.ty != TK::tok_num_int)
-			error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+			error_unexpected(curtok);
 		if(curtok.ty == TK::tok_str_string)
 			str += curtok.val;
 		else if (curtok.ty == TK::tok_num_int) {
@@ -60,7 +60,7 @@ std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
 		}
 		getNextToken();
 		if (curtok.ty != TK::tok_dq)
-			error("Unexpected", "Unexpected token --> " + curtok.val, curtok);
+			error_unexpected(curtok);
 		getNextToken();
 		if (curtok.ty == TK::tok_plus) {
 			getNextToken();
@@ -145,7 +145,7 @@ std::unique_ptr<ASTAction> Parser::def_action() {
 std::unique_ptr<ASTString> Parser::def_string() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier)
-		error("Syntax error", "After type must be an identifier.", curtok);
+		error_unexpected(curtok);
 	auto str = curtok.val;
 	getNextToken();
 	if (curtok.ty == TK::tok_equal) {
@@ -153,8 +153,8 @@ std::unique_ptr<ASTString> Parser::def_string() {
 		auto loc = curtok.loc;
 		auto ast = std::make_unique<ASTString>(str, std::move(expr_str()));
 		ast->loc = loc;
-		if(curtok.ty != TK::tok_semi)
-			error("Expected", "Expected --> ;", curtok);
+		if (curtok.ty != TK::tok_semi)
+			error_expected(";", curtok);
 		return std::move(ast);
 	}
 	else if (consume(TK::tok_semi)) { // ;
@@ -163,7 +163,7 @@ std::unique_ptr<ASTString> Parser::def_string() {
 		ast->loc = loc;
 		return std::move(ast);
 	}
-	error("Unexpected", "Syntax error.", curtok);
+	error_unexpected(curtok);
 	return nullptr;
 }
 
@@ -194,12 +194,14 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 
 std::unique_ptr<ASTFunc> Parser::def_func() {
 	getNextToken();
-	if (curtok.ty != TK::tok_identifier)
-		error("Synatax error", "After fn must be an identifier", curtok);
+	if (curtok.ty != TK::tok_identifier) {
+		add_err_msg(curtok.val + " may be used as a reserved word.");
+		error_unexpected(curtok);
+	}
 	auto str = curtok.val;
 	getNextToken();
 	if (curtok.ty != TK::tok_lp)
-		error("Expected", "Expected --> (", curtok);
+		error_expected("(", curtok);
 	getNextToken();
 	std::vector<AType> putsArgs;
 	std::vector<std::string> argsIdentifier;
@@ -211,7 +213,7 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 
 		getNextToken();
 		if (curtok.ty != TK::tok_identifier)
-			error("Unexpected token", "Unexpected token --> " + curtok.val, curtok);
+			error_unexpected(curtok);
 		argsIdentifier.push_back(curtok.val);
 		getNextToken();
 		if (curtok.ty != TK::tok_comma) break;

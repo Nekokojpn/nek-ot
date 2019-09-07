@@ -27,17 +27,18 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextWhite();
 	std::cerr << source_filename << ":" << line + 1 << ":" << column << std::endl;
 	Console::SetConsoleTextBlue();
-	std::cerr << "  |" << std::endl << line + 1 << " |";
+	std::cerr << line - 1 << "  |" << std::endl << line << " |";
 	Console::SetConsoleTextWhite();
 	std::vector<std::string> t;
 	if (line - 1 >= 0)
 		t.push_back(source[line - 1].substr(0, source[line - 1].size() - 1));
 	std::string t1 = source[line].substr(0, source[line].size() - 1);
 	t.push_back(t1);
+	int ll = 1;
 	for (std::string s : t) {
 		std::cerr << "     " << s << std::endl;
 		Console::SetConsoleTextBlue();
-		std::cerr << "  |";
+		std::cerr << line + ll++ << " |";
 		Console::SetConsoleTextWhite();
 	}
 	Console::SetConsoleTextWhite();
@@ -46,7 +47,7 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextRed();
 	std::cerr << message << std::endl;
 	Console::SetConsoleTextBlue();
-	std::cerr << "  |" << std::endl;
+	std::cerr << line + ll << " |" << std::endl;
 	Console::SetConsoleTextRed();
 	std::cerr << errmsg << std::endl;
 	Console::SetConsoleTextGray();

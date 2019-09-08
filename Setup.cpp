@@ -4,10 +4,9 @@ extern std::string source_filename;
 extern std::vector<std::string> source;
 
 /*												load_source
-		引数：なし
-		戻り値：int
-		概要：std::ifstreamを使用してソースファイル"source_test.nk"を読み
-		込みます。それをグローバル変数std::vector<std:string> sourceにセットします。
+		Argument: None
+		return type：int
+		description：Read source codes using std::ifstream and set to variable.
 */
 int load_source(std::string source_path) {
 	std::ifstream ifs(source_path);

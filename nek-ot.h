@@ -334,6 +334,13 @@ public:
 	ASTRet(AType _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
 };
+class ASTStruct : public AST {
+public:
+	std::string name;
+	std::vector<AType> atts;
+	ASTStruct(std::string _name, std::vector<AType> _atts) : name(_name), atts(_atts) {};
+	Value* codegen();
+};
 class ASTProto : public AST {
 public:
 	std::string name;
@@ -436,7 +443,8 @@ class Parser {
 	std::unique_ptr<AST> expr_identifier();
 	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
-
+	std::unique_ptr<AST> def_stct();
+	std::unique_ptr<AST> expr_stct();
 	
 	
 	

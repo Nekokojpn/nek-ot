@@ -9,8 +9,6 @@ fn fibo(i32 n) -> i32{
 	ret val;
 }
 fn main() -> i32 {
-	i := i32(35); 
-	res := i32(fibo(i));
-	writefln("%d", res);
-	ret res;
+	writefln("%d", fibo(35));
+	ret 0;
 }

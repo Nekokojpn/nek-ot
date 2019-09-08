@@ -35,6 +35,10 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 			auto ast = def_action();
 			asts.push_back(std::move(ast));
 		}
+		else if (curtok.ty == TK::tok_stct) {
+			auto ast = def_stct();
+			asts.push_back(std::move(ast));
+		}
 		else getNextToken();
 	}
 	if (curtok.ty == TK::tok_eof) {

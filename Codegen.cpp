@@ -820,4 +820,7 @@ Value* ASTRet::codegen() {
 	}
 	return nullptr;
 }
+Value* ASTStruct::codegen() {
+	return nullptr;
+}
 

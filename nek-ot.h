@@ -444,9 +444,6 @@ class Parser {
 	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
 	std::unique_ptr<AST> def_stct();
-	std::unique_ptr<AST> expr_stct();
-	
-	
 	
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;

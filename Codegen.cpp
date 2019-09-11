@@ -821,6 +821,14 @@ Value* ASTRet::codegen() {
 	return nullptr;
 }
 Value* ASTStruct::codegen() {
+	std::vector<Type*> tys;
+	for (auto ty : atts) {
+		tys.push_back(Codegen::getTypebyAType(ty));
+	}
+	ArrayRef<Type*> elements(tys);
+	auto stct = StructType::create(context,"");
+	stct->setBody(elements);
+	builder.CreateAlloca(stct);
 	return nullptr;
 }
 

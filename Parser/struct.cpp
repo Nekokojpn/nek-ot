@@ -30,11 +30,11 @@ std::unique_ptr<AST> Parser::def_stct() {
 		getNextToken();
 	}
 
-	if (curtok.ty != TK::tok_rp)
-		error("Expected", "Expected --> )", curtok);
+	if (curtok.ty != TK::tok_rb)
+		error("Expected", "Expected --> }", curtok);
 	getNextToken();
 	if (curtok.ty != TK::tok_semi)
-		error("Expected", "Expected --> )", curtok);
+		error("Expected", "Expected --> ;", curtok);
 	getNextToken();
 	return std::make_unique<ASTStruct>(name, putsArgs);
 }

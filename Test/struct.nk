@@ -1,0 +1,7 @@
+fn main(){
+	stct mys{
+		i32 i,
+		i32 j
+	};
+	ret;
+}

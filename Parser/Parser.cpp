@@ -80,14 +80,19 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 		if (ty != AType::Nop) {
 			getNextToken();
 
-			if (curtok.ty == TK::tok_lpb) {
+			if (curtok.ty == TK::tok_lpb) { // for array control
 				std::vector<long long> size_v;
 				while (curtok.ty == TK::tok_lpb) {
 					getNextToken();
 					//Experimental 
-					if (curtok.ty != TK::tok_num_int)
+					if (curtok.ty != TK::tok_num_int && curtok.ty != TK::tok_dtdt)
 						error_unexpected(curtok);
-					size_v.push_back(std::atoll(curtok.val.c_str()));
+					if (curtok.ty == TK::tok_num_int) {
+						size_v.push_back(std::atoll(curtok.val.c_str()));
+					}
+					else {
+						// TODO : For array block structure.
+					}
 					getNextToken();
 					if (curtok.ty != TK::tok_rpb)
 						error_unexpected(curtok);
@@ -109,9 +114,22 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 				if (curtok.ty != TK::tok_lp)
 					error_unexpected(curtok);
 				getNextToken();
+				if (curtok.ty == TK::tok_rp) {
+					getNextToken();
+					if (curtok.ty != TK::tok_semi)
+						error_expected(";", curtok);
+					getNextToken();
+					auto loc = curtok.loc;
+					auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), nullptr));
+					ast->loc = loc;
+					return std::move(ast);
+				}
 				auto loc = curtok.loc;
 				auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), std::move(expr())));
 				ast->loc = loc;
+				if (curtok.ty != TK::tok_semi)
+					error_expected(";", curtok);
+				getNextToken();
 				return std::move(ast);
 			}
 		}

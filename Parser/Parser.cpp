@@ -29,6 +29,9 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_double) {
 		return AType::Double;
 	}
+	else if (curtok.ty == TK::tok_stct) {
+		return AType::Struct;
+	}
 	else {
 		return AType::Nop;
 	}
@@ -88,10 +91,16 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					if (curtok.ty != TK::tok_num_int && curtok.ty != TK::tok_dtdt)
 						error_unexpected(curtok);
 					if (curtok.ty == TK::tok_num_int) {
-						size_v.push_back(std::atoll(curtok.val.c_str()));
+						if(std::atoll(curtok.val.c_str()) > 0)
+							size_v.push_back(std::atoll(curtok.val.c_str()));
+						else {
+							error("Compile error", "Array elements size must be higher than 0.", curtok);
+						}
 					}
 					else {
 						// TODO : For array block structure.
+						// evaluate when codegen.
+						size_v.push_back(0LL);
 					}
 					getNextToken();
 					if (curtok.ty != TK::tok_rpb)
@@ -99,7 +108,7 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					getNextToken();
 				}
 				if (curtok.ty == TK::tok_lp) { // The array declaration has a body.
-
+					auto ast = std::make_unique<ASTType>(expr_arr();
 				}
 				else if (curtok.ty == TK::tok_semi) { // The array declaration has no body.
 					getNextToken();

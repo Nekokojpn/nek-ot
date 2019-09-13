@@ -25,7 +25,7 @@
 #include "llvm\IR\DIBuilder.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/BitStream/BitstreamWriter.h"
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Linker/Linker.h"
 #include "llvm/IR/InlineAsm.h"
@@ -231,6 +231,7 @@ enum class AType { //AllType
 	Double,
 	Char,
 	String,
+	Struct,
 	Void
 };
 enum class AArrType {
@@ -304,6 +305,7 @@ public:
 	std::string name;
 	/* FOR ARRAY ATTRIBUTES*/
 	std::vector<long long> arr_size_v;
+	std::unique_ptr<ASTArrElements> elements;
 	//
 	std::unique_ptr<ASTSubst> expr;
 	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
@@ -317,6 +319,14 @@ public:
 	std::string name;
 	std::unique_ptr<ASTFunc> lambda;	
 	ASTAction(std::string _name, std::unique_ptr<ASTFunc> _lambda) : name(_name), lambda(std::move(_lambda)) {};
+	Value* codegen();
+};
+
+class ASTArrElements : public AST {
+public:
+	std::vector<std::unique_ptr<AST>> elements;
+	std::vector<long long> arr_size_v;
+	ASTArrElements(std::vector<std::unique_ptr<AST>> _elements, std::vector<long long> _arr_size_v) : elements(_elements), arr_size_v(_arr_size_v) {};
 	Value* codegen();
 };
 
@@ -444,6 +454,7 @@ class Parser {
 	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
 	std::unique_ptr<ASTRet> def_ret();
 	std::unique_ptr<AST> def_stct();
+	std::unique_ptr<ASTArrElements> expr_arr();
 	
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;

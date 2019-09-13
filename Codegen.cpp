@@ -8,6 +8,7 @@ std::unique_ptr<legacy::FunctionPassManager> fpm;
 std::unique_ptr<PassManagerBuilder> pmbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
+static std::map<std::string, StructType*> userdefined_stcts;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
@@ -297,8 +298,8 @@ void Sys::IO::Printfln::CreateFunc() {
 }
 
 void init_parse() {
-	module = make_unique<Module>("top", context);
-	fpm = llvm::make_unique<legacy::FunctionPassManager>(module.get());
+	module = std::make_unique<Module>("top", context);
+	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());
 	pmbuilder = std::make_unique<PassManagerBuilder>();
 	pmbuilder->OptLevel = 2;
 	pmbuilder->populateFunctionPassManager(*fpm);
@@ -826,9 +827,9 @@ Value* ASTStruct::codegen() {
 		tys.push_back(Codegen::getTypebyAType(ty));
 	}
 	ArrayRef<Type*> elements(tys);
-	auto stct = StructType::create(context,"");
+	auto stct = StructType::create(context,this->name);
 	stct->setBody(elements);
-	builder.CreateAlloca(stct);
+	userdefined_stcts[this->name] = stct;
 	return nullptr;
 }
 

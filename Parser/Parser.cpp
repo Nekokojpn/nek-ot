@@ -108,12 +108,15 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					getNextToken();
 				}
 				if (curtok.ty == TK::tok_lp) { // The array declaration has a body.
-					auto ast = std::make_unique<ASTType>(expr_arr();
+					auto loc = curtok.loc;
+					auto ast = std::make_unique<ASTType>(ty, _id, size_v, expr_arr());
+					ast->loc = loc;
+					return std::move(ast);
 				}
 				else if (curtok.ty == TK::tok_semi) { // The array declaration has no body.
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v);
+					auto ast = std::make_unique<ASTType>(ty, _id, size_v, nullptr);
 					ast->loc = loc;
 					return std::move(ast);
 				}

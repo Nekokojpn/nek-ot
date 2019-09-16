@@ -117,7 +117,15 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 						error_unexpected(curtok);
 					getNextToken();
 				}
-				if (curtok.ty == TK::tok_lp) { // The array declaration has a body.
+				if (curtok.ty != TK::tok_lp) {
+					error_expected("(", curtok);
+				}
+				getNextToken();
+				if (curtok.ty != TK::tok_rp) {
+					error_expected(")", curtok);
+				}
+				getNextToken();
+				if (curtok.ty == TK::tok_lb) { // The array declaration has a body.
 					auto loc = curtok.loc;
 					auto ast = std::make_unique<ASTType>(ty, _id, size_v, std::move(expr_arr()), stct_name);
 					ast->loc = loc;

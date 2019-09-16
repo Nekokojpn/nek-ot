@@ -4,5 +4,6 @@ fn main(){
 		i32 j
 	};
 	i := mys();
+	i.i = 0;
 	ret;
 }

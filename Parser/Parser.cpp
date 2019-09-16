@@ -17,6 +17,11 @@ void Parser::getNextToken() noexcept {
 void Parser::add_userdefined_stct(Token_t& cur) {
 	stcts[cur.val] = cur;
 }
+bool Parser::find_userdefined_stct(std::string stct_name) {
+	for (auto itr = this->stcts.begin(); itr != stcts.end(); itr++)
+		if (itr->first == stct_name)return true;
+	return false;
+}
 
 //get AType from curtok.
 AType Parser::getATypeByCurtok() {
@@ -33,7 +38,8 @@ AType Parser::getATypeByCurtok() {
 		return AType::Double;
 	}
 	else {
-
+		if (find_userdefined_stct(curtok.val))
+			return AType::Struct;
 		return AType::Nop;
 	}
 }
@@ -81,6 +87,9 @@ std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
 std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 		getNextToken();
 		auto ty = getATypeByCurtok(); //TODO: Support stct;
+		std::string stct_name = "";
+		if (ty == AType::Struct)
+			stct_name = curtok.val;
 		if (ty != AType::Nop) {
 			getNextToken();
 
@@ -110,14 +119,14 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 				}
 				if (curtok.ty == TK::tok_lp) { // The array declaration has a body.
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v, std::move(expr_arr()));
+					auto ast = std::make_unique<ASTType>(ty, _id, size_v, std::move(expr_arr()), stct_name);
 					ast->loc = loc;
 					return std::move(ast);
 				}
 				else if (curtok.ty == TK::tok_semi) { // The array declaration has no body.
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v, nullptr);
+					auto ast = std::make_unique<ASTType>(ty, _id, size_v, nullptr, stct_name);
 					ast->loc = loc;
 					return std::move(ast);
 				}
@@ -133,12 +142,12 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 						error_expected(";", curtok);
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), nullptr));
+					auto ast = std::make_unique<ASTType>(ty, _id, nullptr, stct_name);
 					ast->loc = loc;
 					return std::move(ast);
 				}
 				auto loc = curtok.loc;
-				auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), std::move(expr())));
+				auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), std::move(expr())), stct_name);
 				ast->loc = loc;
 				if (curtok.ty != TK::tok_rp) 
 					error_expected(")", curtok);

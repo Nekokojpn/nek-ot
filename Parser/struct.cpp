@@ -6,6 +6,7 @@ std::unique_ptr<AST> Parser::def_stct() {
 		add_err_msg(curtok.val + " may be used as a reserved word.");
 		error_unexpected(curtok);
 	}
+	add_userdefined_stct(curtok);
 	auto name = curtok.val;
 	getNextToken();
 	if (curtok.ty != TK::tok_lb) {

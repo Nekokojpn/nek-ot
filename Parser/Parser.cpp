@@ -14,6 +14,9 @@ void Parser::getNextToken() noexcept {
 	if(index+1 < tokens.size())
 		curtok = tokens[++index];
 }
+void Parser::add_userdefined_stct(Token_t& cur) {
+	stcts[cur.val] = cur;
+}
 
 //get AType from curtok.
 AType Parser::getATypeByCurtok() {
@@ -29,10 +32,8 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_double) {
 		return AType::Double;
 	}
-	else if (curtok.ty == TK::tok_stct) {
-		return AType::Struct;
-	}
 	else {
+
 		return AType::Nop;
 	}
 }
@@ -79,7 +80,7 @@ std::unique_ptr<ASTStrLiteral> Parser::expr_str() {
 
 std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 		getNextToken();
-		auto ty = getATypeByCurtok();
+		auto ty = getATypeByCurtok(); //TODO: Support stct;
 		if (ty != AType::Nop) {
 			getNextToken();
 
@@ -109,7 +110,7 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 				}
 				if (curtok.ty == TK::tok_lp) { // The array declaration has a body.
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v, expr_arr());
+					auto ast = std::make_unique<ASTType>(ty, _id, size_v, std::move(expr_arr()));
 					ast->loc = loc;
 					return std::move(ast);
 				}
@@ -139,6 +140,9 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 				auto loc = curtok.loc;
 				auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), std::move(expr())));
 				ast->loc = loc;
+				if (curtok.ty != TK::tok_rp) 
+					error_expected(")", curtok);
+				getNextToken();
 				if (curtok.ty != TK::tok_semi)
 					error_expected(";", curtok);
 				getNextToken();

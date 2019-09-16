@@ -1,7 +1,0 @@
-fn main() -> void {
- int i = 0;
- while(i < 100000000){
-	int j = 100; 
- }
- ret;
-}

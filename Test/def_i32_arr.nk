@@ -1,5 +1,5 @@
 fn main() -> i32 {
-	arr := i32[5];
+	arr := i32[5]();
 	arr[0] = 5;
 	ret arr[0];
-};
+}

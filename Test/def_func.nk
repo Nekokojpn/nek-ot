@@ -4,4 +4,4 @@ fn main() -> i32 {
 	i := i32(testMulExpr + 12);
 	m := i32((testMulExpr + i) * testExpr);
 	ret m;
-};
+}

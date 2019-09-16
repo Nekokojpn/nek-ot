@@ -25,7 +25,12 @@
 #include "llvm\IR\DIBuilder.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
-#include "llvm/BitStream/BitstreamWriter.h"
+#if LLVM_VERSION >= 10
+	#include "llvm/BitStream/BitstreamWriter.h"
+#else
+	#include "llvm/Bitcode/BitstreamWriter.h"
+#endif
+
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Linker/Linker.h"
 #include "llvm/IR/InlineAsm.h"
@@ -257,6 +262,8 @@ public:
 
 class ASTSubst;
 class ASTFunc;
+class ASTStctElements;
+class ASTArrElements;
 
 class AST {
 public:
@@ -309,7 +316,7 @@ public:
 	//
 	std::unique_ptr<ASTSubst> expr;
 	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
-	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)) {};
+	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v, std::unique_ptr<ASTArrElements> _elements) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)) {};
 	Value* codegen() override;
 };
 
@@ -321,14 +328,28 @@ public:
 	ASTAction(std::string _name, std::unique_ptr<ASTFunc> _lambda) : name(_name), lambda(std::move(_lambda)) {};
 	Value* codegen();
 };
-
+class ASTStruct : public AST {
+public:
+	std::string name;
+	std::unique_ptr<ASTStctElements> elements;
+	ASTStruct(std::string _name, std::unique_ptr<ASTStctElements> _elements) : name(_name), elements(std::move(_elements)) {};
+	Value* codegen() override;
+};
+class ASTStctElements : public AST {
+public:
+	std::vector<std::pair<AType, std::string>> elements;
+	ASTStctElements(std::vector<std::pair<AType, std::string>> _elements) : elements(_elements) {};
+	Value* codegen() override;
+	ArrayRef<Type*> make_aref();
+};
 class ASTArrElements : public AST {
 public:
 	std::vector<std::unique_ptr<AST>> elements;
-	std::vector<long long> arr_size_v;
-	ASTArrElements(std::vector<std::unique_ptr<AST>> _elements, std::vector<long long> _arr_size_v) : elements(_elements), arr_size_v(_arr_size_v) {};
-	Value* codegen();
+	ASTArrElements(std::vector<std::unique_ptr<AST>> _elements) : elements(std::move(_elements)) {};
+	Value* subst(Value* arr);
+	Value* codegen() override;
 };
+
 
 class ASTString : public AST {
 public:
@@ -344,13 +365,7 @@ public:
 	ASTRet(AType _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
 };
-class ASTStruct : public AST {
-public:
-	std::string name;
-	std::vector<AType> atts;
-	ASTStruct(std::string _name, std::vector<AType> _atts) : name(_name), atts(_atts) {};
-	Value* codegen();
-};
+
 class ASTProto : public AST {
 public:
 	std::string name;
@@ -432,6 +447,7 @@ public:
 class Parser {
 	int index;
 	Token_t curtok;
+	std::map<std::string, Token_t> stcts;
 	std::vector<Token_t> tokens;
 	std::unique_ptr<AST> expr();
 	std::unique_ptr<AST> expr_add();
@@ -455,7 +471,7 @@ class Parser {
 	std::unique_ptr<ASTRet> def_ret();
 	std::unique_ptr<AST> def_stct();
 	std::unique_ptr<ASTArrElements> expr_arr();
-	
+	std::unique_ptr<ASTStctElements> expr_stct();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:
@@ -465,4 +481,5 @@ public:
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
+	void add_userdefined_stct(Token_t& cur);
 };

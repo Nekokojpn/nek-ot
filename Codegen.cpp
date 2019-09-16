@@ -819,7 +819,10 @@ Value* ASTRet::codegen() {
 	if (!lambdavalue) {
 		retcodegen = true;
 		if (expr_p) {
-			builder.CreateStore(expr_p->codegen(), retvalue);
+			auto v = expr_p->codegen();
+			if (v->getType()->isPointerTy())
+				v = builder.CreateLoad(v);
+			builder.CreateStore(v, retvalue);
 			retbbs.push_back(builder.GetInsertBlock());
 		}
 		else {

@@ -11,30 +11,32 @@ std::unique_ptr<AST> Parser::def_stct() {
 	if (curtok.ty != TK::tok_lb) {
 		error_unexpected(curtok);
 	}
-	getNextToken();
+	auto elements = std::move(expr_stct());
 
-	std::vector<AType> putsArgs;
-	std::vector<std::string> argsIdentifier;
+	if (curtok.ty != TK::tok_semi)
+		error("Expected", "Expected --> ;", curtok);
+	getNextToken();
+	return std::make_unique<ASTStruct>(name, std::move(elements));
+}
+
+std::unique_ptr<ASTStctElements> Parser::expr_stct() {
+	getNextToken();
+	std::vector<std::pair<AType, std::string>> elements;
 	while (true) {
 		AType ty = getATypeByCurtok();
 		if (ty == AType::Nop)break;
 
-		putsArgs.push_back(ty);
-
 		getNextToken();
 		if (curtok.ty != TK::tok_identifier)
 			error_unexpected(curtok);
-		argsIdentifier.push_back(curtok.val);
+		elements.push_back(std::make_pair(ty, curtok.val));
 		getNextToken();
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
-	}
 
+	}
 	if (curtok.ty != TK::tok_rb)
 		error("Expected", "Expected --> }", curtok);
 	getNextToken();
-	if (curtok.ty != TK::tok_semi)
-		error("Expected", "Expected --> ;", curtok);
-	getNextToken();
-	return std::make_unique<ASTStruct>(name, putsArgs);
+	return std::make_unique<ASTStctElements>(elements);
 }

@@ -310,13 +310,16 @@ class ASTType : public AST { // i32 i = 0;
 public:
 	AType ty;
 	std::string name;
-	/* FOR ARRAY ATTRIBUTES*/
+	/* FOR ARRAY ATTRIBUTES */
 	std::vector<long long> arr_size_v;
 	std::unique_ptr<ASTArrElements> elements;
 	//
+	/* FOR STRUCT ATTRIBUTES */
+	std::string stct_name;
+	//
 	std::unique_ptr<ASTSubst> expr;
-	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr) : ty(_ty), name(_name), expr(std::move(_expr)) {};
-	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v, std::unique_ptr<ASTArrElements> _elements) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)) {};
+	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name) {};
+	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)), stct_name(_stct_name) {};
 	Value* codegen() override;
 };
 
@@ -482,4 +485,5 @@ public:
 	bool getOpt();
 	AType getATypeByCurtok();
 	void add_userdefined_stct(Token_t& cur);
+	bool find_userdefined_stct(std::string stct_name);
 };

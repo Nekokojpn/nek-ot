@@ -547,7 +547,11 @@ Value* ASTBinOp::codegen() {
 
 Value* ASTType::codegen() {
 	if (this->arr_size_v.size() == 0) {
-		auto allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
+		AllocaInst* allocainst;
+		if (this->ty != AType::Struct)
+			allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
+		else
+			allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
 		namedvalues_local[this->name] = allocainst;
 		if (this->expr) {
 			auto value = this->expr->codegen();

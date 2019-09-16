@@ -459,6 +459,7 @@ Value* ASTIdentifierArrayElement::codegen() {
 }
 
 Value* ASTValue::codegen() {
+	/*
 	if (curvar) {
 		if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
 			if (this->value >= 2147483648)
@@ -468,6 +469,7 @@ Value* ASTValue::codegen() {
 		}
 	}
 	curvar_v.push_back(value);
+	*/
 	return builder.getInt32(value);
 }
 
@@ -495,6 +497,7 @@ Value* ASTBinOp::codegen() {
 	switch (op) {
 	case Op::Plus:
 		
+		/*
 		if (l->getType() && size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
 			if (l->getType() && l->getType() == builder.getInt32Ty()) {
@@ -503,25 +506,25 @@ Value* ASTBinOp::codegen() {
 			}
 			curvar_v.pop_back();
 		}
-		
+		*/
 		return builder.CreateAdd(l, r);
 	case Op::Minus:
-		if (size + 2 == curvar_v.size()) {
+		/*if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] - curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
-		}
+		}*/
 		return builder.CreateSub(l, r);
 	case Op::Mul:
-		if (size + 2 == curvar_v.size()) {
+		/*if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] * curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
-		}
+		}*/
 		return builder.CreateMul(l, r);
 	case Op::Div:
-		if (size + 2 == curvar_v.size()) {
+		/*if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] / curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
-		}
+		}*/
 		return builder.CreateSDiv(l, r);
 	case Op::RDiv:
 		return builder.CreateSRem(l, r);
@@ -548,8 +551,8 @@ Value* ASTType::codegen() {
 		namedvalues_local[this->name] = allocainst;
 		if (this->expr) {
 			auto value = this->expr->codegen();
-			constantfoldings[this->name] = curvar_v[0];
-			curvar_v.clear();
+			//constantfoldings[this->name] = curvar_v[0];
+			//curvar_v.clear();
 			if (!value)
 				return nullptr;
 			return value;
@@ -565,6 +568,9 @@ Value* ASTType::codegen() {
 		}
 		auto allocainst = builder.CreateAlloca(ty);
 		namedvalues_local[name] = allocainst;
+		if (this->elements) {
+			this->elements->subst(allocainst);
+		}
 		return allocainst;
 	}
 }
@@ -613,7 +619,7 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
-	auto retbb = BasicBlock::Create(context, "ret", builder.GetInsertBlock()->getParent());
+	auto retbb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 	builder.SetInsertPoint(retbb);
 
 	if (retvalue) {
@@ -650,7 +656,7 @@ Value* ASTCall::codegen() {
 		return nullptr;
 	}
 	else {
-		auto inst = builder.CreateCall(functions_global[name], argsRef, "calltmp");
+		auto inst = builder.CreateCall(functions_global[name], argsRef, "");
 		inst->setCallingConv(CallingConv::X86_StdCall);
 		return inst;
 	}
@@ -671,7 +677,7 @@ Value* ASTIf::codegen() {
 	auto curfunc = builder.GetInsertBlock()->getParent();
 
 	std::vector<BasicBlock*> blocks;
-	BasicBlock* if_block = BasicBlock::Create(context,"if",curfunc);
+	BasicBlock* if_block = BasicBlock::Create(context,"",curfunc);
 	auto curbb = builder.GetInsertBlock();
 	builder.SetInsertPoint(if_block);
 	retcodegen = false;
@@ -688,7 +694,7 @@ Value* ASTIf::codegen() {
 	//When exsists only if
 	if (ast_elif == nullptr && ast_else == nullptr) {
 
-		BasicBlock* cont = BasicBlock::Create(context, "cont", curfunc);
+		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
 		builder.CreateCondBr(astboolop, if_block, cont);
 		builder.SetInsertPoint(before);
 		builder.CreateBr(cont);
@@ -704,7 +710,7 @@ Value* ASTIf::codegen() {
 	else {
 		//When exists elif
 		if (ast_elif != nullptr) {
-			BasicBlock* elif_block = BasicBlock::Create(context, "elif", curfunc);
+			BasicBlock* elif_block = BasicBlock::Create(context, "", curfunc);
 			builder.CreateCondBr(astboolop, if_block, elif_block);
 
 			builder.SetInsertPoint(elif_block);
@@ -719,7 +725,7 @@ Value* ASTIf::codegen() {
 		}
 		//When exists else
 		if (ast_else != nullptr) {
-			BasicBlock* else_block = BasicBlock::Create(context, "el", curfunc);
+			BasicBlock* else_block = BasicBlock::Create(context, "", curfunc);
 			builder.CreateCondBr(astboolop, if_block, else_block);
 
 			builder.SetInsertPoint(else_block);
@@ -730,7 +736,7 @@ Value* ASTIf::codegen() {
 			retcodegen = false;
 		}
 		if (blocks.size() != 0) {
-			auto cont = BasicBlock::Create(context, "cont", curfunc);
+			auto cont = BasicBlock::Create(context, "", curfunc);
 			builder.SetInsertPoint(before);
 			builder.CreateBr(cont);
 			for (int i = 0; i < blocks.size(); i++) {
@@ -753,9 +759,9 @@ Value* ASTWhile::codegen() {
 
 	auto curfunc = builder.GetInsertBlock()->getParent();
 
-	BasicBlock* while_block = BasicBlock::Create(context, "while_block", curfunc);
-	BasicBlock* body_block = BasicBlock::Create(context, "body_block", curfunc);
-	BasicBlock* cont_block = BasicBlock::Create(context, "cont", curfunc);
+	BasicBlock* while_block = BasicBlock::Create(context, "", curfunc);
+	BasicBlock* body_block = BasicBlock::Create(context, "", curfunc);
+	BasicBlock* cont_block = BasicBlock::Create(context, "", curfunc);
 	builder.CreateBr(while_block);
 	
 	builder.SetInsertPoint(while_block);
@@ -786,7 +792,7 @@ Value* ASTAction::codegen() {
 
 Value* ASTSubst::codegen() {
 	if (this->id) {
-		curvar = namedvalues_local[id->name];
+		//curvar = namedvalues_local[id->name];
 		if(this->expr)
 			return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
 		else {
@@ -804,7 +810,7 @@ Value* ASTSubst::codegen() {
 	else
 		return nullptr;
 }
-// This function prepares to generate a return IR, but does not generate a return IR. 
+// This function prepares to generate a return IR. 
 Value* ASTRet::codegen() {
 	if (!lambdavalue) {
 		retcodegen = true;
@@ -822,14 +828,43 @@ Value* ASTRet::codegen() {
 	return nullptr;
 }
 Value* ASTStruct::codegen() {
-	std::vector<Type*> tys;
-	for (auto ty : atts) {
-		tys.push_back(Codegen::getTypebyAType(ty));
-	}
-	ArrayRef<Type*> elements(tys);
+	ArrayRef<Type*> elements = this->elements->make_aref();
 	auto stct = StructType::create(context,this->name);
 	stct->setBody(elements);
 	userdefined_stcts[this->name] = stct;
+	return nullptr;
+}
+Value* ASTArrElements::subst(Value* arr) {
+	//TODO : not supported de.
+	Value* gep;
+	std::vector<Value*> p;
+	p.push_back(builder.getInt64(0));
+	p.push_back(this->elements[0]->codegen());
+	ArrayRef<Value*> pp(p);
+	gep = builder.CreateInBoundsGEP(arr, pp);
+	for (int i = 1; i < this->elements.size(); i++) {
+		std::vector<Value*> p;
+		p.push_back(builder.getInt64(0));
+		p.push_back(this->elements[i]->codegen());
+		ArrayRef<Value*> pp(p);
+		gep = builder.CreateInBoundsGEP(gep, pp);
+	}
+	return gep;
+
+}
+Value* ASTArrElements::codegen() {
+
+	return nullptr;
+}
+ArrayRef<Type*> ASTStctElements::make_aref(){
+	std::vector<Type*> elem_v(this->elements.size());
+	for (int i = 0; i < elements.size(); i++) {
+		elem_v[i] = Codegen::getTypebyAType(this->elements[i].first);
+	}
+	ArrayRef<Type*> elements(elem_v);
+	return elements;
+}
+Value* ASTStctElements::codegen() {
 	return nullptr;
 }
 

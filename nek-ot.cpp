@@ -80,6 +80,8 @@ int main(int argc, char** argv) {
   Sys::IO::Printf::CreateFunc();
   Sys::IO::Printfln::CreateFunc();
 
+  std::cout << "Generating LLVM IR..." << std::endl;
+
   parser.parse_codegen();
   
   std::cout << std::endl;
@@ -124,4 +126,14 @@ int main(int argc, char** argv) {
   printf("Tokenize time %lf[s]\n", toknize_time);
   printf("Parse time %lf[s]\n", parse_time);  
 #endif
+  /*
+  const char* llc_command = "C:\\Users\\nekoko\\Desktop\\llvm-project\\build\\Debug\\bin\\llc.exe -filetype=obj -o=out.o out.bc";
+  const char* lld_command = "\"C:\\Program Files\\LLVM\\bin\\lld-link.exe\" -flavor link /out:out.exe /entry:main /subsystem:console out.o /libpath:\"C:\\Program Files(x86)\\Windows Kits\\10\\Lib\\10.0.18362.0\\um\\x64\" Kernel32.lib User32.lib \"C:\\Program Files(x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.22.27905\\lib\\x64\\chkstk.obj\"";
+  std::cout << llc_command;
+  std::cout << "Compiling..." << std::endl;
+  system(llc_command);
+  std::cout << "Linking..." << std::endl;
+  system(lld_command);
+  */
+  return 0;
 }

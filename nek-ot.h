@@ -25,11 +25,7 @@
 #include "llvm\IR\DIBuilder.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
-#if LLVM_VERSION >= 10
-	#include "llvm/BitStream/BitstreamWriter.h"
-#else
-	#include "llvm/Bitcode/BitstreamWriter.h"
-#endif
+#include "llvm/BitStream/BitstreamWriter.h"
 
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Linker/Linker.h"
@@ -92,6 +88,7 @@ enum class TK {
 	tok_lb, // {
 	tok_rb, // }
 	tok_arrow, // ->
+	tok_rarrow, // <-
 	tok_sq, // '
 	tok_dq, // "
 	tok_lt, // <
@@ -111,6 +108,8 @@ enum class TK {
 	tok_colon, // :
 	tok_cleq, //:=
 	tok_dtdt, //..
+	tok_doll, //$
+	tok_pipe, //|
 
 
 	// operator
@@ -319,7 +318,7 @@ public:
 	//
 	std::unique_ptr<ASTSubst> expr;
 	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name) {};
-	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)), stct_name(_stct_name) {};
+	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)), elements(std::move(_elements)), stct_name(_stct_name) {};
 	Value* codegen() override;
 };
 
@@ -348,8 +347,12 @@ public:
 class ASTArrElements : public AST {
 public:
 	std::vector<std::unique_ptr<AST>> elements;
+	//for comprehension
+	std::unique_ptr<AST> restraint;
+	std::unique_ptr<ASTType> arr_type;
+	ASTArrElements(std::unique_ptr<AST> _restraint, std::unique_ptr<ASTType> _arr_type) : restraint(std::move(_restraint)), arr_type(std::move(_arr_type)) {};
 	ASTArrElements(std::vector<std::unique_ptr<AST>> _elements) : elements(std::move(_elements)) {};
-	Value* subst(Value* arr);
+	Value* subst(Value* arr, std::vector<long long> arr_size_v);
 	Value* codegen() override;
 };
 
@@ -446,6 +449,7 @@ public:
 	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2) : id2(std::move(_id2)) {};
 	Value* codegen() override;
 };
+
 
 class Parser {
 	int index;

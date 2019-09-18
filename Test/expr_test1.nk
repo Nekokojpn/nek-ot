@@ -1,0 +1,6 @@
+fn main(){
+	writefln("%d", $3*3);
+	writefln("%d", $1+2*2);
+	writefln("%d", 2*$2+1);
+	ret;
+}

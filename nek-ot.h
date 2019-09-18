@@ -99,7 +99,6 @@ enum class TK {
 	tok_em, // !
 	tok_emeq, //!=
 	tok_comma, // ,
-	tok_under, // _
 	tok_dot, //.
 	tok_lpb, // [
 	tok_rpb, // ]

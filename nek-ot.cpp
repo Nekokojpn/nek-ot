@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
   
   Test::CreateFunc();
   //Sys::IO::OutPuti8Ptr::CreateFunc();
-  Sys::Cast::CastInt32toInt8ptr::CreateFunc();
-  Sys::Cast::CastInt32toInt8Array::CreateFunc();
+  //Sys::Cast::CastInt32toInt8ptr::CreateFunc();
+  //Sys::Cast::CastInt32toInt8Array::CreateFunc();
   Sys::IO::Printf::CreateFunc();
   Sys::IO::Printfln::CreateFunc();
 

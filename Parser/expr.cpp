@@ -97,8 +97,9 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	}
 	else if (curtok.ty == TK::tok_lp) {
 		getNextToken();
+		auto loc = curtok.loc;
 		auto ast = expr();
-		ast->loc = curtok.loc;
+		ast->loc = loc;
 		if (curtok.ty == TK::tok_rp)
 		{
 			getNextToken();
@@ -108,6 +109,13 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		add_err_msg("Have you forgotten ) ?");
 		add_err_msg("Hint: You specified nested expression must start with ( and end with ).");
 		error_expected(")", curtok);
+	}
+	else if (curtok.ty == TK::tok_doll) {
+		getNextToken();
+		auto loc = curtok.loc;
+		auto ast = expr();
+		ast->loc = loc;
+		return std::move(ast);
 	}
 	add_err_msg("You specified token is unkown for the expression.");
 	error_unexpected(curtok);

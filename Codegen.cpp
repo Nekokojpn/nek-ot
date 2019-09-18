@@ -12,6 +12,7 @@ static std::map<std::string, StructType*> userdefined_stcts;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
+static Value* underscore;
 
 AllocaInst* curvar;
 std::vector<double> curvar_v;
@@ -418,8 +419,11 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		auto global = namedvalues_global[name];
 		if (!global) {
 			auto str = namedvalues_str[name];
-			if(!str)
-				error("Unsolved value name", "Unsolved value name --> "+name, this->loc);
+			if (!str) {
+				if(underscore)
+					return underscore;
+				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
+			}
 			return str;
 		}
 		return global;
@@ -454,7 +458,7 @@ Value* ASTIdentifierArrayElement::codegen() {
 		ArrayRef<Value*> pp(p);
 		gep = builder.CreateInBoundsGEP(gep, pp);
 	}
-	return gep;
+	return builder.CreateLoad(gep);
 	
 }
 
@@ -565,14 +569,18 @@ Value* ASTType::codegen() {
 	}
 	else {
 		ArrayType* ty = ArrayType::get(Codegen::getTypebyAType(this->ty), arr_size_v[arr_size_v.size() - 1]);
-		arr_size_v.pop_back();
 		long long cnt = 1;
-		while (arr_size_v.size() > 0) {
+		while (cnt < arr_size_v.size()) {
 			ty = ArrayType::get(ty, arr_size_v[arr_size_v.size() - cnt]);
 			cnt++;
 		}
 		auto allocainst = builder.CreateAlloca(ty);
-		namedvalues_local[name] = allocainst;
+		
+		if (name != "_")
+			namedvalues_local[name] = allocainst;
+		else
+			underscore = allocainst;
+
 		if (this->elements) {
 			this->elements->subst(allocainst, arr_size_v);
 		}
@@ -624,9 +632,10 @@ Value* ASTFunc::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
+	
 	auto retbb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 	builder.SetInsertPoint(retbb);
-
+	module->dump();
 	if (retvalue) {
 		builder.CreateRet(builder.CreateLoad(retvalue));
 	}
@@ -857,6 +866,23 @@ Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
 	}
 	else {
 		//TODO: Comprehension
+		Value* gep_main;
+		auto arr_child = this->arr_type->codegen();
+		for (auto i = 0ULL; i < arr_type->arr_size_v[0]; i++) {
+			std::vector<Value*> p;
+			p.push_back(builder.getInt64(0));
+			p.push_back(builder.getInt64(i));
+			ArrayRef<Value*> pp(p);
+			std::vector<Value*> p1;
+			p1.push_back(builder.getInt64(0));
+			p1.push_back(builder.getInt64(i));
+			ArrayRef<Value*> pp1(p1);
+			gep_main = builder.CreateInBoundsGEP(arr, pp);
+			gep = builder.CreateInBoundsGEP(arr_child, pp1);
+			underscore = gep;
+			builder.CreateStore(this->restraint->codegen(), gep_main);
+			underscore = nullptr;
+		}
 	}
 	return nullptr;
 }

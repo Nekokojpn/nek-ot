@@ -23,8 +23,10 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		getNextToken();
 		if (curtok.ty != TK::tok_rarrow)
 			error_expected("<-", curtok);
-		getNextToken();
 		auto ast_type = this->def_type(identifier);
+		if (curtok.ty != TK::tok_rb)
+			error("Expected", "Expected --> }", curtok);
+		getNextToken();
 		return std::move(std::make_unique<ASTArrElements>(std::move(restrait), std::move(ast_type)));
 	}
 	if (cnt != 0 && curtok.ty == TK::tok_pipe) {

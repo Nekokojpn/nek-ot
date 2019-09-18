@@ -196,6 +196,9 @@ TK gettoken() {
 			if (cc == '=') { // <=
 				return TK::tok_lteq;
 			}
+			else if (cc == '-') {
+				return TK::tok_rarrow;
+			}
 			undo_char();
 			return TK::tok_lt;
 		}
@@ -235,6 +238,12 @@ TK gettoken() {
 			}
 			undo_char();
 			return TK::tok_colon;
+		}
+		if (cc == '$') {
+			return TK::tok_doll;
+		}
+		if (cc == '|') {
+			return TK::tok_pipe;
 		}
 	}
 	std::string s = "";

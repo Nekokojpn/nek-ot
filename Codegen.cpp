@@ -566,14 +566,15 @@ Value* ASTType::codegen() {
 	else {
 		ArrayType* ty = ArrayType::get(Codegen::getTypebyAType(this->ty), arr_size_v[arr_size_v.size() - 1]);
 		arr_size_v.pop_back();
+		long long cnt = 1;
 		while (arr_size_v.size() > 0) {
-			ty = ArrayType::get(ty, arr_size_v[arr_size_v.size() - 1]);
-			arr_size_v.pop_back();
+			ty = ArrayType::get(ty, arr_size_v[arr_size_v.size() - cnt]);
+			cnt++;
 		}
 		auto allocainst = builder.CreateAlloca(ty);
 		namedvalues_local[name] = allocainst;
 		if (this->elements) {
-			this->elements->subst(allocainst);
+			this->elements->subst(allocainst, arr_size_v);
 		}
 		return allocainst;
 	}
@@ -841,23 +842,23 @@ Value* ASTStruct::codegen() {
 	userdefined_stcts[this->name] = stct;
 	return nullptr;
 }
-Value* ASTArrElements::subst(Value* arr) {
+Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
 	//TODO : not supported de.
 	Value* gep;
-	std::vector<Value*> p;
-	p.push_back(builder.getInt64(0));
-	p.push_back(this->elements[0]->codegen());
-	ArrayRef<Value*> pp(p);
-	gep = builder.CreateInBoundsGEP(arr, pp);
-	for (int i = 1; i < this->elements.size(); i++) {
-		std::vector<Value*> p;
-		p.push_back(builder.getInt64(0));
-		p.push_back(this->elements[i]->codegen());
-		ArrayRef<Value*> pp(p);
-		gep = builder.CreateInBoundsGEP(gep, pp);
+	if (this->elements.size() > 0) {
+		for (int i = 0; i < elements.size(); i++) {
+			std::vector<Value*> p;
+			p.push_back(builder.getInt64(0));
+			p.push_back(builder.getInt64(i));
+			ArrayRef<Value*> pp(p);
+			gep = builder.CreateInBoundsGEP(arr, pp);
+			builder.CreateStore(this->elements[i]->codegen(), gep);
+		}
 	}
-	return gep;
-
+	else {
+		//TODO: Comprehension
+	}
+	return nullptr;
 }
 Value* ASTArrElements::codegen() {
 

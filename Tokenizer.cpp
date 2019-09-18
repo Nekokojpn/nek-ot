@@ -87,7 +87,7 @@ TK gettoken() {
 		addToloc(cs.length());
 		return TK::tok_str_string;
 	}
-	if (isalpha(cc)) { // Regex, [A-Z]|[a-z]+[digit]*
+	if (isalpha(cc)||cc == '_') { // Regex, [A-Z]|[a-z]+[digit]*
 		cs = cc;
 		get_char();
 		while (true) {
@@ -219,7 +219,6 @@ TK gettoken() {
 			return TK::tok_em;
 		}
 		if (cc == ',')	return TK::tok_comma;
-		if (cc == '_')	return TK::tok_under;
 		if (cc == '.') {
 			get_char();
 			if (cc == '.') {

@@ -873,12 +873,8 @@ Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
 			p.push_back(builder.getInt64(0));
 			p.push_back(builder.getInt64(i));
 			ArrayRef<Value*> pp(p);
-			std::vector<Value*> p1;
-			p1.push_back(builder.getInt64(0));
-			p1.push_back(builder.getInt64(i));
-			ArrayRef<Value*> pp1(p1);
 			gep_main = builder.CreateInBoundsGEP(arr, pp);
-			gep = builder.CreateInBoundsGEP(arr_child, pp1);
+			gep = builder.CreateInBoundsGEP(arr_child, pp);
 			underscore = gep;
 			builder.CreateStore(this->restraint->codegen(), gep_main);
 			underscore = nullptr;

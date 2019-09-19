@@ -9,6 +9,7 @@ std::unique_ptr<PassManagerBuilder> pmbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, StructType*> userdefined_stcts;
+static std::map<StructType*, std::vector<std::pair<Type*, std::string>>> userdefined_stcts_elements;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;

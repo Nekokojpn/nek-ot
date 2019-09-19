@@ -282,6 +282,10 @@ public:
 	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v) : name(_name), expr_v(std::move(_expr_v)) {};
 	Value* codegen();
 };
+class ASTIdentifierStctElement : public AST {
+public:
+	std::string name;
+};
 class ASTValue : public AST {
 public:
 	long long value;
@@ -478,6 +482,7 @@ class Parser {
 	std::unique_ptr<AST> def_stct();
 	std::unique_ptr<ASTArrElements> expr_arr();
 	std::unique_ptr<ASTStctElements> expr_stct();
+	std::unique_ptr<AST> expr_dot(std::string& identifier);
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:

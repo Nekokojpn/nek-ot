@@ -1,5 +1,6 @@
 #include "../nek-ot.h"
 
+
 std::unique_ptr<AST> Parser::def_stct() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier) {

@@ -9,7 +9,7 @@ std::unique_ptr<PassManagerBuilder> pmbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, StructType*> userdefined_stcts;
-static std::map<StructType*, std::vector<std::pair<Type*, std::string>>> userdefined_stcts_elements;
+static std::map<StructType*, std::map<std::string, Stct_t>> userdefined_stcts_elements;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
@@ -903,8 +903,21 @@ Value* ASTStctElements::codegen() {
 	return nullptr;
 }
 Value* ASTIdentifierStctElement::codegen() {
-	auto value = exprs->codegen();
-	
-	return nullptr;
+	if(!userdefined_stcts[this->name])
+		error("Compile error:", "Undefined value --> " + this->name, this->loc);
+	if(!namedvalues_local[this->name])
+		error("Compile error:", "Undefined stct --> " + this->name, this->loc);
+	auto cur = userdefined_stcts_elements[userdefined_stcts[this->name]];
+	auto gep = builder.CreateStructGEP(namedvalues_local[this->name], cur[elem_names[0]].idx);
+	for (int i = 1; i < this->elem_names.size(); i++) {
+		
+		std::vector<Value*> vv;
+		vv.push_back(builder.getInt64(0));
+		vv.push_back(builder.getInt64(cur[elem_names[i]].idx));
+		ArrayRef<Value*> v(vv);
+		
+		gep = builder.CreateStructGEP(gep, cur[elem_names[i]].idx);
+	}
+	return builder.CreateLoad(gep);
 }
 

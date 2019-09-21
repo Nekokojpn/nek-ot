@@ -63,6 +63,7 @@ enum class TK {
 	tok_while,
 	tok_new,
 	tok_class,
+	tok_import,
 
 	tok_ret,
 	tok_void,
@@ -189,8 +190,15 @@ void error(std::string title, std::string message, Location_t& loc);
 void error(std::string title, std::string message, uint32_t line, uint32_t column);
 void error_expected(std::string lit, Token_t& curtok);
 void error_unexpected(Token_t& curtok);
+void warning(std::string title, std::string message, uint32_t line, uint32_t column);
+void warning(std::string title, std::string message, Location_t& loc);
+void warning(std::string title, std::string message, Token_t& curtok);
+void warning_unexpected(Token_t& curtok);
+void warning_expected(std::string lit, Token_t& curtok);
 
 void add_err_msg(std::string _errmsg);
+void add_warning_msg(std::string _warningmsg);
+
 
 void init_parse();
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);
@@ -285,6 +293,9 @@ public:
 class ASTIdentifierStctElement : public AST {
 public:
 	std::string name;
+	std::unique_ptr<AST> exprs;
+	ASTIdentifierStctElement(std::string _name, std::unique_ptr<AST> _exprs) :name(_name), exprs(std::move(_exprs)) {};
+	Value* codegen() override;
 };
 class ASTValue : public AST {
 public:
@@ -452,8 +463,11 @@ public:
 	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2) : id2(std::move(_id2)) {};
 	Value* codegen() override;
 };
-
-
+/*
+class ASTImport : public AST {
+public:
+};
+*/
 class Parser {
 	int index;
 	Token_t curtok;

@@ -6,6 +6,20 @@ std::unique_ptr<AST> Parser::expr_dot(std::string& identifier) {
 	if (curtok.ty != TK::tok_identifier) {
 		error_unexpected(curtok);
 	}
-	auto id = curtok.val;
-	return std::make_unique<ASTIdentifierStctElement>(id, std::move(expr()));
+	std::vector<std::string> elems;
+	while (true) {
+		elems.push_back(curtok.val);
+		getNextToken();
+		//Does not supported array.
+		/*
+		if (curtok.ty == TK::tok_lpb) {
+			getNextToken();
+			auto expr = expr();
+			if (curtok.ty != TK::tok_rpb){}
+		}
+		*/
+		if (curtok.ty != TK::tok_dot)break;
+		getNextToken();
+	}
+	return std::make_unique<ASTIdentifierStctElement>(identifier, elems);
 }

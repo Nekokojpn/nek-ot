@@ -1,4 +1,4 @@
-#include "nek-ot.h"
+#include "../nek-ot.h"
 
 extern std::string source_filename;
 extern std::vector<std::string> source;
@@ -17,11 +17,12 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 		std::cerr << std::endl;
 		Console::SetConsoleTextRed();
 		std::cerr << "Serious error: unknown error." << title << std::endl;
+		exit(1);
 	}
 
 	std::cerr << std::endl;
 	Console::SetConsoleTextRed();
-	std::cerr << "error: " << title << std::endl;
+	std::cerr << "Error: " << title << std::endl;
 	Console::SetConsoleTextBlue();
 	std::cerr << " --> ";
 	Console::SetConsoleTextWhite();

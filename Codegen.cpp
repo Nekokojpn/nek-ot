@@ -808,8 +808,13 @@ Value* ASTAction::codegen() {
 Value* ASTSubst::codegen() {
 	if (this->id) {
 		//curvar = namedvalues_local[id->name];
-		if(this->expr)
-			return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+		if (this->expr) {
+			if(namedvalues_local[id->name])
+				return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+			else {
+				error("Compile error:", "Undefined value --> " + id->name, this->loc);
+			}
+		}
 		else {
 			lambdavalue = namedvalues_local[this->id->name];
 			for (auto ast = body.begin(); ast != body.end(); ast++) {
@@ -853,7 +858,7 @@ Value* ASTStruct::codegen() {
 	return nullptr;
 }
 Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
-	//TODO : not supported de.
+	//TODO : Does not supported multidimentional array.
 	Value* gep;
 	if (this->elements.size() > 0) {
 		for (int i = 0; i < elements.size(); i++) {
@@ -866,7 +871,6 @@ Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
 		}
 	}
 	else {
-		//TODO: Comprehension
 		Value* gep_main;
 		auto arr_child = this->arr_type->codegen();
 		for (auto i = 0ULL; i < arr_type->arr_size_v[0]; i++) {
@@ -896,6 +900,11 @@ ArrayRef<Type*> ASTStctElements::make_aref(){
 	return elements;
 }
 Value* ASTStctElements::codegen() {
+	return nullptr;
+}
+Value* ASTIdentifierStctElement::codegen() {
+	auto value = exprs->codegen();
+	
 	return nullptr;
 }
 

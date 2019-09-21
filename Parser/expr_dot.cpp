@@ -7,6 +7,5 @@ std::unique_ptr<AST> Parser::expr_dot(std::string& identifier) {
 		error_unexpected(curtok);
 	}
 	auto id = curtok.val;
-	getNextToken();
-	return nullptr;
+	return std::make_unique<ASTIdentifierStctElement>(id, std::move(expr()));
 }

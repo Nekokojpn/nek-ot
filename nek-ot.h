@@ -183,6 +183,11 @@ typedef struct {
 	std::string val;
 	Location_t loc;
 } Token_t;
+typedef struct {
+	unsigned long long idx;
+	Type* ty;
+	std::string identifier;
+} Stct_t;
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);
@@ -293,8 +298,8 @@ public:
 class ASTIdentifierStctElement : public AST {
 public:
 	std::string name;
-	std::unique_ptr<AST> exprs;
-	ASTIdentifierStctElement(std::string _name, std::unique_ptr<AST> _exprs) :name(_name), exprs(std::move(_exprs)) {};
+	std::vector<std::string> elem_names;
+	ASTIdentifierStctElement(std::string _name, std::vector<std::string> _elem_names) :name(_name), elem_names(_elem_names) {};
 	Value* codegen() override;
 };
 class ASTValue : public AST {

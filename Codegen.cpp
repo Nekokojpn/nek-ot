@@ -459,7 +459,7 @@ Value* ASTIdentifierArrayElement::codegen() {
 		ArrayRef<Value*> pp(p);
 		gep = builder.CreateInBoundsGEP(gep, pp);
 	}
-	return builder.CreateLoad(gep);
+	return gep;
 	
 }
 
@@ -809,10 +809,14 @@ Value* ASTSubst::codegen() {
 	if (this->id) {
 		//curvar = namedvalues_local[id->name];
 		if (this->expr) {
-			if(namedvalues_local[id->name])
+			if (namedvalues_local[id->name]) {
+				auto val = expr->codegen();
+				if (val->getType()->isPointerTy())
+					val = builder.CreateLoad(val);
 				return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+			}
 			else {
-				error("Compile error:", "Undefined value --> " + id->name, this->loc);
+				error("Compile error:", "Undefined value name --> " + id->name, this->loc);
 			}
 		}
 		else {

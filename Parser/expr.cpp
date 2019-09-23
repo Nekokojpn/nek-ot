@@ -71,8 +71,9 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
 		identifier->loc = loc;
 		getNextToken();
-		if (curtok.ty == TK::tok_lp) { //Function call.
-			auto funccall = func_call(identifier->name);
+		if (curtok.ty == TK::tok_lp ||
+			curtok.ty == TK::tok_doll) { //Function call.
+			auto funccall = func_call(identifier->name, curtok.ty == TK::tok_doll ? true : false);
 			return std::move(funccall);
 		}
 		else if (curtok.ty == TK::tok_lpb) { //Array

@@ -813,7 +813,7 @@ Value* ASTSubst::codegen() {
 				auto val = expr->codegen();
 				if (val->getType()->isPointerTy())
 					val = builder.CreateLoad(val);
-				return builder.CreateStore(expr->codegen(), namedvalues_local[id->name]);
+				return builder.CreateStore(val, namedvalues_local[id->name]);
 			}
 			else {
 				error("Compile error:", "Undefined value name --> " + id->name, this->loc);
@@ -829,7 +829,11 @@ Value* ASTSubst::codegen() {
 		}
 	}
 	else if (id2) {
-		return builder.CreateStore(this->expr->codegen(), id2->codegen());
+		auto val = this->expr->codegen();
+		auto ptr = id2->codegen();
+		if (val->getType()->isPointerTy())
+			val = builder.CreateLoad(val);
+		return builder.CreateStore(val, ptr);
 	}
 	else
 		return nullptr;

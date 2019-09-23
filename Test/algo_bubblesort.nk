@@ -1,32 +1,34 @@
 fn main() {
-	target := i32[10](){1,5,8,2,3,9,4,6,7,10};
+	target := i32[10](){1,5,8,4,10,9,2,6,7,3};
 	i := i32 $ 0;
 	j := i32 $ 0;
 	tmp := i32 $ 0;
 	while $ i < 10 {
 		j = i + 1;
 		while(j < 10){
+			k := i32 $ 10;
+			l := i32 $ 0;
+			while(k > 0){
+				l = 0;
+				while(l < 10){
+					if(target[l] >= k){
+						writef $ "*";
+					}
+					else{
+						writef $ " ";
+					}
+					l = l + 1;
+				}
+				writefln $ " ";
+				k = k - 1;
+			}
 			if(target[i] > target[j]){
 				tmp = target[i];
 				target[i] = target[j];
 				target[j] = tmp;
 			}
 			j = j + 1;
-		}
-		k := i32 $ 10;
-		while(k > 0){
-			j = 0;
-			while(j < 10){
-				if(target[j] == i){
-					writef $ "*";
-				}
-				else{
-					writef $ " ";
-				}
-				j = j + 1;
-			}
-			writefln $ " ";
-			k = k - 1;
+			
 		}
 		i = i + 1;
 	}

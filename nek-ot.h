@@ -489,7 +489,7 @@ class Parser {
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
 	std::unique_ptr<ASTAction> def_action();
-	std::unique_ptr<ASTCall> func_call(const std::string& _id);
+	std::unique_ptr<ASTCall> func_call(const std::string& _id, bool isdoll);
 	std::vector<std::unique_ptr<AST>> expr_block();
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();

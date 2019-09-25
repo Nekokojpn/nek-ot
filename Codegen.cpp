@@ -356,7 +356,7 @@ void Parser::dump() {
 }
 
 //std::string : TypeName, Type* : LLVM IR TYPE
-Type* Codegen::getTypebyAType(AType ty) {
+Type* Codegen::getTypebyAType(AType& ty) {
 	switch (ty)
 	{
 	case AType::Nop:
@@ -385,32 +385,13 @@ Type* Codegen::getTypebyAType(AType ty) {
 		break;
 	}
 }
-Type* Codegen::getTypebyAArrType(AArrType ty) {
-	switch (ty)
-	{
-	case AArrType::Nop:
-		return nullptr;
-		break;
-	case AArrType::I32:
-		return builder.getInt32Ty();
-		break;
-	case AArrType::Float:
-		return builder.getFloatTy();
-		break;
-	case AArrType::Double:
-		return builder.getDoubleTy();
-		break;
-	case AArrType::Char:
-		return builder.getInt8Ty();
-		break;
-	case AArrType::String:
-		return builder.getInt8PtrTy();
-		break;
-	default:
-		return nullptr;
-		break;
-	}
+Type* Codegen::getTypebyType(Type_t& t) {
+	auto ty = getTypebyAType(t.ty);
+	if (t.kind == TypeKind::Pointer)
+		ty = ty->getPointerTo();
+	return ty;
 }
+
 
 Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 	auto value = namedvalues_local[name]; 
@@ -551,10 +532,10 @@ Value* ASTBinOp::codegen() {
 }
 
 Value* ASTType::codegen() {
-	if (this->arr_size_v.size() == 0) {
+	if (!this->ty.isArr) {
 		AllocaInst* allocainst;
-		if (this->ty != AType::Struct)
-			allocainst = builder.CreateAlloca(Codegen::getTypebyAType(this->ty));
+		if (this->ty.ty != AType::Struct)
+			allocainst = builder.CreateAlloca(Codegen::getTypebyType(this->ty));
 		else
 			allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
 		namedvalues_local[this->name] = allocainst;
@@ -569,10 +550,10 @@ Value* ASTType::codegen() {
 		return allocainst;
 	}
 	else {
-		ArrayType* ty = ArrayType::get(Codegen::getTypebyAType(this->ty), arr_size_v[arr_size_v.size() - 1]);
+		ArrayType* ty = ArrayType::get(Codegen::getTypebyType(this->ty), this->ty.arrsize[this->ty.arrsize.size() - 1]);
 		long long cnt = 1;
-		while (cnt < arr_size_v.size()) {
-			ty = ArrayType::get(ty, arr_size_v[arr_size_v.size() - cnt]);
+		while (cnt < this->ty.arrsize.size()) {
+			ty = ArrayType::get(ty, this->ty.arrsize[this->ty.arrsize.size() - cnt]);
 			cnt++;
 		}
 		auto allocainst = builder.CreateAlloca(ty);
@@ -583,7 +564,7 @@ Value* ASTType::codegen() {
 			underscore = allocainst;
 
 		if (this->elements) {
-			this->elements->subst(allocainst, arr_size_v);
+			this->elements->subst(allocainst, this->ty.arrsize);
 		}
 		return allocainst;
 	}
@@ -593,11 +574,11 @@ Value* ASTProto::codegen() {
 	
 	std::vector<Type*> putsArgs;
 
-	for (int i = 0; i < args.size(); i++) putsArgs.push_back(Codegen::getTypebyAType(args[i]));
+	for (int i = 0; i < args.size(); i++) putsArgs.push_back(Codegen::getTypebyType(args[i]));
 
 	ArrayRef<Type*>  argsRef(putsArgs);
 	
-	Type* return_type = Codegen::getTypebyAType(this->ret);
+	Type* return_type = Codegen::getTypebyType(this->ret);
 
 	Function* mainFunc =
 		Function::Create(FunctionType::get(return_type, argsRef, false),
@@ -865,7 +846,7 @@ Value* ASTStruct::codegen() {
 	userdefined_stcts[this->name] = stct;
 	return nullptr;
 }
-Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
+Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
 	//TODO : Does not supported multidimentional array.
 	Value* gep;
 	if (this->elements.size() > 0) {
@@ -881,7 +862,7 @@ Value* ASTArrElements::subst(Value* arr, std::vector<long long> arr_size_v) {
 	else {
 		Value* gep_main;
 		auto arr_child = this->arr_type->codegen();
-		for (auto i = 0ULL; i < arr_type->arr_size_v[0]; i++) {
+		for (auto i = 0ULL; i < arr_type->ty.arrsize[0]; i++) {
 			std::vector<Value*> p;
 			p.push_back(builder.getInt64(0));
 			p.push_back(builder.getInt64(i));
@@ -902,7 +883,7 @@ Value* ASTArrElements::codegen() {
 ArrayRef<Type*> ASTStctElements::make_aref(){
 	std::vector<Type*> elem_v(this->elements.size());
 	for (int i = 0; i < elements.size(); i++) {
-		elem_v[i] = Codegen::getTypebyAType(this->elements[i].first);
+		elem_v[i] = Codegen::getTypebyType(this->elements[i].first);
 	}
 	ArrayRef<Type*> elements(elem_v);
 	return elements;

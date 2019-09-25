@@ -23,13 +23,42 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 	return false;
 }
 //get Arg_t from curtok.
-Arg_t Parser::getArgFromCurtok() {
+Type_t Parser::getTypeFromCurtok() {
 	auto ty = getATypeByCurtok();
 	auto isArr = false;
+	auto kind = TypeKind::Value;
+	std::vector<unsigned long long> arrsize_;
+	if (ty == AType::Nop)goto proc;
 	getNextToken();
-	if (curtok.ty == TK::tok_lpb) {
-		//TODO is array jud
+	while (curtok.ty == TK::tok_lpb) {
+		isArr = true;
+		getNextToken();
+		if (curtok.ty == TK::tok_num_int) {
+			if (std::atoll(curtok.val.c_str()) > 0)
+				arrsize_.push_back(std::atoll(curtok.val.c_str()));
+			else {
+				add_err_msg("Array size must be higher than 0.");
+				error_unexpected(curtok);
+			}
+			getNextToken();
+		}
+		if (curtok.ty != TK::tok_rpb) {
+			error_unexpected(curtok);
+		}
+		getNextToken();
 	}
+	if (curtok.ty == TK::tok_star)
+		kind = TypeKind::Pointer;
+	else if (curtok.ty == TK::tok_amp)
+		kind = TypeKind::Reference;
+
+proc:
+	Type_t arg;
+	arg.isArr = isArr;
+	arg.ty = ty;
+	arg.kind = kind;
+	arg.arrsize = std::move(arrsize_);
+	return arg;
 }
 
 //get AType from curtok.
@@ -173,7 +202,7 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 	if (curtok.ty != TK::tok_lp)
 		error_expected("(", curtok);
 	getNextToken();
-	std::vector<AType> putsArgs;
+	std::vector<Type_t> putsArgs;
 	std::vector<std::string> argsIdentifier;
 	while (true) {
 		if (curtok.ty == TK::tok_rp)break;
@@ -189,16 +218,15 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 		}
 		getNextToken();
 
-		AType ty = getATypeByCurtok();
+		auto ty = getTypeFromCurtok();
 
-		if (ty == AType::Nop) {
-			add_err_msg("Unkown type name");
+		if (ty.ty == AType::Nop) {
+			add_err_msg("Unkown type name.");
 			error_unexpected(curtok);
 		}
 
 		putsArgs.push_back(ty);
 
-		getNextToken();
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
 	}
@@ -206,15 +234,14 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 		error("Expected", "Expected --> )", curtok);
 	getNextToken();
 
-	AType ret;
+	Type_t ret;
 
 	if (curtok.ty == TK::tok_arrow) {
 		getNextToken();
-		ret = getATypeByCurtok();
-		getNextToken();
+		ret = getTypeFromCurtok();
 	}
 	else {
-		ret = AType::Void;
+		ret.ty = AType::Void;
 	}
 
 	auto loc = curtok.loc;
@@ -361,10 +388,10 @@ std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id, bool isdoll) 
 }
 std::unique_ptr<ASTRet> Parser::def_ret() {
 	getNextToken();
-	AType rty = AType::Nop;
+	auto rty = getTypeFromCurtok();
 	std::unique_ptr<ASTRet> ast;
 	if (curtok.ty == TK::tok_semi) {//void
-		rty = AType::Void;
+		rty.ty = AType::Void;
 	}
 	else {
 		auto loc = curtok.loc;

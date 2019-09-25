@@ -22,6 +22,15 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 		if (itr->first == stct_name)return true;
 	return false;
 }
+//get Arg_t from curtok.
+Arg_t Parser::getArgFromCurtok() {
+	auto ty = getATypeByCurtok();
+	auto isArr = false;
+	getNextToken();
+	if (curtok.ty == TK::tok_lpb) {
+		//TODO is array jud
+	}
+}
 
 //get AType from curtok.
 AType Parser::getATypeByCurtok() {

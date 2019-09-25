@@ -3,37 +3,13 @@
 std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
 	getNextToken();
-	auto ty = getATypeByCurtok(); //TODO: Support stct;
+	auto ty = getTypeFromCurtok(); //TODO: Support stct;
 	std::string stct_name;
-	if (ty == AType::Struct)
+	if (ty.ty == AType::Struct)
 		stct_name = curtok.val;
-	if (ty != AType::Nop) {
-		getNextToken();
-
-		if (curtok.ty == TK::tok_lpb) { // for array control
-			std::vector<long long> size_v;
-			while (curtok.ty == TK::tok_lpb) {
-				getNextToken();
-				//Experimental 
-				if (curtok.ty != TK::tok_num_int && curtok.ty != TK::tok_dtdt)
-					error_unexpected(curtok);
-				if (curtok.ty == TK::tok_num_int) {
-					if (std::atoll(curtok.val.c_str()) > 0)
-						size_v.push_back(std::atoll(curtok.val.c_str()));
-					else {
-						error("Compile error", "Array elements size must be higher than 0.", curtok);
-					}
-				}
-				else {
-					// TODO : For array block structure.
-					// evaluate when codegen.
-					size_v.push_back(0LL);
-				}
-				getNextToken();
-				if (curtok.ty != TK::tok_rpb)
-					error_unexpected(curtok);
-				getNextToken();
-			}
+	if (ty.ty != AType::Nop) {
+		if (ty.isArr) { // for array control
+			std::unique_ptr<ASTArrElements> elem;
 			if (!isonlydef) {
 				if (curtok.ty != TK::tok_lp) {
 					error_expected("(", curtok);
@@ -43,16 +19,17 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					error_expected(")", curtok);
 				}
 				getNextToken();
+				
 				if (curtok.ty == TK::tok_lb) { // The array declaration has a body.
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v, std::move(expr_arr()), stct_name);
+					auto ast = std::make_unique<ASTType>(ty, _id , std::move(expr_arr()), stct_name);
 					ast->loc = loc;
 					return std::move(ast);
 				}
 				else if (curtok.ty == TK::tok_semi) { // The array declaration has no body.
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v, nullptr, stct_name);
+					auto ast = std::make_unique<ASTType>(ty, _id, std::move(elem), stct_name);
 					ast->loc = loc;
 					return std::move(ast);
 				}
@@ -60,14 +37,16 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 			else {
 				if (curtok.ty == TK::tok_semi) {
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, size_v, nullptr, stct_name);
+					auto ast = std::make_unique<ASTType>(ty, _id, std::move(elem), stct_name);
 					ast->loc = loc;
+					getNextToken();
 					return std::move(ast);
 				}
 			}
 			getNextToken();
 		}
 		else { // for var control
+			std::unique_ptr<ASTSubst> expr_;
 			if (!isonlydef) {
 				bool doll = false;
 				if (curtok.ty != TK::tok_lp &&
@@ -81,7 +60,7 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 						error_expected(";", curtok);
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id, nullptr, stct_name);
+					auto ast = std::make_unique<ASTType>(ty, _id, std::move(expr_), stct_name);
 					ast->loc = loc;
 					return std::move(ast);
 				}
@@ -102,7 +81,7 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					error_expected(";", curtok);
 				getNextToken();
 				auto loc = curtok.loc;
-				auto ast = std::make_unique<ASTType>(ty, _id, nullptr, stct_name);
+				auto ast = std::make_unique<ASTType>(ty, _id, std::move(expr_), stct_name);
 				ast->loc = loc;
 				return std::move(ast);
 			}

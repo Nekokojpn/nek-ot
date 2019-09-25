@@ -1,0 +1,29 @@
+fn main(){
+	size := i32$4;                    
+	pixel := i32$100;
+	i := i32$0;
+	while (i < pixel) { 
+		x := i32$i * size / pixel - size / 2; 
+		j := i32$0;
+		while (j < pixel) { 
+			y := i32$j * size / pixel - size / 2;
+			a := i32$0;                        
+			b := i32$0;
+			k := i32$0;
+			while (k < 50) { 
+				_a := i32$a * a - b * b + x; 
+				_b := i32$2 * a * b + y;
+				a = _a;
+				b = _b;
+				if (a * a + b * b > 4) {
+					writef("*")
+					break;
+				}
+				k = k + 1;
+			}
+			j = j + 1;
+		}
+		writefln(" ");
+		i = i + 1;
+	}
+}

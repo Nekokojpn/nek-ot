@@ -17,7 +17,7 @@ std::vector<Location_t> locs;
 //Tokenizer Funcs----->
 void get_char() {
 	cc = source[line][column++];
-	if (cc == '\n') {
+	if (cc == '\n' || cc == '\r\n' || cc == '\r' || cc == '\n\r') {
 		line++;
 		column = 0;
 		cc = source[line][column++];
@@ -244,6 +244,14 @@ TK gettoken() {
 		}
 		if (cc == '|') {
 			return TK::tok_pipe;
+		}
+		if (cc == '&') {
+			get_char();
+			if (cc == '&') {
+				return TK::tok_ampamp;
+			}
+			undo_char();
+			return TK::tok_amp;
 		}
 	}
 	std::string s = "";

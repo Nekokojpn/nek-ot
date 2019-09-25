@@ -188,6 +188,11 @@ typedef struct {
 	Type* ty;
 	std::string identifier;
 } Stct_t;
+typedef struct {
+	AType ty;
+	bool isArr;
+	TypeKind kind;
+}Arg_t;
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);
@@ -250,13 +255,10 @@ enum class AType { //AllType
 	Struct,
 	Void
 };
-enum class AArrType {
-	Nop,
-	I32,
-	Float,
-	Double,
-	Char,
-	String
+enum class TypeKind {
+	Value,
+	Pointer,
+	Reference
 };
 
 
@@ -267,7 +269,6 @@ public:
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
 	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
 	static Type* getTypebyAType(AType ty);
-	static Type* getTypebyAArrType(AArrType ty);
 	//<-----
 };
 
@@ -511,6 +512,7 @@ public:
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
+	Arg_t getArgFromCurtok();
 	void add_userdefined_stct(Token_t& cur);
 	bool find_userdefined_stct(std::string stct_name);
 };

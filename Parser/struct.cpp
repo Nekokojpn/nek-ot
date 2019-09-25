@@ -23,10 +23,10 @@ std::unique_ptr<AST> Parser::def_stct() {
 
 std::unique_ptr<ASTStctElements> Parser::expr_stct() {
 	getNextToken();
-	std::vector<std::pair<AType, std::string>> elements;
+	std::vector<std::pair<Type_t, std::string>> elements;
 	while (true) {
-		AType ty = getATypeByCurtok();
-		if (ty == AType::Nop)break;
+		auto ty = this->getTypeFromCurtok();
+		if (ty.ty == AType::Nop)break;
 
 		getNextToken();
 		if (curtok.ty != TK::tok_identifier)

@@ -110,6 +110,7 @@ enum class TK {
 	tok_dtdt, //..
 	tok_doll, //$
 	tok_pipe, //|
+	tok_amp, // &
 
 
 	// operator
@@ -119,6 +120,7 @@ enum class TK {
 	tok_slash,
 	tok_plpl, //++
 	tok_mimi, //--
+	tok_ampamp, // &&
 
 	tok_identifier,
 
@@ -169,7 +171,8 @@ public:
 	};
 };
 
-
+enum class AType;
+enum class TypeKind;
 
 // typedef----->
 typedef struct {
@@ -191,8 +194,9 @@ typedef struct {
 typedef struct {
 	AType ty;
 	bool isArr;
+	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
-}Arg_t;
+}Type_t;
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);
@@ -268,7 +272,8 @@ public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
 	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
-	static Type* getTypebyAType(AType ty);
+	static Type* getTypebyAType(AType& ty);
+	static Type* getTypebyType(Type_t& t);
 	//<-----
 };
 
@@ -327,18 +332,17 @@ public:
 
 class ASTType : public AST { // i32 i = 0;
 public:
-	AType ty;
+	Type_t ty;
 	std::string name;
 	/* FOR ARRAY ATTRIBUTES */
-	std::vector<long long> arr_size_v;
 	std::unique_ptr<ASTArrElements> elements;
 	//
 	/* FOR STRUCT ATTRIBUTES */
 	std::string stct_name;
 	//
 	std::unique_ptr<ASTSubst> expr;
-	ASTType(AType _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name) {};
-	ASTType(AType _ty, std::string _name, std::vector<long long> _arr_size_v, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name) : ty(_ty), name(_name), arr_size_v(std::move(_arr_size_v)), elements(std::move(_elements)), stct_name(_stct_name) {};
+	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name) {};
+	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name) : ty(_ty), name(_name), elements(std::move(_elements)), stct_name(_stct_name) {};
 	Value* codegen() override;
 };
 
@@ -359,8 +363,8 @@ public:
 };
 class ASTStctElements : public AST {
 public:
-	std::vector<std::pair<AType, std::string>> elements;
-	ASTStctElements(std::vector<std::pair<AType, std::string>> _elements) : elements(_elements) {};
+	std::vector<std::pair<Type_t, std::string>> elements;
+	ASTStctElements(std::vector<std::pair<Type_t, std::string>> _elements) : elements(_elements) {};
 	Value* codegen() override;
 	ArrayRef<Type*> make_aref();
 };
@@ -372,7 +376,7 @@ public:
 	std::unique_ptr<ASTType> arr_type;
 	ASTArrElements(std::unique_ptr<AST> _restraint, std::unique_ptr<ASTType> _arr_type) : restraint(std::move(_restraint)), arr_type(std::move(_arr_type)) {};
 	ASTArrElements(std::vector<std::unique_ptr<AST>> _elements) : elements(std::move(_elements)) {};
-	Value* subst(Value* arr, std::vector<long long> arr_size_v);
+	Value* subst(Value* arr, std::vector<unsigned long long> arr_size_v);
 	Value* codegen() override;
 };
 
@@ -386,19 +390,19 @@ public:
 };
 class ASTRet : public AST {
 public:
-	AType ret_type;
+	Type_t ret_type;
 	std::unique_ptr<AST> expr_p;
-	ASTRet(AType _ret_type) : ret_type(_ret_type) {};
+	ASTRet(Type_t _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
 };
 
 class ASTProto : public AST {
 public:
 	std::string name;
-	std::vector<AType> args;
+	std::vector<Type_t> args;
 	std::vector<std::string> identifier;
-	AType ret;
-	ASTProto(std::string _name, std::vector<AType> _args, std::vector<std::string> _identifier, AType _ret) : name(_name), args(_args), identifier(_identifier), ret(_ret) {};
+	Type_t ret;
+	ASTProto(std::string _name, std::vector<Type_t> _args, std::vector<std::string> _identifier, Type_t _ret) : name(_name), args(_args), identifier(_identifier), ret(_ret) {};
 	Value* codegen() override;
 };
 class ASTFunc : public AST {
@@ -512,7 +516,7 @@ public:
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
-	Arg_t getArgFromCurtok();
+	Type_t getTypeFromCurtok();
 	void add_userdefined_stct(Token_t& cur);
 	bool find_userdefined_stct(std::string stct_name);
 };

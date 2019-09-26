@@ -647,7 +647,7 @@ Value* ASTFunc::codegen() {
 	}
 	retvalue = nullptr;
 	retbbs.clear();
-
+	module->dump();
 	if(opt)
 		fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();

@@ -26,6 +26,7 @@ std::vector<BasicBlock*> retbbs;
 
 bool opt = true;
 bool retcodegen = false;
+auto isStringCodegen = false;
 
 
 Module* getModule() {
@@ -424,13 +425,20 @@ Value* ASTIdentifierArrayElement::codegen() {
 				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
 		}
 	}
+	else {
+		if (!value->getType()->getElementType()->isArrayTy()) {
+			val = builder.CreateLoad(value);
+			value = nullptr;
+		}
+	}
 	Value* gep;
 	std::vector<Value*> p;
-	p.push_back(builder.getInt64(0));
+	if(value)
+		p.push_back(builder.getInt64(0));
 	p.push_back(expr_v[0]->codegen());
 	ArrayRef<Value*> pp(p);
-	if (value)
-		gep = builder.CreateInBoundsGEP(value,pp);
+	if(value)
+		gep = builder.CreateInBoundsGEP(value, pp);
 	else
 		gep = builder.CreateInBoundsGEP(val, pp);
 	for (int i = 1; i < expr_v.size(); i++) {
@@ -464,6 +472,7 @@ Value* ASTStrLiteral::codegen() {
 }
 
 Value* ASTString::codegen() { //—vC³
+	isStringCodegen = true;
 	auto str = expr_str->value;
 	auto ptr = builder.CreateGlobalStringPtr(str, name);
 	namedvalues_str[name] = ptr;
@@ -574,7 +583,16 @@ Value* ASTProto::codegen() {
 	
 	std::vector<Type*> putsArgs;
 
-	for (int i = 0; i < args.size(); i++) putsArgs.push_back(Codegen::getTypebyType(args[i]));
+	for (int i = 0; i < args.size(); i++) {
+		Type* ty;
+		if (args[i].isArr == true)
+			ty = Codegen::getTypebyType(args[i])->getPointerTo();
+		else if (args[i].kind == TypeKind::Pointer)
+			ty = Codegen::getTypebyType(args[i])->getPointerTo();
+		else
+			ty = Codegen::getTypebyType(args[i]);
+		putsArgs.push_back(ty);
+	}
 
 	ArrayRef<Type*>  argsRef(putsArgs);
 	
@@ -595,7 +613,7 @@ Value* ASTProto::codegen() {
 		arg.setName(identifier[idx++]);
 		
 	for (auto& arg : mainFunc->args()) {
-		auto alloca = builder.CreateAlloca(Type::getInt32Ty(context));
+		auto alloca = builder.CreateAlloca(arg.getType());
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
 	}
@@ -617,7 +635,6 @@ Value* ASTFunc::codegen() {
 	
 	auto retbb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 	builder.SetInsertPoint(retbb);
-	module->dump();
 	if (retvalue) {
 		builder.CreateRet(builder.CreateLoad(retvalue));
 	}
@@ -640,7 +657,15 @@ Value* ASTFunc::codegen() {
 Value* ASTCall::codegen() {
 	std::vector<Value*> types;
 	for (int i = 0; i < args_expr.size(); i++) {
-		types.push_back(args_expr[i]->codegen());
+		auto ty = args_expr[i]->codegen();
+		if (ty->getType()->isPointerTy() == false)
+			types.push_back(ty);
+		else if (isStringCodegen) {
+			isStringCodegen = false;
+			types.push_back(ty);
+		}
+		else
+			types.push_back(builder.CreateLoad(ty));
 	}
 	ArrayRef<Value*> argsRef(types);
 	if (name == "writefln") {
@@ -899,12 +924,6 @@ Value* ASTIdentifierStctElement::codegen() {
 	auto cur = userdefined_stcts_elements[userdefined_stcts[this->name]];
 	auto gep = builder.CreateStructGEP(namedvalues_local[this->name], cur[elem_names[0]].idx);
 	for (int i = 1; i < this->elem_names.size(); i++) {
-		
-		std::vector<Value*> vv;
-		vv.push_back(builder.getInt64(0));
-		vv.push_back(builder.getInt64(cur[elem_names[i]].idx));
-		ArrayRef<Value*> v(vv);
-		
 		gep = builder.CreateStructGEP(gep, cur[elem_names[i]].idx);
 	}
 	return builder.CreateLoad(gep);

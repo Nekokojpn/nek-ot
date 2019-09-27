@@ -197,6 +197,12 @@ typedef struct {
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
 }Type_t;
+typedef struct {
+	AllocaInst ainst;
+	bool isArr;
+	std::vector<unsigned long long> arrsize;
+	TypeKind kind;
+}Alloca_t;
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);

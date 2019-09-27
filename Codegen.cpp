@@ -15,6 +15,10 @@ static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
 static Value* underscore;
 
+//AST Identifier
+AllocaInst* current_inst;
+bool isPtr = false;
+
 AllocaInst* curvar;
 std::vector<double> curvar_v;
 std::map<std::string, double> constantfoldings;
@@ -300,6 +304,15 @@ void Sys::IO::Printfln::CreateFunc() {
 		fpm->run(*func);
 }
 
+void Sys::IO::Input::CreateFunc() {
+	std::vector<Type*> vv;
+	vv.push_back(builder.getInt32Ty()->getPointerTo());
+	ArrayRef<Type*> v(vv);
+	auto inp = module->getOrInsertFunction("input", FunctionType::get(builder.getVoidTy(), vv, false));
+	functions_global["input"] = inp;
+	return;
+}
+
 void init_parse() {
 	module = std::make_unique<Module>("top", context);
 	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());
@@ -403,15 +416,24 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		if (!global) {
 			auto str = namedvalues_str[name];
 			if (!str) {
-				if(underscore)
+				if (underscore)
 					return underscore;
 				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
 			}
 			return str;
 		}
+		current_inst = global;
 		return global;
 	}
-	return value;
+	current_inst = value;
+	if (this->kind == TypeKind::Pointer)
+		isPtr = true;
+	else
+		isPtr = false;
+	if (!value->getAllocatedType()->isArrayTy())
+		return value;
+	else
+		return value;
 }
 
 Value* ASTIdentifierArrayElement::codegen() {
@@ -426,11 +448,17 @@ Value* ASTIdentifierArrayElement::codegen() {
 		}
 	}
 	else {
-		if (!value->getType()->getElementType()->isArrayTy()) {
+		// is array type
+		if (!value->getAllocatedType()->isArrayTy()) {
 			val = builder.CreateLoad(value);
 			value = nullptr;
 		}
 	}
+	current_inst = value;
+	if (this->kind == TypeKind::Pointer)
+		isPtr = true;
+	else
+		isPtr = false;
 	Value* gep;
 	std::vector<Value*> p;
 	if(value)
@@ -653,7 +681,6 @@ Value* ASTFunc::codegen() {
 	}
 	retvalue = nullptr;
 	retbbs.clear();
-	module->dump();
 	if(opt)
 		fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
@@ -662,19 +689,30 @@ Value* ASTFunc::codegen() {
 }
 Value* ASTCall::codegen() {
 	std::vector<Value*> types;
-	for (int i = 0; i < args_expr.size(); i++) {
+	current_inst = nullptr;
+	isPtr = false; 
+	for (int i = 0; i < args_expr.size(); i++, current_inst = nullptr, isPtr = false) {
 		auto ty = args_expr[i]->codegen();
-		if (ty->getType()->isPointerTy() == false)
+		if (!ty->getType()->isPointerTy()) {
 			types.push_back(ty);
+			continue;
+		}
 		else if (isStringCodegen) {
 			isStringCodegen = false;
 			types.push_back(ty);
+			continue;
 		}
-		else if (cast<AllocaInst>(ty)->getAllocatedType()->isArrayTy()) {
+		else if (current_inst && current_inst->getAllocatedType()->isArrayTy()) {
 			types.push_back(builder.CreateConstGEP2_64(ty, 0, 0));
+			continue;
+		}
+		else if (!isPtr) {
+			types.push_back(builder.CreateLoad(ty));
+			continue;
 		}
 		else
-			types.push_back(builder.CreateLoad(ty));
+			types.push_back(ty);
+			
 	}
 	ArrayRef<Value*> argsRef(types);
 	if (name == "writefln") {

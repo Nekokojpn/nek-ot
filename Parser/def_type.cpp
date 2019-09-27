@@ -65,7 +65,7 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					return std::move(ast);
 				}
 				auto loc = curtok.loc;
-				auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id), std::move(expr())), stct_name);
+				auto ast = std::make_unique<ASTType>(ty, _id, std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id, TypeKind::Value), std::move(expr())), stct_name);
 				ast->loc = loc;
 				if (!doll && curtok.ty != TK::tok_rp)
 					error_expected(")", curtok);

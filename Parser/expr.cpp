@@ -93,8 +93,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 					add_err_msg("Have you forgotten ] ?");
 					add_err_msg("Hint: The specified array element accessor is invalid! Starts with [ and ends with ].");
 					error_unexpected(curtok);
-				}
-					
+				}	
 				getNextToken();
 			}
 			if (curtok.ty == TK::tok_dot) {

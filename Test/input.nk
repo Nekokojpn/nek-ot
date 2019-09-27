@@ -1,0 +1,5 @@
+fn main(){
+	i := i32(0);
+	input(&i);
+	ret;
+}

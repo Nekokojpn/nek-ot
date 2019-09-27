@@ -1,10 +1,10 @@
-fn display(arr : i32[10]){
-	k := i32 $ 10;
+fn display(arr : i32[15]){
+	k := i32 $ 15;
 	l := i32 $ 0;
-	while(k > 0){
+	while $ k > 0{
 		l = 0;
-		while(l < 10){
-			if(arr[l] >= k){
+		while $ l < 15{
+			if $ arr[l] >= k {
 				writef $ "*";
 			}
 			else{
@@ -18,15 +18,15 @@ fn display(arr : i32[10]){
 	ret;
 }
 fn main() {
-	target := i32[10](){1,5,8,4,10,9,2,6,7,3};
+	target := i32[15](){6,7,1,12,10,15,4,3,11,13,9,5,14,8,2};
 	i := i32 $ 0;
 	j := i32 $ 0;
 	tmp := i32 $ 0;
-	while $ i < 10 {
+	while $ i < 15 {
 		j = i + 1;
-		while(j < 10){
-			display(target);
-			if(target[i] > target[j]){
+		while $ j < 15{
+			display $ target;
+			if $ target[i] > target[j]{
 				tmp = target[i];
 				target[i] = target[j];
 				target[j] = tmp;
@@ -35,6 +35,6 @@ fn main() {
 		}
 		i = i + 1;
 	}
-	display(target);
+	display $ target;
 	ret;
 }

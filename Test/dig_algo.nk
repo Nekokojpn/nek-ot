@@ -1,4 +1,4 @@
-fn rand(i32 seed) -> i32{
+fn rand(seed : i32) -> i32{
 	rnd := i32(0);
 	rnd = seed;
 	rnd = rnd * 12345;
@@ -14,16 +14,16 @@ fn main() -> i32{
 		while(j < 51){
 			map[i][j] = 1;
 			if(i == 0){
-				//map[i][j] = 0;
+				map[i][j] = 0;
 			}
 			if(j == 0){
-				//map[i][j] = 0;
+				map[i][j] = 0;
 			}
 			if(i == 24){
-				//map[i][j] = 0;
+				map[i][j] = 0;
 			}
 			if(j == 50){
-				//map[i][j] = 0;
+				map[i][j] = 0;
 			}
 			j = j + 1;
 		}

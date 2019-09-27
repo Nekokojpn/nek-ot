@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
   //Sys::Cast::CastInt32toInt8Array::CreateFunc();
   Sys::IO::Printf::CreateFunc();
   Sys::IO::Printfln::CreateFunc();
+  Sys::IO::Input::CreateFunc();
 
   std::cout << "Generating LLVM IR..." << std::endl;
 

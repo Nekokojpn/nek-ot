@@ -64,6 +64,9 @@ enum class TK {
 	tok_new,
 	tok_class,
 	tok_import,
+	tok_in,
+	tok_out,
+	tok_body,
 
 	tok_ret,
 	tok_void,
@@ -148,6 +151,10 @@ public:
 		};
 		class Printfln {
 			public:
+				static void CreateFunc();
+		};
+		class Input {
+			public: 
 				static void CreateFunc();
 		};
 	};
@@ -297,14 +304,16 @@ public:
 class ASTIdentifier : public AST {
 public:
 	std::string name;
-	ASTIdentifier(const std::string& _name) : name(_name) {};
+	TypeKind kind;
+	ASTIdentifier(const std::string& _name, TypeKind _kind) : name(_name), kind(_kind) {};
 	Value* codegen() override;
 };
 class ASTIdentifierArrayElement : public AST {
 public:
 	std::string name;
+	TypeKind kind;
 	std::vector<std::unique_ptr<AST>> expr_v;
-	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v) : name(_name), expr_v(std::move(_expr_v)) {};
+	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v, TypeKind _kind) : name(_name), expr_v(std::move(_expr_v)), kind(_kind) {};
 	Value* codegen();
 };
 class ASTIdentifierStctElement : public AST {

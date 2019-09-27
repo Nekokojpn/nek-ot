@@ -411,7 +411,7 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		}
 		return global;
 	}
-	return builder.CreateLoad(value);
+	return value;
 }
 
 Value* ASTIdentifierArrayElement::codegen() {
@@ -663,6 +663,9 @@ Value* ASTCall::codegen() {
 		else if (isStringCodegen) {
 			isStringCodegen = false;
 			types.push_back(ty);
+		}
+		else if () {
+			types.push_back(builder.CreateConstGEP2_64(ty, 0, 0));
 		}
 		else
 			types.push_back(builder.CreateLoad(ty));

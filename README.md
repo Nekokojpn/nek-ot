@@ -3,7 +3,7 @@ nek-ot is a programming language.
 
 This is fibonacci example program.  
 ```
-fn fibo(i32 n) -> i32{
+fn fibo(n : i32) -> i32{
 	val := i32();
 	if(n < 2){
 		val = n;

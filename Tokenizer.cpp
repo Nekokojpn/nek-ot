@@ -123,7 +123,10 @@ TK gettoken() {
 		else if (cs == "action") { addToloc(cs.length()); return TK::tok_action; }
 		else if (cs == "var") { addToloc(cs.length()); return TK::tok_var; }
 		else if (cs == "stct") { addToloc(cs.length()); return TK::tok_stct; }
-		else if (cs == "Import") { addToloc(cs.length()); return TK::tok_import; }
+		else if (cs == "import") { addToloc(cs.length()); return TK::tok_import; }
+		else if (cs == "in") { addToloc(cs.length()); return TK::tok_in; }
+		else if (cs == "out") { addToloc(cs.length()); return TK::tok_out; }
+		else if (cs == "body") { addToloc(cs.length()); return TK::tok_body; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

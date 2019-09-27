@@ -35,5 +35,6 @@ fn main() {
 		}
 		i = i + 1;
 	}
+	display(target);
 	ret;
 }

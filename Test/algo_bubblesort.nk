@@ -1,4 +1,4 @@
-fn display(arr : i32[]){
+fn display(arr : i32[10]){
 	k := i32 $ 10;
 	l := i32 $ 0;
 	while(k > 0){
@@ -32,7 +32,6 @@ fn main() {
 				target[j] = tmp;
 			}
 			j = j + 1;
-			
 		}
 		i = i + 1;
 	}

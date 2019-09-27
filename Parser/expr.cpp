@@ -66,9 +66,17 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
 		
 	}
-	else if (curtok.ty == TK::tok_identifier) {
+	else if (curtok.ty == TK::tok_identifier || curtok.ty == TK::tok_amp) {
+		auto kind = TypeKind::Value;
+		if (curtok.ty == TK::tok_amp) {
+			getNextToken();
+			if (curtok.ty != TK::tok_identifier) {
+				error_unexpected(curtok);
+			}
+			kind = TypeKind::Pointer;
+		}
 		auto loc = curtok.loc;
-		auto identifier = std::make_unique<ASTIdentifier>(curtok.val);
+		auto identifier = std::make_unique<ASTIdentifier>(curtok.val, kind);
 		identifier->loc = loc;
 		getNextToken();
 		if (curtok.ty == TK::tok_lp ||
@@ -93,7 +101,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 				//TODO:  for arrray structure accessor.
 			}
 			auto loc = curtok.loc;
-			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_v));
+			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_v), kind);
 			ast->loc = loc;
 			return std::move(ast);
 		}

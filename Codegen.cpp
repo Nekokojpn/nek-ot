@@ -435,7 +435,10 @@ Value* ASTIdentifierArrayElement::codegen() {
 	std::vector<Value*> p;
 	if(value)
 		p.push_back(builder.getInt64(0));
-	p.push_back(expr_v[0]->codegen());
+	auto index = expr_v[0]->codegen();
+	if (index->getType()->isPointerTy())
+		index = builder.CreateLoad(index);
+	p.push_back(index);
 	ArrayRef<Value*> pp(p);
 	if(value)
 		gep = builder.CreateInBoundsGEP(value, pp);
@@ -444,7 +447,10 @@ Value* ASTIdentifierArrayElement::codegen() {
 	for (int i = 1; i < expr_v.size(); i++) {
 		std::vector<Value*> p;
 		p.push_back(builder.getInt64(0));
-		p.push_back(expr_v[i]->codegen());
+		index = expr_v[i]->codegen();
+		if (index->getType()->isPointerTy())
+			index = builder.CreateLoad(index);
+		p.push_back(index);
 		ArrayRef<Value*> pp(p);
 		gep = builder.CreateInBoundsGEP(gep, pp);
 	}
@@ -664,7 +670,7 @@ Value* ASTCall::codegen() {
 			isStringCodegen = false;
 			types.push_back(ty);
 		}
-		else if () {
+		else if (cast<AllocaInst>(ty)->getAllocatedType()->isArrayTy()) {
 			types.push_back(builder.CreateConstGEP2_64(ty, 0, 0));
 		}
 		else

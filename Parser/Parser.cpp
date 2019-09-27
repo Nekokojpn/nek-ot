@@ -272,13 +272,15 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 std::unique_ptr<ASTIf> Parser::bool_statement() {
 	//IF----->
 	getNextToken();
-	if (curtok.ty != TK::tok_lp)
+	bool doll = false;
+	if (curtok.ty != TK::tok_lp && curtok.ty != TK::tok_doll)
 		error("Expected", "Expected --> (", curtok);
+	if (curtok.ty == TK::tok_doll) doll = true;
 	getNextToken();
 	auto boolast = bool_expr();
-	if (curtok.ty != TK::tok_rp)
+	if (!doll && curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
-	getNextToken();
+	if (!doll)getNextToken();
 	if (curtok.ty != TK::tok_lb)
 		error("Expected", "Expected --> {", curtok);
 
@@ -373,6 +375,7 @@ std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id, bool isdoll) 
 	getNextToken();
 	std::vector<std::unique_ptr<AST>> argsIdentifier;
 	while (true) {
+
 		argsIdentifier.push_back(std::move(expr()));
 		
 		if (curtok.ty != TK::tok_comma) break;

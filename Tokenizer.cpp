@@ -205,6 +205,9 @@ TK gettoken() {
 			else if (cc == '-') {
 				return TK::tok_rarrow;
 			}
+			else if (cc == '<') {
+				return TK::tok_ltlt;
+			}
 			undo_char();
 			return TK::tok_lt;
 		}
@@ -212,6 +215,9 @@ TK gettoken() {
 			get_char();
 			if (cc == '=') { // >=
 				return TK::tok_rteq;
+			}
+			else if (cc == '>') {
+				return TK::tok_rtrt;
 			}
 			undo_char();
 			return TK::tok_rt;

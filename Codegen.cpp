@@ -45,7 +45,17 @@ void Parser::setOpt(bool b) {
 }
 
 void Test::CreateFunc() {
-
+	/*
+	std::vector<Type*> putsArgs;
+	putsArgs.push_back(builder.getInt32Ty());
+	ArrayRef<Type*>  argsRef(putsArgs);
+	Function* mainFunc =
+		Function::Create(FunctionType::get(builder.getInt8Ty()->getPointerTo(), argsRef, false),
+			Function::ExternalLinkage, "test", module.get());
+	builder.SetInsertPoint(BasicBlock::Create(context, "", mainFunc));
+	builder.CreateStore(ConstantFP::get(context, APFloat(1.1)), builder.CreateAlloca(builder.getDoubleTy()), 4);
+	builder.CreateRetVoid();
+	*/
 }
 
 
@@ -386,7 +396,7 @@ Type* Codegen::getTypebyAType(AType& ty) {
 		return builder.getInt64Ty();
 		break;
 	case AType::F32:
-		return builder.getFloatTy();
+		return builder.getDoubleTy();
 		break;
 	case AType::F64:
 		return builder.getDoubleTy();
@@ -532,6 +542,12 @@ Value* ASTBinOp::codegen() {
 		l = builder.CreateLoad(l);
 	if (r->getType()->isPointerTy())
 		r = builder.CreateLoad(r);
+	if (l->getType()->isFloatingPointTy())
+		if (!r->getType()->isFloatingPointTy())
+			r = builder.CreateSIToFP(r, builder.getDoubleTy());
+	if (r->getType()->isFloatingPointTy())
+		if (!l->getType()->isFloatingPointTy())
+			l = builder.CreateSIToFP(l, builder.getDoubleTy());
 	switch (op) {
 	case Op::Plus:
 		
@@ -545,29 +561,68 @@ Value* ASTBinOp::codegen() {
 			curvar_v.pop_back();
 		}
 		*/
-		return builder.CreateAdd(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateAdd(l, r);
+		else
+			return builder.CreateFAdd(l, r);
 	case Op::Minus:
 		/*if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] - curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
 		}*/
-		return builder.CreateSub(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateSub(l, r);
+		else
+			return builder.CreateFSub(l, r);
 	case Op::Mul:
 		/*if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] * curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
 		}*/
-		return builder.CreateMul(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateMul(l, r);
+		else
+			return builder.CreateFMul(l, r);
 	case Op::Div:
 		/*if (size + 2 == curvar_v.size()) {
 			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] / curvar_v[curvar_v.size() - 1];
 			curvar_v.pop_back();
 		}*/
-		return builder.CreateSDiv(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateSDiv(l, r);
+		else
+			return builder.CreateFDiv(l, r);
 	case Op::RDiv:
-		return builder.CreateSRem(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateSRem(l, r);
+		else
+			return builder.CreateFRem(l, r);
 	case Op::Xor:
-		return builder.CreateXor(l, r);
+			return builder.CreateXor(l, r);
+	case Op::Or:
+		return builder.CreateOr(l, r);
+	case Op::And:
+		return builder.CreateAnd(l, r);
+	case Op::LShift:
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateShl(l, r);
+	case Op::RShift:
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateAShr(l, r);
 	case Op::LThan:
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
@@ -918,7 +973,6 @@ Value* ASTSubst::codegen() {
 				auto val = expr->codegen();
 				if (val->getType()->isPointerTy())
 					val = builder.CreateLoad(val);
-				module->dump();
 				auto ptr = namedvalues_local[id->name];
 				Value* ptr_ = ptr;
 				//if (!ptr->getAllocatedType()->isPointerTy())

@@ -114,6 +114,9 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 			}
 		}
 	}
+	else { //Type researcher
+	
+	}
 	auto loc = curtok.loc;
 	error_unexpected(curtok);
 	return nullptr;

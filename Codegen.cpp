@@ -1061,7 +1061,6 @@ Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_siz
 	return nullptr;
 }
 Value* ASTArrElements::codegen() {
-
 	return nullptr;
 }
 ArrayRef<Type*> ASTStctElements::make_aref(){

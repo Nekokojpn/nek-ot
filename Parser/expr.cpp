@@ -38,6 +38,9 @@ std::unique_ptr<AST> Parser::expr_mul() {
 		else if (consume(TK::tok_percent)) {
 			op = Op::RDiv;
 		}
+		else if (consume(TK::tok_xor)) {
+			op = Op::Xor;
+		}
 		else {
 			break;
 		}
@@ -53,6 +56,13 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	if (curtok.ty == TK::tok_num_int) {
 		auto loc = curtok.loc;
 		auto value = std::make_unique<ASTValue>(std::atoll(curtok.val.c_str()));
+		value->loc = loc;
+		getNextToken(); //eat num
+		return std::move(value);
+	}
+	else if (curtok.ty == TK::tok_num_double) {
+		auto loc = curtok.loc;
+		auto value = std::make_unique<ASTValue>(std::atof(curtok.val.c_str()), true);
 		value->loc = loc;
 		getNextToken(); //eat num
 		return std::move(value);

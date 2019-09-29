@@ -376,13 +376,19 @@ Type* Codegen::getTypebyAType(AType& ty) {
 	case AType::Nop:
 		return nullptr;
 		break;
+	case AType::I16:
+		return builder.getInt16Ty();
+		break;
 	case AType::I32:
 		return builder.getInt32Ty();
 		break;
-	case AType::Float:
+	case AType::I64:
+		return builder.getInt64Ty();
+		break;
+	case AType::F32:
 		return builder.getFloatTy();
 		break;
-	case AType::Double:
+	case AType::F64:
 		return builder.getDoubleTy();
 		break;
 	case AType::Char:
@@ -498,7 +504,10 @@ Value* ASTValue::codegen() {
 	}
 	curvar_v.push_back(value);
 	*/
-	return builder.getInt32(value);
+	if (!this->isDouble)
+		return builder.getInt32(value);
+	else
+		return ConstantFP::get(context, APFloat(value_d));
 }
 
 Value* ASTStrLiteral::codegen() {
@@ -557,18 +566,50 @@ Value* ASTBinOp::codegen() {
 		return builder.CreateSDiv(l, r);
 	case Op::RDiv:
 		return builder.CreateSRem(l, r);
+	case Op::Xor:
+		return builder.CreateXor(l, r);
 	case Op::LThan:
-		return builder.CreateICmpSLT(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateICmpSLT(l, r);
+		else
+			return builder.CreateFCmpOLT(l, r);
 	case Op::LThanEqual:
-		return builder.CreateICmpSLE(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateICmpSLE(l, r);
+		else
+			return builder.CreateFCmpOLE(l, r);
 	case Op::RThan:
-		return builder.CreateICmpSGT(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateICmpSGT(l, r);
+		else
+			return builder.CreateFCmpOGT(l, r);
 	case Op::RThanEqual:
-		return builder.CreateICmpSGE(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateICmpSGE(l, r);
+		else
+			return builder.CreateFCmpOGE(l, r);
 	case Op::EqualEqual:
-		return builder.CreateICmpEQ(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateICmpEQ(l, r);
+		else
+			return builder.CreateFCmpOEQ(l, r);
 	case Op::NotEqual:
-		return builder.CreateICmpNE(l, r);
+		if (!l->getType()->isFloatingPointTy() &&
+			!r->getType()->isFloatingPointTy()
+			)
+			return builder.CreateICmpNE(l, r);
+		else
+			return builder.CreateFCmpONE(l, r);
 	default:
 		return nullptr;
 	}
@@ -577,11 +618,22 @@ Value* ASTBinOp::codegen() {
 Value* ASTType::codegen() {
 	if (!this->ty.isArr) {
 		AllocaInst* allocainst;
-		if (this->ty.ty != AType::Struct)
-			allocainst = builder.CreateAlloca(Codegen::getTypebyType(this->ty));
-		else
-			allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
-		namedvalues_local[this->name] = allocainst;
+		//If local variable
+		if (!this->isGlobal) {
+			if (this->ty.ty != AType::Struct)
+				allocainst = builder.CreateAlloca(Codegen::getTypebyType(this->ty));
+			else
+				allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
+			namedvalues_local[this->name] = allocainst;
+		}
+		//If global variable
+		else {
+			if (this->ty.ty != AType::Struct)
+				allocainst = builder.CreateAlloca(Codegen::getTypebyType(this->ty));
+			else
+				allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
+			namedvalues_local[this->name] = allocainst;
+		}
 		if (this->expr) {
 			auto value = this->expr->codegen();
 			//constantfoldings[this->name] = curvar_v[0];
@@ -866,10 +918,16 @@ Value* ASTSubst::codegen() {
 				auto val = expr->codegen();
 				if (val->getType()->isPointerTy())
 					val = builder.CreateLoad(val);
-				return builder.CreateStore(val, namedvalues_local[id->name]);
+				module->dump();
+				auto ptr = namedvalues_local[id->name];
+				Value* ptr_ = ptr;
+				//if (!ptr->getAllocatedType()->isPointerTy())
+				//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
+				return builder.CreateStore(val, ptr_);
 			}
 			else {
 				error("Compile error:", "Undefined value name --> " + id->name, this->loc);
+				return nullptr;
 			}
 		}
 		else {

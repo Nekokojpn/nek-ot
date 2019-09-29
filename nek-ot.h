@@ -115,6 +115,8 @@ enum class TK {
 	tok_doll, //$
 	tok_pipe, //|
 	tok_amp, // &
+	tok_ltlt, // <<
+	tok_rtrt, // >> 
 
 
 	// operator
@@ -262,6 +264,9 @@ enum class Op{
 	And,
 	Nand,
 	Nor,
+	Not,
+	LShift,
+	RShift,
 	LThanEqual,
 	RThan,
 	RThanEqual,

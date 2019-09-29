@@ -41,6 +41,12 @@ std::unique_ptr<AST> Parser::expr_mul() {
 		else if (consume(TK::tok_xor)) {
 			op = Op::Xor;
 		}
+		else if (consume(TK::tok_ltlt)) {
+			op = Op::LShift;
+		}
+		else if (consume(TK::tok_rtrt)) {
+			op = Op::RShift;
+		}
 		else {
 			break;
 		}

@@ -67,14 +67,15 @@ enum class TK {
 	tok_in,
 	tok_out,
 	tok_body,
+	tok_xor,
 
 	tok_ret,
 	tok_void,
 	tok_i32,
-	tok_float,
-	tok_double,
-	tok_short,
 	tok_i64,
+	tok_f32,
+	tok_f64,
+	tok_i16,
 	tok_char,
 	tok_string,
 	tok_action,
@@ -256,6 +257,11 @@ enum class Op{
 	Div,
 	RDiv,
 	LThan,
+	Xor,
+	Or,
+	And,
+	Nand,
+	Nor,
 	LThanEqual,
 	RThan,
 	RThanEqual,
@@ -264,9 +270,11 @@ enum class Op{
 };
 enum class AType { //AllType
 	Nop,
+	I16,
 	I32,
-	Float,
-	Double,
+	I64,
+	F32,
+	F64,
 	Char,
 	String,
 	Struct,
@@ -281,6 +289,7 @@ enum class TypeKind {
 
 
 class Codegen {
+	bool isNowGlobal = false;
 public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
@@ -288,6 +297,8 @@ public:
 	static Type* getTypebyAType(AType& ty);
 	static Type* getTypebyType(Type_t& t);
 	//<-----
+	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
+	bool IsGlobal() { return isNowGlobal; }
 };
 
 class ASTSubst;
@@ -326,7 +337,10 @@ public:
 class ASTValue : public AST {
 public:
 	long long value;
-	ASTValue(long long  _value) : value(_value) {};
+	double value_d;
+	bool isDouble;
+	ASTValue(long long  _value) : value(_value),isDouble(false) {};
+	ASTValue(double  _value, bool _isDouble) : value_d(_value), isDouble(true) {};
 	Value* codegen() override;
 };
 class ASTStrLiteral : public AST {
@@ -355,9 +369,10 @@ public:
 	/* FOR STRUCT ATTRIBUTES */
 	std::string stct_name;
 	//
+	bool isGlobal;
 	std::unique_ptr<ASTSubst> expr;
-	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name) {};
-	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name) : ty(_ty), name(_name), elements(std::move(_elements)), stct_name(_stct_name) {};
+	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name, bool _isGlobal) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name), isGlobal(_isGlobal) {};
+	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name, bool _isGlobal) : ty(_ty), name(_name), elements(std::move(_elements)), stct_name(_stct_name), isGlobal(_isGlobal) {};
 	Value* codegen() override;
 };
 
@@ -474,6 +489,13 @@ public:
 	Value* codegen() override;
 };
 
+class ASTTop : public AST {
+public:
+	std::vector<std::unique_ptr<AST>> globals;
+	ASTTop(std::vector<std::unique_ptr<AST>> _globals) : globals(std::move(_globals)) {};
+	Value* codegen();
+};
+
 class ASTSubst : public AST {
 public:
 	std::unique_ptr<ASTIdentifier> id;
@@ -496,6 +518,7 @@ public:
 class Parser {
 	int index;
 	Token_t curtok;
+	std::unique_ptr<Codegen> cdgen;
 	std::map<std::string, Token_t> stcts;
 	std::vector<Token_t> tokens;
 	std::unique_ptr<AST> expr();
@@ -526,7 +549,8 @@ class Parser {
 	void Parser::getNextToken() noexcept;
 public:
 	Parser(std::vector<Token_t> _tokens);
-	void parse_codegen();
+	std::vector<std::unique_ptr<AST>> parse();
+	void codegen(std::vector<std::unique_ptr<AST>> _ast);
 	void dump();
 	void setOpt(bool b);
 	bool getOpt();

@@ -7,6 +7,7 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 	std::vector<std::unique_ptr<AST>> asts;
 	while (curtok.ty != TK::tok_rb && curtok.ty != TK::tok_eof)
 	{
+		this->cdgen->setIsGlobal(false);
 		if (curtok.ty == TK::tok_string) {
 			auto ast = def_string();
 			asts.push_back(std::move(ast));

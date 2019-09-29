@@ -1,5 +1,7 @@
 #include "../nek-ot.h"
 
+Codegen cdgen;
+
 //Read forward if the next token is expected.
 bool Parser::consume(TK tk) noexcept {
 	if (tokens[index].ty == tk)
@@ -63,17 +65,23 @@ proc:
 
 //get AType from curtok.
 AType Parser::getATypeByCurtok() {
-	if (curtok.ty == TK::tok_i32) {
+	if (curtok.ty == TK::tok_i16) {
+		return AType::I16;
+	}
+	else if (curtok.ty == TK::tok_i32) {
 		return AType::I32;
+	}
+	else if (curtok.ty == TK::tok_i64) {
+		return AType::I64;
 	}
 	else if (curtok.ty == TK::tok_char) {
 		return AType::Char;
 	}
-	else if (curtok.ty == TK::tok_float) {
-		return  AType::Float;
+	else if (curtok.ty == TK::tok_f32) {
+		return AType::F32;
 	}
-	else if (curtok.ty == TK::tok_double) {
-		return AType::Double;
+	else if (curtok.ty == TK::tok_f64) {
+		return AType::F64;
 	}
 	else if (curtok.ty == TK::tok_void) {
 		return AType::Void;
@@ -416,15 +424,28 @@ std::unique_ptr<ASTRet> Parser::def_ret() {
 Parser::Parser(std::vector<Token_t> _tokens) : tokens(_tokens) {
 	index = 0;
 	curtok = tokens[index];
+	cdgen = std::make_unique<Codegen>();
 }
-void Parser::parse_codegen() {	
-	if (curtok.ty == TK::tok_fn)
-	{
-		auto ast = def_func();
-		ast->codegen();
+void Parser::codegen(std::vector<std::unique_ptr<AST>> _ast) {
+	for (int i = 0; i < _ast.size(); i++) {
+		_ast[i]->codegen();
 	}
-	if (curtok.ty == TK::tok_eof)
-		return;
-	parse_codegen();
 	return;
+}
+std::vector<std::unique_ptr<AST>> Parser::parse() {
+	std::vector<std::unique_ptr<AST>> asts;
+	while (curtok.ty != TK::tok_eof) {
+		this->cdgen->setIsGlobal(true);
+		if (curtok.ty == TK::tok_fn)
+		{
+			auto ast = def_func();
+			asts.push_back(std::move(ast));
+		}
+		else if (curtok.ty == TK::tok_identifier) {
+			auto ast = expr_identifier();
+			asts.push_back(std::move(ast));
+		}
+		else getNextToken();
+	}
+	return std::move(asts);
 }

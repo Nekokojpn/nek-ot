@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
   std::cout << "Generating LLVM IR..." << std::endl;
 
-  parser.parse_codegen();
+  parser.codegen(std::move(parser.parse()));
   
   std::cout << std::endl;
   /*

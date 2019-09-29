@@ -13,25 +13,12 @@ fn main() -> i32{
 		j = 0;
 		while(j < 51){
 			map[i][j] = 1;
-			if(i == 0){
-				map[i][j] = 0;
-			}
-			if(j == 0){
-				map[i][j] = 0;
-			}
-			if(i == 24){
-				map[i][j] = 0;
-			}
-			if(j == 50){
-				map[i][j] = 0;
-			}
 			j = j + 1;
 		}
 		i = i + 1;
 	}
-	x := i32(0);
-	y := i32(1);
-	x = 0;
+	x := i32(3);
+	y := i32(3);
 	rand_v := i32(0);
 	judge := i32(0);
 	exp := i32(0);
@@ -39,7 +26,7 @@ fn main() -> i32{
 	while(judge == 0){
 		map[y][x] = 0;
 		exp = exp + 1;
-		if(exp == 10000){
+		if(exp == 10){
 			judge = 1;
 		}
 		rand_ret = rand(rand_v) % 4;
@@ -81,11 +68,28 @@ fn main() -> i32{
 			}
 		}
 		if(cnt == 0){
-			jd := i32(0);
+			jd := i32 $ 0;
+			jd_ := i32(0);
 			while(jd == 0){
-				rand_v = rand_v + 1;
-				x = rand(rand_v) % 51;
-				y = rand(rand_v) % 25;
+				while(jd_ == 0){
+					rand_v = rand_v + 1;
+					t := i32 $ rand(rand_v) xor rand_v % 51;
+					t_ := i32 $ t % 2;
+					if(t_ == 1){
+						x = t;
+						jd_ = 1;
+					}
+				}
+				jd_ = 0;
+				while(jd_ == 0){
+					rand_v = rand_v + 2;
+					t1 := i32 $ rand(rand_v) xor rand_v % 25;
+					t1_ := i32 $ t1 % 2;
+					if(t1_ == 1){
+						y = t1;
+						jd_ = 1;
+					}
+				}
 				if(map[y][x] == 0){
 					jd = 1;
 				}
@@ -101,7 +105,7 @@ fn main() -> i32{
 				writef(" ");
 			}
 			else{
-				writef("Å°");
+				writef("#");
 			}
 			j = j + 1;
 		}

@@ -1,0 +1,4 @@
+fn main(){
+	writefln("%d", 9 xor 11);
+	ret;
+}

@@ -1,5 +1,5 @@
 fn main() -> i32 {
-	i := f32(1.1);
+	i = f32(1.1);
 	j := f32(3.5);
 	writefln("%d", i+j);
 	ret 5;

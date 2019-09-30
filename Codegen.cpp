@@ -315,11 +315,16 @@ void Sys::IO::Printfln::CreateFunc() {
 }
 
 void Sys::IO::Input::CreateFunc() {
-	std::vector<Type*> vv;
-	vv.push_back(builder.getInt32Ty()->getPointerTo());
-	ArrayRef<Type*> v(vv);
-	auto inp = module->getOrInsertFunction("input", FunctionType::get(builder.getVoidTy(), vv, false));
-	functions_global["input"] = inp;
+	llvm::Function* input_func;
+	{
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt32Ty()->getPointerTo());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
+		input_func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "?input@@YAXPEAH@Z", module.get());
+		input_func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["input"] = input_func;
 	return;
 }
 

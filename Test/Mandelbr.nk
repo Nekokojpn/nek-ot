@@ -21,9 +21,9 @@ fn mandelbrot(c_x : f64, c_y : f64, n : i32) -> i32 {
 fn main(){	
 	times := i32$500;
 	x_max := f64$1.0;
-	x_min := f64$0.0-2.0;
+	x_min := f64$-2.0;
 	y_max := f64$1.0;
-	y_min := f64$0.0-1.0;
+	y_min := f64$-1.0;
 	dx := f64$0.02;
 	dy := f64$0.02;
 	x := f64$0.0;

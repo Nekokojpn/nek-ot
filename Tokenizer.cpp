@@ -152,9 +152,8 @@ TK gettoken() {
 		}
 	}
 	else { // Symbol.
-		std::string s = "";
-		s += cc;
-		literals.push_back(s);
+		cs += cc;
+		literals.push_back(cs);
 		addToloc(1);
 		if (cc == '\0') return TK::tok_eof;
 		if (cc == '=') {
@@ -178,6 +177,24 @@ TK gettoken() {
 			get_char();
 			if (cc == '>') { // arrow
 				return TK::tok_arrow;
+			}
+			else if (isdigit(cc)) {
+				bool point = false;
+				while (isdigit(cc) || (cc == '.' && !point)) {
+					if (cc == '.')
+						point = true;
+					cs += cc;
+					get_char();
+				}
+				undo_char();
+				literals.pop_back();
+				literals.push_back(cs);
+				if (point) { // double.
+					return TK::tok_num_double;
+				}
+				else { // int
+					return TK::tok_num_int;
+				}
 			}
 			undo_char();
 			return TK::tok_minus;

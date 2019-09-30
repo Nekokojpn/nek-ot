@@ -149,6 +149,19 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		ast->loc = loc;
 		return std::move(ast);
 	}
+	else if (curtok.ty == TK::tok_minus) {
+		getNextToken();
+		auto lloc = curtok.loc;
+		auto lhs = std::make_unique<ASTValue>(0);
+		lhs->loc = lloc;
+		auto rloc = curtok.loc;
+		auto rhs = expr();
+		rhs->loc = rloc;
+		auto bloc = curtok.loc;
+		auto binop = std::make_unique<ASTBinOp>(std::move(lhs), Op::Minus, std::move(rhs));
+		binop->loc = bloc;
+		return std::move(binop);
+	}
 	add_err_msg("You specified token is unkown for the expression.");
 	error_unexpected(curtok);
 	exit(1);

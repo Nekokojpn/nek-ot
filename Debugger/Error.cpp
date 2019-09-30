@@ -28,7 +28,7 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextWhite();
 	std::cerr << source_filename << ":" << line + 1 << ":" << column << std::endl;
 	Console::SetConsoleTextBlue();
-	std::cerr << line - 1 << "  |" << std::endl << line << " |";
+	std::cerr << line - 1 << " |" << std::endl << line << " |";
 	Console::SetConsoleTextWhite();
 	std::vector<std::string> t;
 	if (line - 1 >= 0)

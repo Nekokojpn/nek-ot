@@ -25,7 +25,7 @@
 #include "llvm\IR\DIBuilder.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
-#include "llvm/BitStream/BitstreamWriter.h"
+#include "llvm/Bitstream/BitstreamWriter.h"
 
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Linker/Linker.h"

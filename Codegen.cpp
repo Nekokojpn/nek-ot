@@ -328,6 +328,26 @@ void Sys::IO::Input::CreateFunc() {
 	return;
 }
 
+void Sys::Inline::Asm::CreateFunc() {
+	//TODO INLINE ASM/ I hope Proceed at Codegen.
+	llvm::Function* AsmFunc; 
+	{
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt8PtrTy());
+		args.push_back(builder.getInt8PtrTy());
+		bool is_var_args = false;
+		AsmFunc = Function::Create(
+			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "asm", module.get());
+		AsmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(),false), "LFENCE;", "~{dirflag},~{fpsr},~{flags}", true, false);
+	std::vector<Value*> vec;
+	ArrayRef<Value*> arg(vec);
+	builder.CreateCall(IA, arg);
+	return;
+}
+
 void init_parse() {
 	module = std::make_unique<Module>("top", context);
 	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());
@@ -374,10 +394,6 @@ void Codegen::call_writef(llvm::ArrayRef<llvm::Value*> args)
 
 	llvm::CallInst* inst = builder.CreateCall(func, args);
 	inst->setCallingConv(func->getCallingConv());
-}
-
-void Sys::Internal::Chkstk::CreateFunc() {
-
 }
 
 void Parser::dump() {
@@ -957,13 +973,6 @@ Value* ASTWhile::codegen() {
 	}
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
-	
-	/*  (Experimental) InlineAsm Implement LFENCE; for spectre.
-	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(),false), "LFENCE;", "~{dirflag},~{fpsr},~{flags}", true, false);
-	std::vector<Value*> vec;
-	ArrayRef<Value*> arg(vec);
-	builder.CreateCall(IA, arg);
-	*/
 	return astboolop;
 }
 Value* ASTAction::codegen() {

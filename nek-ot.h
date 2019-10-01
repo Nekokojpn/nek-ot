@@ -172,9 +172,9 @@ public:
 			static void CreateFunc();
 		};
 	};
-	class Internal {
+	class Inline {
 	public:
-		class Chkstk {
+		class Asm {
 		public:
 			static void CreateFunc();
 		};
@@ -538,7 +538,7 @@ class Parser {
 	std::unique_ptr<ASTFunc> def_func();
 	std::unique_ptr<ASTAction> def_action();
 	std::unique_ptr<ASTCall> func_call(const std::string& _id, bool isdoll);
-	std::vector<std::unique_ptr<AST>> expr_block();
+	std::vector<std::unique_ptr<AST>> expr_block(bool isOneExpr);
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
 	std::unique_ptr<ASTFor> for_statement();

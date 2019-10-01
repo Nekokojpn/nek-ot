@@ -178,6 +178,7 @@ TK gettoken() {
 			if (cc == '>') { // arrow
 				return TK::tok_arrow;
 			}
+			/*
 			else if (isdigit(cc)) {
 				bool point = false;
 				while (isdigit(cc) || (cc == '.' && !point)) {
@@ -196,6 +197,7 @@ TK gettoken() {
 					return TK::tok_num_int;
 				}
 			}
+			*/
 			undo_char();
 			return TK::tok_minus;
 		}

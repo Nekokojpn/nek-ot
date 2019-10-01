@@ -1,5 +1,8 @@
 fn abs(a : i32) -> i32 {
-	ret -a;
+	if(a < 0)
+		ret 0 - a;
+	else
+		ret a;
 }
 fn main(){
 	writefln$"%d", abs(5);

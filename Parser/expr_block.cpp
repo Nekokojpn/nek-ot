@@ -1,9 +1,10 @@
 #include "../nek-ot.h"
 
-std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block} 
-	if (curtok.ty != TK::tok_lb)
+std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr block} 
+	if (!isOneExpr && curtok.ty != TK::tok_lb)
 		error("Expected", "Expected --> {", curtok);
-	getNextToken();
+	if(!isOneExpr)
+		getNextToken();
 	std::vector<std::unique_ptr<AST>> asts;
 	while (curtok.ty != TK::tok_rb && curtok.ty != TK::tok_eof)
 	{
@@ -41,12 +42,14 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block() { //  {expr block}
 			asts.push_back(std::move(ast));
 		}
 		else if (curtok.ty == TK::tok_doll) {
-			auto ast = expr_block();
+			auto ast = expr_block(false);
 			asts.push_back(std::move(ast[0]));
 		}
 		else getNextToken();
+		if (isOneExpr)
+			break;
 	}
-	if (curtok.ty == TK::tok_eof) {
+	if (!isOneExpr && curtok.ty == TK::tok_eof) {
 		add_err_msg("Have you forgotten } ?");
 		error_expected("}", curtok);
 	}

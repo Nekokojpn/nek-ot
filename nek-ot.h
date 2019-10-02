@@ -223,6 +223,7 @@ void error_unexpected(Token_t& curtok);
 void warning(std::string title, std::string message, uint32_t line, uint32_t column);
 void warning(std::string title, std::string message, Location_t& loc);
 void warning(std::string title, std::string message, Token_t& curtok);
+void error_codegen(std::string message, Location_t loc);
 void warning_unexpected(Token_t& curtok);
 void warning_expected(std::string lit, Token_t& curtok);
 
@@ -301,6 +302,7 @@ public:
 	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
 	static Type* getTypebyAType(AType& ty);
 	static Type* getTypebyType(Type_t& t);
+	static void gen_asm(std::string statement, std::string option);
 	//<-----
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }
@@ -451,6 +453,9 @@ class ASTCall : public AST {
 public:
 	std::string name;
 	std::vector<std::unique_ptr<AST>> args_expr;
+	// FOR INLINE ASM ATTRIBUTES
+	std::vector<std::string> asm_args;
+
 	ASTCall(std::string _name, std::vector<std::unique_ptr<AST>> _args_expr) : name(_name), args_expr(std::move(_args_expr)) {};
 	Value* codegen() override;
 };

@@ -357,8 +357,7 @@ std::unique_ptr<AST> Parser::bool_expr() {
 		auto rhs = expr();
 		if (curtok.ty == TK::tok_ampamp) {
 			getNextToken();
-			auto boolast = std::make_unique<ASTBinOp>(bool_expr());
-			lhs = std::make_unique<ASTBinOp>()
+			//TODO Support &&
 		}
 		auto loc = curtok.loc;
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));

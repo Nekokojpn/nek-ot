@@ -26,8 +26,7 @@ int curtok = 0;
 
 int main(int argc, char** argv) {
 #ifdef DEBUGG
-	std::chrono::system_clock::time_point start, end_toknize, end;
-	start = std::chrono::system_clock::now();
+	std::chrono::system_clock::time_point start_tokenize, end_toknize, start_parse, end_parse, start_codegen, end_codegen;
 #endif
 #ifdef DEBUGG
 	if (load_source(argv[1]) == 1)
@@ -36,6 +35,7 @@ int main(int argc, char** argv) {
   if (load_source(static_cast<std::string>(argv[1])) == 1)
     return 1;
 #endif
+  start_tokenize = std::chrono::system_clock::now();
   TK tok = gettoken();
   while (tok != TK::tok_eof) {
 	if(tok!=TK::tok_nope)
@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
 #ifdef HIGH_DEBUGG
   std::cout << "-----Token dump-----" << std::endl;
 #endif //  HIGHDEBUGG
+  std::vector<Token_t> tytokens(tokens.size());
   for (int i = 0; i < it; i++) {
     Token_t t;
     t.ty = tokens[i];
@@ -64,6 +65,7 @@ int main(int argc, char** argv) {
   end_toknize = std::chrono::system_clock::now();
 #endif
   // Parser--->  
+  start_parse = std::chrono::system_clock::now();
   auto parser = Parser(tytokens);
   std::string uo = "-Uo\0";
   char* up = &uo[0];
@@ -83,8 +85,11 @@ int main(int argc, char** argv) {
 
   std::cout << "Generating LLVM IR..." << std::endl;
 
-  parser.codegen(std::move(parser.parse()));
-  
+  auto parsed_ast = parser.parse();
+  end_parse = std::chrono::system_clock::now();
+  start_codegen = std::chrono::system_clock::now();
+  parser.codegen();
+  end_codegen = std::chrono::system_clock::now();
   std::cout << std::endl;
   /*
   auto targetTriple = sys::getDefaultTargetTriple();
@@ -108,24 +113,26 @@ int main(int argc, char** argv) {
   WriteBitcodeToFile(*getModule(), os);
   
 #ifdef DEBUGG
-  end = std::chrono::system_clock::now();
   std::cout << "-----LLVM IR-----" << std::endl;
   parser.dump();
   std::cout << "-----time-----" << std::endl;
-  double all_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() /
-	  1000000.0);
-  double toknize_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end_toknize - start)
+  double tokenize_time = static_cast<double>(
+	  std::chrono::duration_cast<std::chrono::microseconds>(end_toknize - start_tokenize)
 	  .count() /
 	  1000000.0);
   double parse_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end - end_toknize)
+	  std::chrono::duration_cast<std::chrono::microseconds>(end_parse - end_parse)
 	  .count() /
 	  1000000.0);
+  double codegen_time = static_cast<double>(
+	  std::chrono::duration_cast<std::chrono::microseconds>(end_codegen - end_codegen)
+	  .count() /
+	  1000000.0);
+  double all_time = tokenize_time + parse_time + codegen_time;
   printf("All time %lf[s]\n", all_time);
-  printf("Tokenize time %lf[s]\n", toknize_time);
-  printf("Parse time %lf[s]\n", parse_time);  
+  printf("Tokenize time %lf[s]\n", tokenize_time);
+  printf("Parse time %lf[s]\n", parse_time);
+  printf("Codegen time %lf[s]\n", codegen_time);
 #endif
   
   return 0;

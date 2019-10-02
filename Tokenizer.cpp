@@ -9,7 +9,6 @@ char cc;        // Current char.
 std::string cs; // Current string EX. identiflier,number.
 std::vector<TK> tokens;
 std::vector<std::string> literals;
-std::vector<Token_t> tytokens;
 bool isdq_started = false;
 std::vector<Location_t> locs;
 //<-----

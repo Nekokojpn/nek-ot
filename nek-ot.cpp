@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     t.ty = tokens[i];
     t.val = literals[i];
 	t.loc = locs[i];
-    tytokens.push_back(t);
+    tytokens[i] = t;
 #ifdef  HIGH_DEBUGG
 	std::cout  << locs[i].location_begin_line << ":" << locs[i].location_begin_column << "     " << (int)tokens[i] << " " << literals[i] << "   " << std::endl;
 #endif //  HIGHDEBUGG

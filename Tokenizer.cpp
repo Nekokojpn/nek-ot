@@ -16,7 +16,7 @@ std::vector<Location_t> locs;
 //Tokenizer Funcs----->
 void get_char() {
 	cc = source[line][column++];
-	if (cc == '\n' || cc == '\r\n' || cc == '\r' || cc == '\n\r') {
+	if (cc == '\n' || cc == '\r\n' || cc == '\r' || cc == '\n\r'0+-) {
 		line++;
 		column = 0;
 		cc = source[line][column++];
@@ -30,7 +30,7 @@ void undo_char() {
 	}
 }
 void skip_line() {
-	while (true) {
+	while (true) 
 		cc = source[line][column++];
 		if (cc == '\n'  || cc == '\0') {
 			line++;

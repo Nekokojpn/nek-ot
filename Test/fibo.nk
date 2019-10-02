@@ -1,16 +1,14 @@
 fn fibo(n : i32) -> i32 {
-val : i32;
- if(n < 2)
-  val = n;
- else 
-   val = fibo(n-1) + fibo(n-2);
-  ret val;
+	if(n < 2)
+		ret n;
+	else 
+		ret fibo(n-1) + fibo(n-2);
 }
 fn main() {
-i := i32(1); 
- while(i < 36){
- writefln$"fibo(%d) -> %d", i, fibo(i);
- i = i + 1;
- }
- ret;
+	i := i32$ 1; 
+	while$ i < 36 {
+		writefln$ "fibo(%d) -> %d", i, fibo(i);
+		i = i + 1;
+	}
+	ret;
 }

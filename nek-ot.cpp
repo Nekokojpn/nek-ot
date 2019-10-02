@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
   auto parsed_ast = parser.parse();
   end_parse = std::chrono::system_clock::now();
   start_codegen = std::chrono::system_clock::now();
-  parser.codegen();
+  parser.codegen(std::move(parsed_ast));
   end_codegen = std::chrono::system_clock::now();
   std::cout << std::endl;
   /*
@@ -121,11 +121,11 @@ int main(int argc, char** argv) {
 	  .count() /
 	  1000000.0);
   double parse_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end_parse - end_parse)
+	  std::chrono::duration_cast<std::chrono::microseconds>(end_parse - start_parse)
 	  .count() /
 	  1000000.0);
   double codegen_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end_codegen - end_codegen)
+	  std::chrono::duration_cast<std::chrono::microseconds>(end_codegen - start_codegen)
 	  .count() /
 	  1000000.0);
   double all_time = tokenize_time + parse_time + codegen_time;

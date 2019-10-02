@@ -395,10 +395,16 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id, bool isdoll) {
 	getNextToken();
 	std::vector<std::unique_ptr<AST>> argsIdentifier;
+	std::vector<std::string> asmArgs;
 	while (true) {
-
-		argsIdentifier.push_back(std::move(expr()));
-		
+		if (_id != "asm")
+			argsIdentifier.push_back(std::move(expr()));
+		else {
+			getNextToken();
+			asmArgs.push_back(curtok.val);
+			getNextToken();
+			getNextToken();
+		}
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
 	}
@@ -406,6 +412,7 @@ std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id, bool isdoll) 
 		error("Expected", "Expected --> )", curtok);
 	auto loc = curtok.loc;
 	auto ast = std::make_unique<ASTCall>(_id, std::move(argsIdentifier));
+	ast->asm_args = asmArgs;
 	ast->loc = loc;
 	getNextToken();
 	return std::move(ast);

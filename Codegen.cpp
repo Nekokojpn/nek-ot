@@ -328,26 +328,6 @@ void Sys::IO::Input::CreateFunc() {
 	return;
 }
 
-void Sys::Inline::Asm::CreateFunc() {
-	//TODO INLINE ASM/ I hope Proceed at Codegen.
-	llvm::Function* AsmFunc; 
-	{
-		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt8PtrTy());
-		args.push_back(builder.getInt8PtrTy());
-		bool is_var_args = false;
-		AsmFunc = Function::Create(
-			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
-			llvm::Function::ExternalLinkage, "asm", module.get());
-		AsmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(),false), "LFENCE;", "~{dirflag},~{fpsr},~{flags}", true, false);
-	std::vector<Value*> vec;
-	ArrayRef<Value*> arg(vec);
-	builder.CreateCall(IA, arg);
-	return;
-}
-
 void init_parse() {
 	module = std::make_unique<Module>("top", context);
 	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());
@@ -394,6 +374,13 @@ void Codegen::call_writef(llvm::ArrayRef<llvm::Value*> args)
 
 	llvm::CallInst* inst = builder.CreateCall(func, args);
 	inst->setCallingConv(func->getCallingConv());
+}
+void Codegen::gen_asm(std::string statement, std::string option) {
+	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(), false), statement, option, true, false);
+	std::vector<Value*> vec;
+	ArrayRef<Value*> arg(vec);
+	builder.CreateCall(IA, arg);
+	return;
 }
 
 void Parser::dump() {
@@ -843,13 +830,22 @@ Value* ASTCall::codegen() {
 			
 	}
 	ArrayRef<Value*> argsRef(types);
+	//The system calls
 	if (name == "writefln") {
 		Codegen::call_writefln(argsRef);
 		return nullptr;
 	}
-	if (name == "writef") {
+	else if (name == "writef") {
 		Codegen::call_writef(argsRef);
 		return nullptr;
+	}
+	else if (name == "asm") {
+		if (this->asm_args.size() == 2)
+			Codegen::gen_asm(this->asm_args[0], this->asm_args[1]);
+		else {
+			add_err_msg("asm syntax: asm(string, string);");
+			error_codegen("Argument does not match!!", this->loc);
+		}
 	}
 	else {
 		auto inst = builder.CreateCall(functions_global[name], argsRef, "");

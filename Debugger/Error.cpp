@@ -67,3 +67,6 @@ void error_unexpected(Token_t& curtok) {
 void error_expected(std::string lit,Token_t& curtok) {
 	error("Compile error", "Expected token --> " + lit, curtok);
 }
+void error_codegen(std::string message, Location_t loc) {
+	error("Compile error", message, loc);
+}

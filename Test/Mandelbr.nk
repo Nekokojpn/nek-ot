@@ -5,9 +5,11 @@ fn mandelbrot(c_x : f64, c_y : f64, n : i32) -> i32 {
 	y_n_1 := f64$0.0;
 	i := i32$0;
 	i := i32$0;
+
 	while(i < n){
 		x_n_1 = x_n * x_n - y_n * y_n + c_x;
 		y_n_1 = 2 * x_n * y_n + c_y;
+
 		if(x_n_1 * x_n_1 + y_n_1 * y_n_1 > 4.0){
 			ret n;
 		} else {

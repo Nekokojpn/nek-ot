@@ -1,14 +1,49 @@
-fn partition(a : i32[], i : i32, j : i32, x : i32){
-	l : i32$ i;
-	r : i32$ j;
-	while(l <= r){
+fn display(arr : i32[30]){
+	k := i32 $ 30;
+	l := i32 $ 0;
+	while $ k > 0{
+		l = 0;
+		while $ l < 30{
+			if $ arr[l] >= k {
+				writef $ "*";
+			}
+			else{
+				writef $ " ";
+			}
+			l = l + 1;
+		}
+		writefln $ " ";
+		k = k - 1;
+	}
+	ret;
+}
+fn pivot(a : i32[], i : i32, j : i32) -> i32 {
+	k := i32$ i + 1;
+	while(k <= j && a[i] == a[k]) k = k + 1;
+	if(k > j) ret 0 - 1;
+	if(a[i] >= a[k]) ret i;
+	ret k;
+}
+fn partition(a : i32[], i : i32, j : i32, x : i32) -> i32 {
+	l := i32$ i;
+	r := i32$ j;
+	jud := i32$ 0;
+	while(l <= r && jud == 0){
 		while(l <= j && a[l] < x) l = l + 1;
 		while(r >= i && a[r] >= x) r = r - 1;
-		if(l > r) brk;
+		if(l > r) jud = 1;
+		if(jud == 0){
+			t := i32$ a[l];
+			a[l] = a[r];
+			a[r] = t;
+			l = l + 1; r = r - 1;
+		}
 	}
+	ret l;
 }
 fn quicksort(a : i32[], i : i32, j : i32){
-	if(i == j)ret;
+	display(a);
+	if(i == j) { ret; }
 	p := i32$pivot(a, i, j);
 	if(p != 0 - 1){
 		k := i32$ partition(a, i, j, a[p]);
@@ -18,6 +53,9 @@ fn quicksort(a : i32[], i : i32, j : i32){
 	ret;
 }
 fn main(){
-	writefln$"%d", abs(5);
+	target := i32[30](){16,23,25,12,15,19,4,13,11,30,9,3,22,14,7,5,20,28,24,17,2,27,18,8,6,29,21,10,1,26};
+	display(target);
+	quicksort(target, 0, 29);
+	display(target);
 	ret;
 }

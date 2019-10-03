@@ -1,6 +1,25 @@
 #include "../nek-ot.h"
 
 std::unique_ptr<AST> Parser::bool_expr() {
+	auto lhs = bool_expr_op();
+	while (true) {
+		Op op;
+		if (consume(TK::tok_ampamp)) {
+			op = Op::Ampamp;
+		}
+		else if (consume(TK::tok_pipepipe)) {
+			op = Op::Pipepipe;
+		}
+		else break;
+		auto rhs = bool_expr();
+		auto loc = curtok.loc;
+		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
+		lhs->loc = loc;
+	}
+	return std::move(lhs);
+}
+
+std::unique_ptr<AST> Parser::bool_expr_op() {
 	auto lhs = expr();
 	while (true) {
 		Op op;
@@ -26,10 +45,6 @@ std::unique_ptr<AST> Parser::bool_expr() {
 			break;
 		}
 		auto rhs = expr();
-		if (curtok.ty == TK::tok_ampamp) {
-			getNextToken();
-			//TODO Support &&
-		}
 		auto loc = curtok.loc;
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
 		lhs->loc = loc;

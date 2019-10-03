@@ -373,7 +373,10 @@ std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id, bool isdoll) 
 	std::vector<std::string> asmArgs;
 	while (true) {
 		if (_id != "asm")
-			argsIdentifier.push_back(std::move(expr()));
+			if (curtok.ty != TK::tok_rp)
+				argsIdentifier.push_back(std::move(expr()));
+			else
+				break;
 		else {
 			getNextToken();
 			asmArgs.push_back(curtok.val);

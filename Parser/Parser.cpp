@@ -350,13 +350,20 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 	if (!doll && curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
 	if(!doll)getNextToken();
-	if (curtok.ty != TK::tok_lb)
-		error("Expected", "Expected --> {", curtok);
-
-	auto loc = curtok.loc;
-	auto ast = std::make_unique<ASTWhile>(std::move(boolast), expr_block(false));
-	ast->loc = loc;
-	return std::move(ast);
+	std::unique_ptr<ASTWhile> ast;
+	if (curtok.ty == TK::tok_lb) {
+		auto loc = curtok.loc;
+		ast = std::make_unique<ASTWhile>(std::move(boolast), expr_block(false));
+		ast->loc = loc;
+		return std::move(ast);
+	}
+	else {
+		auto loc = curtok.loc;
+		ast = std::make_unique<ASTWhile>(std::move(boolast), expr_block(true));
+		ast->loc = loc;
+		return std::move(ast);
+	}
+	return nullptr;
 }
 
 

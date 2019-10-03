@@ -878,15 +878,16 @@ Value* ASTIf::codegen() {
 	BasicBlock* if_block = BasicBlock::Create(context,"",curfunc);
 	auto curbb = builder.GetInsertBlock();
 	builder.SetInsertPoint(if_block);
+	auto tmp_retcodegen = retcodegen;
 	retcodegen = false;
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
 
 
-	if(!retcodegen)
+	//if(!retcodegen)
 		//blocks.push_back(if_block);
-	retcodegen = false;
+	//retcodegen = false;
 	auto before = builder.GetInsertBlock();
 	builder.SetInsertPoint(curbb);
 	//When exsists only if
@@ -895,7 +896,8 @@ Value* ASTIf::codegen() {
 		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
 		builder.CreateCondBr(astboolop, if_block, cont);
 		builder.SetInsertPoint(before);
-		builder.CreateBr(cont);
+		if(!retcodegen)
+			builder.CreateBr(cont);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
 			curbb = blocks[i];
@@ -903,6 +905,7 @@ Value* ASTIf::codegen() {
 		}
 		curbb = cont;
 		builder.SetInsertPoint(cont);
+		retcodegen = tmp_retcodegen;
 		return cont;
 	}
 	else {
@@ -918,7 +921,7 @@ Value* ASTIf::codegen() {
 
 			if(!retcodegen)
 				blocks.push_back(elif_block);
-			retcodegen = false;
+			retcodegen = tmp_retcodegen;
 			
 		}
 		//When exists else
@@ -931,7 +934,7 @@ Value* ASTIf::codegen() {
 			ast_else->codegen();
 			if (!retcodegen)
 				blocks.push_back(else_block);
-			retcodegen = false;
+			retcodegen = tmp_retcodegen;
 		}
 		if (blocks.size() != 0) {
 			auto cont = BasicBlock::Create(context, "", curfunc);
@@ -942,7 +945,7 @@ Value* ASTIf::codegen() {
 				curbb = blocks[i];
 				builder.CreateBr(cont);
 			}
-
+			retcodegen = tmp_retcodegen;
 			builder.SetInsertPoint(cont);
 		}
 		return nullptr; 
@@ -1105,6 +1108,6 @@ Value* ASTIdentifierStctElement::codegen() {
 	return builder.CreateLoad(gep);
 }
 Value* ASTBrk::codegen() {
-	builder.CreateBr(brk_bbs[brk_bbs.size()]-1);
+	builder.CreateBr(brk_bbs[brk_bbs.size()-1]);
 	return nullptr;
 }

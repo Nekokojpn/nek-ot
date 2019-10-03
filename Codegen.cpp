@@ -28,6 +28,8 @@ Value* lambdavalue;
 AllocaInst* retvalue;
 std::vector<BasicBlock*> retbbs;
 
+std::vector<BasicBlock*> brk_bbs;
+
 bool opt = true;
 bool retcodegen = false;
 auto isStringCodegen = false;
@@ -673,6 +675,10 @@ Value* ASTBinOp::codegen() {
 			return builder.CreateICmpNE(l, r);
 		else
 			return builder.CreateFCmpONE(l, r);
+	case Op::Ampamp:
+		return builder.CreateAnd(l, r);
+	case Op::Pipepipe:
+		return builder.CreateOr(l, r);
 	default:
 		return nullptr;
 	}
@@ -954,6 +960,7 @@ Value* ASTWhile::codegen() {
 	BasicBlock* while_block = BasicBlock::Create(context, "", curfunc);
 	BasicBlock* body_block = BasicBlock::Create(context, "", curfunc);
 	BasicBlock* cont_block = BasicBlock::Create(context, "", curfunc);
+	brk_bbs.push_back(cont_block);
 	builder.CreateBr(while_block);
 	
 	builder.SetInsertPoint(while_block);
@@ -969,6 +976,7 @@ Value* ASTWhile::codegen() {
 	}
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
+	brk_bbs.pop_back();
 	return astboolop;
 }
 Value* ASTAction::codegen() {
@@ -1096,4 +1104,7 @@ Value* ASTIdentifierStctElement::codegen() {
 	}
 	return builder.CreateLoad(gep);
 }
-
+Value* ASTBrk::codegen() {
+	builder.CreateBr(brk_bbs[brk_bbs.size()]-1);
+	return nullptr;
+}

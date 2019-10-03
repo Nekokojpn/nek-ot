@@ -68,6 +68,7 @@ enum class TK {
 	tok_out,
 	tok_body,
 	tok_xor,
+	tok_brk,
 
 	tok_ret,
 	tok_void,
@@ -127,6 +128,7 @@ enum class TK {
 	tok_plpl, //++
 	tok_mimi, //--
 	tok_ampamp, // &&
+	tok_pipepipe, // ||
 
 	tok_identifier,
 
@@ -272,7 +274,9 @@ enum class Op{
 	RThan,
 	RThanEqual,
 	EqualEqual,
-	NotEqual
+	NotEqual,
+	Ampamp,
+	Pipepipe
 };
 enum class AType { //AllType
 	Nop,
@@ -433,6 +437,12 @@ public:
 	Value* codegen();
 };
 
+class ASTBrk : public AST {
+public:
+	ASTBrk() {};
+	Value* codegen();
+};
+
 class ASTProto : public AST {
 public:
 	std::string name;
@@ -546,6 +556,7 @@ class Parser {
 	std::vector<std::unique_ptr<AST>> expr_block(bool isOneExpr);
 	std::unique_ptr<ASTIf> bool_statement();
 	std::unique_ptr<AST> bool_expr();
+	std::unique_ptr<AST> Parser::bool_expr_op();
 	std::unique_ptr<ASTFor> for_statement();
 	std::unique_ptr<ASTWhile> while_statement();
 	std::unique_ptr<AST> expr_identifier();
@@ -555,6 +566,7 @@ class Parser {
 	std::unique_ptr<ASTArrElements> expr_arr();
 	std::unique_ptr<ASTStctElements> expr_stct();
 	std::unique_ptr<AST> expr_dot(std::string& identifier);
+	std::unique_ptr<ASTBrk> def_brk();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:

@@ -1,9 +1,10 @@
-fn rand(seed : i32) -> i32{
-	rnd := i32(0);
-	rnd = seed;
-	rnd = rnd * 12345;
-	rnd = rnd + 1397;
-	ret rnd;
+fn rand(x : i32, y : i32, z : i32, w : i32) -> i32 { 
+  t := i32$ 0;
+ 
+  t = x xor (x << 11);
+  x = y; y = z; z = w;
+  w = (w xor (w >> 19)) xor (t xor (t >> 8));
+  ret w;
 }
 fn main() -> i32{
 	map := i32[25][51]();
@@ -19,17 +20,25 @@ fn main() -> i32{
 	}
 	x := i32(3);
 	y := i32(3);
-	rand_v := i32(0);
+	r1 := i32$ 10;
+	r2 := i32$ 11;
+	r3 := i32$ 12;
+	r4 := i32$ 13;
 	judge := i32(0);
 	exp := i32(0);
 	rand_ret := i32(0);
 	while(judge == 0){
 		map[y][x] = 0;
 		exp = exp + 1;
-		if(exp == 10){
+		if(exp == 5){
 			judge = 1;
 		}
-		rand_ret = rand(rand_v) % 4;
+		rand_ret = rand(r1,r2, r3, r4) % 4;
+		r1 = r1 + 1;
+		if(r2 % 5 == 0)r2 = r2 * 2;
+		r3 = r3 + 2;
+		r4 = r4 * 3;
+		i = i + 1;
 		cnt := i32(0);
 		if((y-1) > 0){
 			if(map[y-1][x] == 1){
@@ -72,8 +81,11 @@ fn main() -> i32{
 			jd_ := i32(0);
 			while(jd == 0){
 				while(jd_ == 0){
-					rand_v = rand_v + 1;
-					t := i32 $ rand(rand_v) xor rand_v % 51;
+					t := i32 $ rand(r1,r2, r3, r4) % 51;
+					r1 = r1 + 1;
+					if(r2 % 5 == 0)r2 = r2 * 2;
+					r3 = r3 + 2;
+					r4 = r4 * 3;
 					t_ := i32 $ t % 2;
 					if(t_ == 1){
 						x = t;
@@ -82,8 +94,11 @@ fn main() -> i32{
 				}
 				jd_ = 0;
 				while(jd_ == 0){
-					rand_v = rand_v + 2;
-					t1 := i32 $ rand(rand_v) xor rand_v % 25;
+					t1 := i32 $ rand(r1,r2, r3, r4) % 25;
+					r1 = r1 + 1;
+					if(r2 % 5 == 0)r2 = r2 * 2;
+					r3 = r3 + 2;
+					r4 = r4 * 3;
 					t1_ := i32 $ t1 % 2;
 					if(t1_ == 1){
 						y = t1;
@@ -95,7 +110,10 @@ fn main() -> i32{
 				}
 			}
 		}
-		rand_v = rand_v + 1;
+		r1 = r1 + 1;
+		if(r2 % 5 == 0)r2 = r2 * 2;
+		r3 = r3 + 2;
+		r4 = r4 * 3;
 	}
 	i = 0;
 	while(i < 25){

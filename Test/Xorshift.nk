@@ -1,0 +1,24 @@
+fn xor128(x : i32, y : i32, z : i32, w : i32) -> i32 { 
+  t := i32$ 0;
+ 
+  t = x xor (x << 11);
+  x = y; y = z; z = w;
+  w = (w xor (w >> 19)) xor (t xor (t >> 8));
+  ret w;
+}
+fn main(){
+	i := i32$ 0;
+	x := i32$ 10;
+	y := i32$ 11;
+	z := i32$ 12;
+	w := i32$ 13;
+	while(i < 100){
+		writefln("%d", xor128(x, y, z, w) % 4);
+		x = x + 1;
+		if(y % 5 == 0)y = y * 2;
+		z = z + 2;
+		w = w * 3;
+		i = i + 1;
+	}
+	ret;
+}

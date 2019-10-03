@@ -45,6 +45,10 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr
 			auto ast = expr_block(false);
 			asts.push_back(std::move(ast[0]));
 		}
+		else if (curtok.ty == TK::tok_brk) {
+			auto ast = def_brk();
+			asts.push_back(std::move(ast));
+		}
 		else getNextToken();
 		if (isOneExpr)
 			break;

@@ -21,6 +21,14 @@ void get_char() {
 		column = 0;
 		cc = source[line][column++];
 	}
+	if (cc == '\0') {
+		if (source.size() - 1 == line);
+		else {
+			line++;
+			column = 0;
+			cc = source[line][column++];
+		}
+	}
 }
 void undo_char() {
 	column--;

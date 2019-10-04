@@ -1001,7 +1001,7 @@ Value* ASTSubst::codegen() {
 				return builder.CreateStore(val, ptr_);
 			}
 			else {
-				error("Compile error:", "Undefined value name --> " + id->name, this->loc);
+				error_codegen("Undefined value name --> " + id->name, this->loc);
 				return nullptr;
 			}
 		}

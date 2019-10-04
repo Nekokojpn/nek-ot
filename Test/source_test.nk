@@ -1,5 +1,6 @@
 fn main() -> i32 {
 	i := f32(1.1);
+	i := ff;
 	writefln("%d", i);
 	x := i32$0;
 	input(&x);

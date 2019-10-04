@@ -27,11 +27,14 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		getNextToken();
 		if (curtok.ty != TK::tok_rarrow)
 			error_expected("<-", curtok);
+		auto loc = curtok.loc;
 		auto ast_type = this->def_type(identifier);
 		if (curtok.ty != TK::tok_rb)
 			error("Expected", "Expected --> }", curtok);
 		getNextToken();
-		return std::move(std::make_unique<ASTArrElements>(std::move(restrait), std::move(ast_type)));
+		auto ast = std::move(std::make_unique<ASTArrElements>(std::move(restrait), std::move(ast_type)));
+		ast->loc = loc;
+		return std::move(ast);
 	}
 	if (cnt != 0 && curtok.ty == TK::tok_pipe) {
 		add_err_msg("");
@@ -40,5 +43,8 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 	if (curtok.ty != TK::tok_rb)
 		error("Expected", "Expected --> }", curtok);
 	getNextToken();
-	return std::move(std::make_unique<ASTArrElements>(std::move(elements)));
+	auto loc = curtok.loc;
+	auto ast = std::move(std::make_unique<ASTArrElements>(std::move(elements)));
+	ast->loc = loc;
+	return std::move(ast);
 }

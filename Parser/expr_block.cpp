@@ -1,8 +1,10 @@
 #include "../nek-ot.h"
 
 std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr block} 
-	if (!isOneExpr && curtok.ty != TK::tok_lb)
-		error("Expected", "Expected --> {", curtok);
+	if (!isOneExpr && curtok.ty != TK::tok_lb) {
+		add_err_msg("Expressions block must be start with {.");
+		error_expected("{", curtok);
+	}
 	if(!isOneExpr)
 		getNextToken();
 	std::vector<std::unique_ptr<AST>> asts;

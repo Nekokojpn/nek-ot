@@ -13,12 +13,15 @@ std::unique_ptr<AST> Parser::def_stct() {
 	if (curtok.ty != TK::tok_lb) {
 		error_unexpected(curtok);
 	}
+	auto loc = curtok.loc;
 	auto elements = std::move(expr_stct());
 
 	if (curtok.ty != TK::tok_semi)
 		error("Expected", "Expected --> ;", curtok);
 	getNextToken();
-	return std::make_unique<ASTStruct>(name, std::move(elements));
+	auto ast = std::make_unique<ASTStruct>(name, std::move(elements));
+	ast->loc = loc;
+	return std::move(ast);
 }
 
 std::unique_ptr<ASTStctElements> Parser::expr_stct() {
@@ -40,5 +43,8 @@ std::unique_ptr<ASTStctElements> Parser::expr_stct() {
 	if (curtok.ty != TK::tok_rb)
 		error("Expected", "Expected --> }", curtok);
 	getNextToken();
-	return std::make_unique<ASTStctElements>(elements);
+	auto loc = curtok.loc;
+	auto ast = std::make_unique<ASTStctElements>(elements);
+	ast->loc = loc;
+	return std::move(ast);
 }

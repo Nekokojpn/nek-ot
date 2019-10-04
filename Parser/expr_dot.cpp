@@ -21,5 +21,8 @@ std::unique_ptr<AST> Parser::expr_dot(std::string& identifier) {
 		if (curtok.ty != TK::tok_dot)break;
 		getNextToken();
 	}
-	return std::make_unique<ASTIdentifierStctElement>(identifier, elems);
+	auto loc = curtok.loc;
+	auto ast = std::make_unique<ASTIdentifierStctElement>(identifier, elems);
+	ast->loc = loc;
+	return std::move(ast);
 }

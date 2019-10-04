@@ -47,17 +47,18 @@ void Parser::setOpt(bool b) {
 }
 
 void Test::CreateFunc() {
-	/*
-	std::vector<Type*> putsArgs;
-	putsArgs.push_back(builder.getInt32Ty());
-	ArrayRef<Type*>  argsRef(putsArgs);
-	Function* mainFunc =
-		Function::Create(FunctionType::get(builder.getInt8Ty()->getPointerTo(), argsRef, false),
-			Function::ExternalLinkage, "test", module.get());
-	builder.SetInsertPoint(BasicBlock::Create(context, "", mainFunc));
-	builder.CreateStore(ConstantFP::get(context, APFloat(1.1)), builder.CreateAlloca(builder.getDoubleTy()), 4);
-	builder.CreateRetVoid();
-	*/
+	llvm::Function* test_func;
+	{
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt32Ty());
+		args.push_back(builder.getInt32Ty());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
+		test_func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "test", module.get());
+		test_func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["test"] = test_func;
+	return;
 }
 
 
@@ -323,7 +324,7 @@ void Sys::IO::Input::CreateFunc() {
 		args.push_back(builder.getInt32Ty()->getPointerTo());
 		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
 		input_func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "?input@@YAXPEAH@Z", module.get());
+			func_type, llvm::Function::ExternalLinkage, "input", module.get());
 		input_func->setCallingConv(llvm::CallingConv::X86_StdCall);
 	}
 	functions_global["input"] = input_func;
@@ -452,8 +453,15 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		return global;
 	}
 	current_inst = value;
-	if (this->kind == TypeKind::Pointer)
+	if (this->kind == TypeKind::Pointer) {
 		isPtr = true;
+		if (value->getAllocatedType()->isPointerTy()) {
+			isPtr = false;
+			return builder.CreateLoad(value);
+		}
+	}
+	else if (this->kind == TypeKind::Reference)
+		return builder.CreateLoad(value);
 	else
 		isPtr = false;
 	if (!value->getAllocatedType()->isArrayTy())
@@ -500,7 +508,8 @@ Value* ASTIdentifierArrayElement::codegen() {
 		gep = builder.CreateInBoundsGEP(val, pp);
 	for (int i = 1; i < expr_v.size(); i++) {
 		std::vector<Value*> p;
-		p.push_back(builder.getInt64(0));
+		if(value)
+			p.push_back(builder.getInt64(0));
 		index = expr_v[i]->codegen();
 		if (index->getType()->isPointerTy())
 			index = builder.CreateLoad(index);
@@ -548,9 +557,9 @@ Value* ASTBinOp::codegen() {
 	Value* r = rhs->codegen();
 	if (!l || !r)
 		return nullptr;
-	if (l->getType()->isPointerTy())
+	if (!isPtr && l->getType()->isPointerTy())
 		l = builder.CreateLoad(l);
-	if (r->getType()->isPointerTy())
+	if (!isPtr && r->getType()->isPointerTy())
 		r = builder.CreateLoad(r);
 	if (l->getType()->isFloatingPointTy())
 		if (!r->getType()->isFloatingPointTy())
@@ -735,7 +744,6 @@ Value* ASTType::codegen() {
 }
 
 Value* ASTProto::codegen() {
-	
 	std::vector<Type*> putsArgs;
 
 	for (int i = 0; i < args.size(); i++) {
@@ -779,7 +787,7 @@ Value* ASTProto::codegen() {
 	return mainFunc;
 }
 Value* ASTFunc::codegen() {
-	
+	//TODO nested func  change->BasicBloc
 	auto pr = proto->codegen(); //Proto
 	if(builder.GetInsertBlock()->getParent()->getReturnType() != builder.getVoidTy())
 		retvalue = builder.CreateAlloca(builder.GetInsertBlock()->getParent()->getReturnType());
@@ -824,7 +832,13 @@ Value* ASTCall::codegen() {
 			continue;
 		}
 		else if (current_inst && current_inst->getAllocatedType()->isArrayTy()) {
-			types.push_back(builder.CreateConstGEP2_64(ty, 0, 0));
+			auto array_ty = current_inst->getAllocatedType()->getArrayElementType();
+			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
+			while (array_ty->isArrayTy()) {
+				gep = builder.CreateConstGEP2_64(gep, 0, 0);
+				array_ty = array_ty->getArrayElementType();
+			}
+			types.push_back(gep);
 			continue;
 		}
 		else if (!isPtr) {

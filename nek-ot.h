@@ -370,7 +370,7 @@ public:
 };
 
 
-class ASTType : public AST { // i32 i = 0;
+class ASTType : public AST {
 public:
 	Type_t ty;
 	std::string name;
@@ -560,13 +560,14 @@ class Parser {
 	std::unique_ptr<ASTFor> for_statement();
 	std::unique_ptr<ASTWhile> while_statement();
 	std::unique_ptr<AST> expr_identifier();
-	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id);
+	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id, TypeKind ty_kind);
 	std::unique_ptr<ASTRet> def_ret();
 	std::unique_ptr<AST> def_stct();
 	std::unique_ptr<ASTArrElements> expr_arr();
 	std::unique_ptr<ASTStctElements> expr_stct();
 	std::unique_ptr<AST> expr_dot(std::string& identifier);
 	std::unique_ptr<ASTBrk> def_brk();
+	std::unique_ptr<AST> expr_star();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:

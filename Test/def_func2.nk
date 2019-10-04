@@ -1,0 +1,4 @@
+fn main(){
+	fn abs(a : i32) -> i32{ if$ a < 0 ret 0-a; else ret a; }
+	ret;
+}

@@ -178,6 +178,17 @@ std::unique_ptr<ASTString> Parser::def_string() {
 std::unique_ptr<AST> Parser::expr_identifier() {
 	auto id = curtok.val;
 	getNextToken();
+	/*
+	std::unique_ptr<ASTBinOp> expr_dot;
+	auto lhs = std::make_unique<ASTIdentifier>(id);
+	while(curtok.ty == TK::tok_dot) {
+		getNextToken();
+		if (curtok.ty != TK::tok_identifier)
+			error_unexpected(curtok);
+		auto rhs = std::make_unique<ASTIdentifier>(curtok.val);
+		getNextToken();
+	}
+	*/
 	if (curtok.ty == TK::tok_semi) {
 		return nullptr;
 	}

@@ -49,11 +49,14 @@ Type_t Parser::getTypeFromCurtok() {
 		}
 		getNextToken();
 	}
-	if (curtok.ty == TK::tok_star)
+	if (curtok.ty == TK::tok_star) {
+		getNextToken();
 		kind = TypeKind::Pointer;
-	else if (curtok.ty == TK::tok_amp)
+	}
+	else if (curtok.ty == TK::tok_amp) {
+		getNextToken();
 		kind = TypeKind::Reference;
-
+	}
 proc:
 	Type_t arg;
 	arg.isArr = isArr;
@@ -183,7 +186,7 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 				curtok.ty == TK::tok_darrow ||
 				curtok.ty == TK::tok_plpl ||
 				curtok.ty == TK::tok_mimi) {
-		auto ast = subst_expr(id);
+		auto ast = subst_expr(id, TypeKind::Value);
 		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_cleq ||

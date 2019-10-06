@@ -497,6 +497,7 @@ Value* ASTIdentifierArrayElement::codegen() {
 	std::vector<Value*> p;
 	if(value)
 		p.push_back(builder.getInt64(0));
+	if (expr_v[0]) current_inst = nullptr;
 	auto index = expr_v[0]->codegen();
 	if (index->getType()->isPointerTy())
 		index = builder.CreateLoad(index);
@@ -1004,23 +1005,17 @@ Value* ASTSubst::codegen() {
 	if (this->id) {
 		//curvar = namedvalues_local[id->name];
 		if (this->expr) {
-			if (namedvalues_local[id->name]) {
-				auto val = expr->codegen();
-				if (val->getType()->isPointerTy())
-					val = builder.CreateLoad(val);
-				auto ptr = namedvalues_local[id->name];
-				Value* ptr_ = ptr;
-				//if (!ptr->getAllocatedType()->isPointerTy())
-				//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
-				return builder.CreateStore(val, ptr_);
-			}
-			else {
-				error_codegen("Undefined value name --> " + id->name, this->loc);
-				return nullptr;
-			}
+			auto val = expr->codegen();
+			if (val->getType()->isPointerTy())
+				val = builder.CreateLoad(val);
+			auto ptr = id->codegen();
+			Value* ptr_ = ptr;
+			//if (!ptr->getAllocatedType()->isPointerTy())
+			//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
+			return builder.CreateStore(val, ptr_);
 		}
 		else {
-			lambdavalue = namedvalues_local[this->id->name];
+			lambdavalue = id->codegen();
 			for (auto ast = body.begin(); ast != body.end(); ast++) {
 				ast->get()->codegen();
 			}
@@ -1028,6 +1023,7 @@ Value* ASTSubst::codegen() {
 			return nullptr;
 		}
 	}
+	/*   For array substination control ex. a[0] = 0;
 	else if (id2) {
 		auto val = this->expr->codegen();
 		auto ptr = id2->codegen();
@@ -1037,6 +1033,7 @@ Value* ASTSubst::codegen() {
 	}
 	else
 		return nullptr;
+		*/
 }
 // This function prepares to generate a return IR. 
 Value* ASTRet::codegen() {

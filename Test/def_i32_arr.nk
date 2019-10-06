@@ -5,6 +5,5 @@ fn main() {
 	writefln("%d", arr[2]);
 	writefln("%d", arr[3]);
 	writefln("%d", arr[4]);
-	arr2 := i32[5](){5..9};
 	ret;
 }

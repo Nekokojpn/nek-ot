@@ -518,16 +518,12 @@ public:
 
 class ASTSubst : public AST {
 public:
-	std::unique_ptr<ASTIdentifier> id;
-	std::unique_ptr<ASTIdentifierArrayElement> id2;
+	std::unique_ptr<AST> id;
 	std::unique_ptr<AST> expr;
 	std::vector<std::unique_ptr<AST>> body;
-	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
-	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::unique_ptr<AST> _expr) :id2(std::move(_id2)), expr(std::move(_expr)) {};
-	ASTSubst(std::unique_ptr<ASTIdentifier> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
-	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2, std::vector<std::unique_ptr<AST>> _body) :id2(std::move(_id2)), body(std::move(_body)) {};
-	ASTSubst(std::unique_ptr<ASTIdentifier> _id) : id(std::move(_id)) {};
-	ASTSubst(std::unique_ptr<ASTIdentifierArrayElement> _id2) : id2(std::move(_id2)) {};
+	ASTSubst(std::unique_ptr<AST> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
+	ASTSubst(std::unique_ptr<AST> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
+	ASTSubst(std::unique_ptr<AST> _id) : id(std::move(_id)) {};
 	Value* codegen() override;
 };
 /*

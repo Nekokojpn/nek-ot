@@ -51,6 +51,14 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr
 			auto ast = def_brk();
 			asts.push_back(std::move(ast));
 		}
+		else if (curtok.ty == TK::tok_fn) {
+			auto ast = def_func();
+			asts.push_back(std::move(ast));
+		}
+		else if (curtok.ty == TK::tok_star) {
+			auto ast = expr_star();
+			asts.push_back(std::move(ast));
+		}
 		else getNextToken();
 		if (isOneExpr)
 			break;

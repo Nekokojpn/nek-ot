@@ -2,23 +2,17 @@
 
 std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
+	bool istyperef = false;
 	getNextToken();
-	auto ty = getTypeFromCurtok(); //TODO: Support stct;
+	auto ty = getTypeFromCurtok();
 	std::string stct_name;
+ty_ref:
 	if (ty.ty == AType::Struct)
 		stct_name = curtok.val;
 	if (ty.ty != AType::Nop) {
 		if (ty.isArr) { // for array control
 			std::unique_ptr<ASTArrElements> elem;
 			if (!isonlydef) {
-				if (curtok.ty != TK::tok_lp) {
-					error_expected("(", curtok);
-				}
-				getNextToken();
-				if (curtok.ty != TK::tok_rp) {
-					error_expected(")", curtok);
-				}
-				getNextToken();
 				
 				if (curtok.ty == TK::tok_lb) { // The array declaration has a body.
 					auto loc = curtok.loc;
@@ -60,11 +54,11 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 			std::unique_ptr<ASTSubst> expr_;
 			if (!isonlydef) {
 				bool doll = false;
-				if (curtok.ty != TK::tok_lp &&
+				if (!istyperef && curtok.ty != TK::tok_lp &&
 					curtok.ty != TK::tok_doll)
 					error_unexpected(curtok);
 				if (curtok.ty == TK::tok_doll)doll = true;
-				getNextToken();
+				if(!istyperef) getNextToken();
 				if (curtok.ty == TK::tok_rp) {
 					getNextToken();
 					if (curtok.ty != TK::tok_semi)
@@ -89,9 +83,9 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 					cdgen->IsGlobal()
 					);
 				ast->loc = loc;
-				if (!doll && curtok.ty != TK::tok_rp)
+				if (!istyperef && !doll && curtok.ty != TK::tok_rp)
 					error_expected(")", curtok);
-				if (!doll)
+				if (!istyperef && !doll)
 					getNextToken();
 				if (curtok.ty != TK::tok_semi)
 					error_expected(";", curtok);
@@ -114,8 +108,22 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 			}
 		}
 	}
-	else { //Type researcher
-	
+	else { //Type reference
+		Type_t ty_;
+		if (curtok.ty == TK::tok_num_int) {
+			ty_.isArr = false;
+			ty_.kind = TypeKind::Value;
+			ty_.ty = AType::I32;
+			ty = ty_;
+		}
+		else if (curtok.ty == TK::tok_num_double) {
+			ty_.isArr = false;
+			ty_.kind = TypeKind::Value;
+			ty_.ty = AType::F64;
+			ty = ty_;
+		}
+		istyperef = true;
+		goto ty_ref;
 	}
 	auto loc = curtok.loc;
 	error_unexpected(curtok);

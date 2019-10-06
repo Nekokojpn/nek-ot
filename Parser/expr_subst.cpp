@@ -1,11 +1,10 @@
 #include "../nek-ot.h"
 
-std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
+std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id, TypeKind ty_kind) {
 	auto loc = curtok.loc;
-	auto id = std::make_unique<ASTIdentifier>(_id, TypeKind::Value);
+	auto id = std::make_unique<ASTIdentifier>(_id, ty_kind);
 	id->loc = loc;
 	std::unique_ptr<ASTIdentifierArrayElement> id2;
-
 	if (curtok.ty == TK::tok_lpb) { //Array
 		std::vector<std::unique_ptr<AST>> expr_v;
 		while (curtok.ty == TK::tok_lpb) { 
@@ -16,7 +15,7 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 			getNextToken();
 		}
 		auto loc = curtok.loc;
-		id2 = std::make_unique<ASTIdentifierArrayElement>(_id, std::move(expr_v), TypeKind::Value);
+		id2 = std::make_unique<ASTIdentifierArrayElement>(_id, std::move(expr_v), ty_kind);
 		id2->loc = loc;
 	}
 	if (curtok.ty == TK::tok_equal) {
@@ -65,5 +64,6 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id) {
 	}
 	else
 		error("Unexpected", "Unexpected token -->" + curtok.val, curtok);
+
 	return nullptr;
 }

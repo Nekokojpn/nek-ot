@@ -8,8 +8,6 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		auto loc = curtok.loc;
 		auto ast = expr();
 		ast->loc = loc;
-		
-		
 		if (curtok.ty == TK::tok_dtdt) {
 			getNextToken();
 		}

@@ -1,44 +1,46 @@
 fn main(){
 	MAX := i32$447;
-	STEP := f64$14.0 / 1048576.0;
 	DN := i32$4;
-	x := i32$0;
-	y := i32$0;
+	x := i64$0LL;
+	y := i64$0LL;
+	sx := i64$0LL;
+	sy := i64$0LL;
+	zx := i64$0LL;
+	zy := i64$0LL;
+	cx := i64$0LL;
+	cy := i64$0LL;
+	xx := i64$0LL;
+	yy := i64$0LL;
+
 	n := i32$0;
-	sx := i32$0;
-	sy := i32$0;
 	sn := i32$0;
 	h := i32$0;
-	zx := f64$0.0;
-	zy := f64$0.0;
-	cx := f64$0.0;
-	cy := f64$0.0;
-	xx := f64$0.0;
-	yy := f64$0.0;
+
 	while(y < 384){
-		x = 0;
+		x = 0LL;
 		while(x < 512){
 			sn = 0;
-			sx = 0;
+			sx = 0LL;
 			while(sx < DN){
-				cx = 0.278564453125 + (x * DN + sx) * (STEP / DN);
-				sy = 0;
+				cx = (x * 4 + sx) * 56 + 4673536LL;
+				sy = 0LL;
 				while(sy < DN){
-					cy = 0.0074462890625 + (y * DN + sy) * (STEP / DN);
-					zx = 0.0;
-					zy = 0.0;
+					cy = (y * 4 + sy) * 56 + 124928LL;
+					zx = 0LL;
+					zy = 0LL;
 					n = 0;
 					while(n < MAX){
-						xx = zx * zx;
-						yy = zy * zy;
-						if(xx + yy > 4.0)goto jmp;
-						zy = zx * zy * 2.0 - cy;
+						xx = (zx * zx) >> 24;
+						yy = (zy * zy) >> 24;
+						if(xx + yy > 67108864)goto jmp;
+						zy = (zx * zy) >> 23;
 						zx = xx - yy + cx;
+						zy = zy - cy;
 						n = n + 1;
 					}
 					@jmp:
 					sn = sn + n;
-					sy = sy + 1;
+					sy = sy + 1LL;
 				}
 				sx = sx + 1;
 			}

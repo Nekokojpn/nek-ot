@@ -87,6 +87,8 @@ enum class TK {
 
 	tok_num_int,
 	tok_num_double,
+	tok_num_long,
+	tok_num_long_long,
 	tok_str_string,
 
 	tok_semi, // ;
@@ -354,8 +356,10 @@ public:
 	long long value;
 	double value_d;
 	bool isDouble;
+	bool isLongLong;
 	ASTValue(long long  _value) : value(_value),isDouble(false) {};
 	ASTValue(double  _value, bool _isDouble) : value_d(_value), isDouble(true) {};
+	ASTValue(long long  _value, bool _isLongLong) : value(_value), isLongLong(true) {};
 	Value* codegen() override;
 };
 class ASTStrLiteral : public AST {

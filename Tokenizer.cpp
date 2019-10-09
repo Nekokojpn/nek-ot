@@ -114,6 +114,7 @@ TK gettoken() {
 		if (cs == "fn") { addToloc(cs.length()); return TK::tok_fn; }
 		else if (cs == "i32") { addToloc(cs.length()); return TK::tok_i32; }
 		else if (cs == "i64") { addToloc(cs.length()); return TK::tok_i64; }
+		else if (cs == "i128") { addToloc(cs.length()); return TK::tok_i128; }
 		else if (cs == "void") { addToloc(cs.length()); return TK::tok_void; }
 		else if (cs == "ret") { addToloc(cs.length()); return TK::tok_ret; }
 		else if (cs == "f32") { addToloc(cs.length()); return TK::tok_f32; }

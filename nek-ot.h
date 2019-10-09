@@ -69,6 +69,7 @@ enum class TK {
 	tok_body,
 	tok_xor,
 	tok_brk,
+	tok_goto,
 
 	tok_ret,
 	tok_void,
@@ -118,6 +119,7 @@ enum class TK {
 	tok_amp, // &
 	tok_ltlt, // <<
 	tok_rtrt, // >> 
+	tok_anno, // @
 
 
 	// operator
@@ -515,6 +517,18 @@ public:
 	ASTTop(std::vector<std::unique_ptr<AST>> _globals) : globals(std::move(_globals)) {};
 	Value* codegen();
 };
+class ASTGoto : public AST {
+public:
+	std::string label;
+	ASTGoto(std::string _label) : label(_label) {};
+	Value* codegen();
+};
+class ASTLabel : public AST {
+public:
+	std::string label;
+	ASTLabel(std::string _label) : label(_label) {};
+	Value* codegen();
+};
 
 class ASTSubst : public AST {
 public:
@@ -564,6 +578,9 @@ class Parser {
 	std::unique_ptr<AST> expr_dot(std::string& identifier);
 	std::unique_ptr<ASTBrk> def_brk();
 	std::unique_ptr<AST> expr_star();
+	std::unique_ptr<ASTGoto> expr_goto();
+	std::unique_ptr<ASTLabel> def_label(std::string& identifier);
+	std::unique_ptr<AST> expr_anno();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:

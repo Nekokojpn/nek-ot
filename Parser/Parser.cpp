@@ -77,6 +77,9 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_i64) {
 		return AType::I64;
 	}
+	else if (curtok.ty == TK::tok_i128) {
+		return AType::I128;
+	}
 	else if (curtok.ty == TK::tok_char) {
 		return AType::Char;
 	}

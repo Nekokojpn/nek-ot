@@ -108,7 +108,7 @@ ty_ref:
 			}
 		}
 	}
-	else { //Type reference
+	else { //Type ref
 		Type_t ty_;
 		if (curtok.ty == TK::tok_num_int) {
 			ty_.isArr = false;

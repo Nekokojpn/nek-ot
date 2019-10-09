@@ -408,6 +408,9 @@ Type* Codegen::getTypebyAType(AType& ty) {
 	case AType::I64:
 		return builder.getInt64Ty();
 		break;
+	case AType::I128:
+		return builder.getInt128Ty();
+		break;
 	case AType::F32:
 		return builder.getDoubleTy();
 		break;

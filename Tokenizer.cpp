@@ -137,6 +137,7 @@ TK gettoken() {
 		else if (cs == "body") { addToloc(cs.length()); return TK::tok_body; }
 		else if (cs == "xor") { addToloc(cs.length()); return TK::tok_xor; }
 		else if (cs == "brk") { addToloc(cs.length()); return TK::tok_brk; }
+		else if(cs == "goto") { addToloc(cs.length()); return TK::tok_goto; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+
@@ -295,6 +296,7 @@ TK gettoken() {
 			undo_char();
 			return TK::tok_amp;
 		}
+		if (cc == '@') return TK::tok_anno;
 	}
 	std::string s = "";
 	s += cc;

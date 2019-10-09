@@ -144,9 +144,15 @@ TK gettoken() {
 		cs = cc;
 		get_char();
 		bool point = false;
-		while (isdigit(cc) || (cc == '.' && !point)) {
+		bool isLong = false;
+		bool isLongLong = false;
+		while (isdigit(cc) || (cc == '.' && !point) || cc == 'L') {
 			if (cc == '.')
 				point = true;
+			if (cc == 'L') {
+				if (!isLong)isLong = true;
+				else isLongLong = true;
+			}
 			cs += cc;
 			get_char();
 		}
@@ -155,6 +161,12 @@ TK gettoken() {
 		addToloc(cs.length());
 		if (point) { // double.
 			return TK::tok_num_double;
+		}
+		else if (isLongLong) {
+			return TK::tok_num_long_long;
+		}
+		else if (isLong) {
+			return TK::tok_num_long;
 		}
 		else { // int
 			return TK::tok_num_int;

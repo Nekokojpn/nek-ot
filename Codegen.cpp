@@ -541,6 +541,8 @@ Value* ASTValue::codegen() {
 	*/
 	if (!this->isDouble)
 		return builder.getInt32(value);
+	else if (this->isLongLong)
+		return builder.getIntN(64, value);
 	else
 		return ConstantFP::get(context, APFloat(value_d));
 }
@@ -573,6 +575,15 @@ Value* ASTBinOp::codegen() {
 	if (r->getType()->isFloatingPointTy())
 		if (!l->getType()->isFloatingPointTy())
 			l = builder.CreateSIToFP(l, builder.getDoubleTy());
+	if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy() &&
+			l->getType() != r->getType()) {
+		if (l->getType() == builder.getIntNTy(64) && r->getType() != builder.getIntNTy(64)) {
+			r = builder.CreateSExt(r, builder.getIntNTy(64));
+		}
+		else if (l->getType() != builder.getIntNTy(64) && r->getType() == builder.getIntNTy(64)) {
+			l = builder.CreateSExt(l, builder.getIntNTy(64));
+		}
+	}
 	switch (op) {
 	case Op::Plus:
 		

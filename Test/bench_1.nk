@@ -1,0 +1,53 @@
+fn main(){
+	MAX := i32$447;
+	STEP := f64$14.0 / 1048576.0;
+	DN := i32$4;
+	x := i32$0;
+	y := i32$0;
+	n := i32$0;
+	sx := i32$0;
+	sy := i32$0;
+	sn := i32$0;
+	h := i32$0;
+	zx := f64$0.0;
+	zy := f64$0.0;
+	cx := f64$0.0;
+	cy := f64$0.0;
+	xx := f64$0.0;
+	yy := f64$0.0;
+	while(y < 384){
+		x = 0;
+		while(x < 512){
+			sn = 0;
+			sx = 0;
+			while(sx < DN){
+				cx = 0.278564453125 + (x * DN + sx) * (STEP / DN);
+				sy = 0;
+				while(sy < DN){
+					cy = 0.0074462890625 + (y * DN + sy) * (STEP / DN);
+					zx = 0.0;
+					zy = 0.0;
+					n = 0;
+					while(n < MAX){
+						xx = zx * zx;
+						yy = zy * zy;
+						if(xx + yy > 4.0)goto jmp;
+						zy = zx * zy * 2.0 - cy;
+						zx = xx - yy + cx;
+						n = n + 1;
+					}
+					@jmp:
+					sn = sn + n;
+					sy = sy + 1;
+				}
+				sx = sx + 1;
+			}
+			n = sn >> 4;
+			h = h + n;
+			x = x + 1;
+		}
+		y = y + 1;
+	}
+	writefln("%d", h);
+	ret;
+}

@@ -72,6 +72,20 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		getNextToken(); //eat num
 		return std::move(value);
 	}
+	else if (curtok.ty == TK::tok_num_long) {
+		auto loc = curtok.loc;
+		auto value = std::make_unique<ASTValue>(std::atoll(curtok.val.c_str()), true);
+		value->loc = loc;
+		getNextToken(); //eat num
+		return std::move(value);
+	}
+	else if (curtok.ty == TK::tok_num_long_long) {
+		auto loc = curtok.loc;
+		auto value = std::make_unique<ASTValue>(std::atoll(curtok.val.c_str()), true);
+		value->loc = loc;
+		getNextToken(); //eat num
+		return std::move(value);
+	}
 	else if (curtok.ty == TK::tok_dq) {
 		auto loc = curtok.loc;
 		auto ast = std::make_unique<ASTString>("", std::move(expr_str()));

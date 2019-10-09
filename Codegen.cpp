@@ -14,6 +14,8 @@ static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
 static Value* underscore;
+static std::map<std::string, BasicBlock*> jmp_labels;
+static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
 
 //AST Identifier
 AllocaInst* current_inst;
@@ -1120,5 +1122,20 @@ Value* ASTIdentifierStctElement::codegen() {
 }
 Value* ASTBrk::codegen() {
 	builder.CreateBr(brk_bbs[brk_bbs.size()-1]);
+	return nullptr;
+}
+Value* ASTLabel::codegen() {
+	auto bb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+	builder.CreateBr(bb);
+	for (auto bb_ : jmp_bbs[this->label]) {
+		builder.SetInsertPoint(bb_);
+		builder.CreateBr(bb);
+	}
+	jmp_bbs[this->label].clear();
+	builder.SetInsertPoint(bb);
+	return nullptr;
+}
+Value* ASTGoto::codegen() {
+	jmp_bbs[this->label].push_back(builder.GetInsertBlock());
 	return nullptr;
 }

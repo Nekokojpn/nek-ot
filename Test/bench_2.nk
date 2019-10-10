@@ -1,6 +1,6 @@
 fn main(){
-	MAX := i32$447;
-	DN := i32$4;
+	MAX := i64$447LL;
+	DN := i64$4LL;
 	x := i64;
 	y := i64;
 	sx := i64;
@@ -42,13 +42,13 @@ fn main(){
 					sn = sn + n;
 					sy = sy + 1LL;
 				}
-				sx = sx + 1;
+				sx = sx + 1LL;
 			}
 			n = sn >> 4;
 			h = h + n;
-			x = x + 1;
+			x = x + 1LL;
 		}
-		y = y + 1;
+		y = y + 1LL;
 	}
 	writefln("%d", h);
 	ret;

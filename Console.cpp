@@ -1,4 +1,4 @@
-#include "nek-ot.h"
+#include "nek-ot.hpp"
 
 void Console::SetConsoleTextGray()
 {

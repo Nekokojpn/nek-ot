@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<ASTSubst> Parser::subst_expr(const std::string& _id, TypeKind ty_kind) {
 	auto loc = curtok.loc;

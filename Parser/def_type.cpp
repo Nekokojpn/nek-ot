@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
@@ -54,6 +54,18 @@ ty_ref:
 			std::unique_ptr<ASTSubst> expr_;
 			if (!isonlydef) {
 				bool doll = false;
+				if (curtok.ty == TK::tok_semi) {
+					getNextToken();
+					auto loc = curtok.loc;
+					auto ast = std::make_unique<ASTType>(ty,
+						_id,
+						std::move(expr_),
+						stct_name,
+						this->cdgen->IsGlobal()
+						);
+					ast->loc = loc;
+					return std::move(ast);
+				}
 				if (!istyperef && curtok.ty != TK::tok_lp &&
 					curtok.ty != TK::tok_doll)
 					error_unexpected(curtok);

@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<AST> Parser::bool_expr() {
 	auto lhs = bool_expr_op();

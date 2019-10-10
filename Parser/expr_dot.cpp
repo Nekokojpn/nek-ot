@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 //TODO experimental function for stct accessor.
 std::unique_ptr<AST> Parser::expr_dot(std::string& identifier) {

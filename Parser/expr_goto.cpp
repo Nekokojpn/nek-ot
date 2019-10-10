@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<ASTGoto> Parser::expr_goto() {
 	getNextToken();

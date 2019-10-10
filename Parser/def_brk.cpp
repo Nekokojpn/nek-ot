@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<ASTBrk> Parser::def_brk() {
 	auto loc = curtok.loc;

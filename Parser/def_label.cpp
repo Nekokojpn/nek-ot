@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<ASTLabel> Parser::def_label(std::string& identifier) {
 	auto loc = curtok.loc;

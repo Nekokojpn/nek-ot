@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr block} 
 	if (!isOneExpr && curtok.ty != TK::tok_lb) {

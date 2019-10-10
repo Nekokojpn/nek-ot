@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 std::unique_ptr<AST> Parser::expr() {
 
@@ -60,7 +60,7 @@ std::unique_ptr<AST> Parser::expr_mul() {
 std::unique_ptr<AST> Parser::expr_primary() {
 	if (curtok.ty == TK::tok_num_int) {
 		auto loc = curtok.loc;
-		auto value = std::make_unique<ASTValue>(std::atoll(curtok.val.c_str()));
+		auto value = std::make_unique<ASTValue>(std::atoi(curtok.val.c_str()));
 		value->loc = loc;
 		getNextToken(); //eat num
 		return std::move(value);

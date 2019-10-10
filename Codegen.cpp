@@ -1,5 +1,5 @@
 #pragma once
-#include "nek-ot.h"
+#include "nek-ot.hpp"
 
 LLVMContext context;
 IRBuilder<> builder(context);
@@ -34,6 +34,7 @@ std::vector<BasicBlock*> brk_bbs;
 
 bool opt = true;
 bool retcodegen = false;
+bool gotocodegen = false;
 auto isStringCodegen = false;
 
 
@@ -337,7 +338,8 @@ void init_parse() {
 	module = std::make_unique<Module>("top", context);
 	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());
 	pmbuilder = std::make_unique<PassManagerBuilder>();
-	pmbuilder->OptLevel = 2;
+	pmbuilder->OptLevel = 3;
+	pmbuilder->SizeLevel = 2;
 	pmbuilder->populateFunctionPassManager(*fpm);
 	fpm->doInitialization();
 }
@@ -390,6 +392,7 @@ void Codegen::gen_asm(std::string statement, std::string option) {
 
 void Parser::dump() {
 	module->dump();
+	return;
 }
 
 //std::string : TypeName, Type* : LLVM IR TYPE
@@ -539,12 +542,11 @@ Value* ASTValue::codegen() {
 	}
 	curvar_v.push_back(value);
 	*/
-	if (!this->isDouble)
-		return builder.getInt32(value);
-	else if (this->isLongLong)
-		return builder.getIntN(64, value);
-	else
+	if (this->isLongLong == true)
+		return builder.getInt64(value);
+	if(this->isDouble == true)
 		return ConstantFP::get(context, APFloat(value_d));
+	return builder.getInt32(value);
 }
 
 Value* ASTStrLiteral::codegen() {
@@ -798,7 +800,7 @@ Value* ASTProto::codegen() {
 		namedvalues_local[arg.getName()] = alloca;
 	}
 	mainFunc->setDSOLocal(true);
-	mainFunc->setCallingConv(CallingConv::X86_StdCall);
+	//mainFunc->setCallingConv(CallingConv::X86_StdCall);
 	functions_global[name] = mainFunc;
 
 	return mainFunc;
@@ -886,7 +888,7 @@ Value* ASTCall::codegen() {
 	}
 	else {
 		auto inst = builder.CreateCall(functions_global[name], argsRef, "");
-		inst->setCallingConv(CallingConv::X86_StdCall);
+		//inst->setCallingConv(CallingConv::X86_StdCall);
 		return inst;
 	}
 }
@@ -911,6 +913,7 @@ Value* ASTIf::codegen() {
 	builder.SetInsertPoint(if_block);
 	auto tmp_retcodegen = retcodegen;
 	retcodegen = false;
+	gotocodegen = false;
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
 	}
@@ -927,7 +930,7 @@ Value* ASTIf::codegen() {
 		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
 		builder.CreateCondBr(astboolop, if_block, cont);
 		builder.SetInsertPoint(before);
-		if(!retcodegen)
+		if(!retcodegen && !gotocodegen)
 			builder.CreateBr(cont);
 		for (int i = 0; i < blocks.size(); i++) {
 			builder.SetInsertPoint(blocks[i]);
@@ -950,7 +953,7 @@ Value* ASTIf::codegen() {
 
 			ast_elif->codegen();
 
-			if(!retcodegen)
+			if (!retcodegen && !gotocodegen)
 				blocks.push_back(elif_block);
 			retcodegen = tmp_retcodegen;
 			
@@ -963,7 +966,7 @@ Value* ASTIf::codegen() {
 			builder.SetInsertPoint(else_block);
 			curbb = else_block;
 			ast_else->codegen();
-			if (!retcodegen)
+			if (!retcodegen && !gotocodegen)
 				blocks.push_back(else_block);
 			retcodegen = tmp_retcodegen;
 		}
@@ -1142,6 +1145,7 @@ Value* ASTLabel::codegen() {
 	auto bb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 	builder.CreateBr(bb);
 	for (auto bb_ : jmp_bbs[this->label]) {
+		
 		builder.SetInsertPoint(bb_);
 		builder.CreateBr(bb);
 	}
@@ -1150,6 +1154,7 @@ Value* ASTLabel::codegen() {
 	return nullptr;
 }
 Value* ASTGoto::codegen() {
+	gotocodegen = true;
 	jmp_bbs[this->label].push_back(builder.GetInsertBlock());
 	return nullptr;
 }

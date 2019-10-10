@@ -1,21 +1,21 @@
 fn main(){
 	MAX := i32$447;
 	DN := i32$4;
-	x := i64$0LL;
-	y := i64$0LL;
-	sx := i64$0LL;
-	sy := i64$0LL;
-	zx := i64$0LL;
-	zy := i64$0LL;
-	cx := i64$0LL;
-	cy := i64$0LL;
-	xx := i64$0LL;
-	yy := i64$0LL;
+	x := i64;
+	y := i64;
+	sx := i64;
+	sy := i64;
+	zx := i64;
+	zy := i64;
+	cx := i64;
+	cy := i64;
+	xx := i64;
+	yy := i64;
 
-	n := i32$0;
-	sn := i32$0;
+	n := i32;
+	sn := i32;
 	h := i32$0;
-
+	y = 0LL;
 	while(y < 384){
 		x = 0LL;
 		while(x < 512){

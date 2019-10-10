@@ -1,4 +1,4 @@
-#include "../nek-ot.h"
+#include "../nek-ot.hpp"
 
 extern std::string source_filename;
 extern std::vector<std::string> source;

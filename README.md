@@ -25,7 +25,7 @@ fn main() -> i32{
 ```
 This is Mandelbrot
 
-'''
+```
 fn main(){
 	MAX := i64$447LL;
 	DN := i64$4LL;
@@ -81,4 +81,4 @@ fn main(){
 	writefln("%d", h);
 	ret;
 }
-'''
+```

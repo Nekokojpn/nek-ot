@@ -6,6 +6,7 @@ IRBuilder<> builder(context);
 std::unique_ptr<Module> module;
 std::unique_ptr<legacy::FunctionPassManager> fpm;
 std::unique_ptr<PassManagerBuilder> pmbuilder;
+std::unique_ptr<PassBuilder> pbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, StructType*> userdefined_stcts;
@@ -339,7 +340,6 @@ void init_parse() {
 	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());
 	pmbuilder = std::make_unique<PassManagerBuilder>();
 	pmbuilder->OptLevel = 3;
-	pmbuilder->SizeLevel = 2;
 	pmbuilder->populateFunctionPassManager(*fpm);
 	fpm->doInitialization();
 }
@@ -829,8 +829,6 @@ Value* ASTFunc::codegen() {
 	}
 	retvalue = nullptr;
 	retbbs.clear();
-	if(opt)
-		fpm->run(*builder.GetInsertBlock()->getParent());
 	namedvalues_local.clear();
 
 	return pr;

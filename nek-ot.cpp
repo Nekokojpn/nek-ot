@@ -67,11 +67,13 @@ int main(int argc, char** argv) {
   // Parser--->  
   start_parse = std::chrono::system_clock::now();
   auto parser = Parser(tytokens);
-  std::string uo = "-Uo\0";
+  std::string uo = "-O3\0";
   char* up = &uo[0];
   if (argc >= 3 && *argv[2] == *up) {
-	  parser.setOpt(false);
+	  parser.setOpt(true);
   }
+  else
+	  parser.setOpt(false);
 
   init_parse();
   

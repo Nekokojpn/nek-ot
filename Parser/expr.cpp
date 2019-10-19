@@ -133,7 +133,10 @@ std::unique_ptr<AST> Parser::expr_primary() {
 				getNextToken();
 			}
 			if (curtok.ty == TK::tok_dot) {
-				//TODO:  for arrray structure accessor.
+				auto loc = curtok.loc;
+				auto ast = expr_dot(identifier->name);
+				ast->loc = loc;
+				return ast;
 			}
 			auto loc = curtok.loc;
 			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_v), kind);

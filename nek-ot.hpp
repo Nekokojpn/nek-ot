@@ -205,8 +205,7 @@ typedef struct {
 } Token_t;
 typedef struct {
 	unsigned long long idx;
-	Type* ty;
-	std::string identifier;
+	std::map<std::string, Type*> elem;
 } Stct_t;
 typedef struct {
 	AType ty;
@@ -412,8 +411,8 @@ public:
 };
 class ASTStctElements : public AST {
 public:
-	std::vector<std::pair<Type_t, std::string>> elements;
-	ASTStctElements(std::vector<std::pair<Type_t, std::string>> _elements) : elements(_elements) {};
+	std::vector<std::pair<std::string, Type_t>> elements;
+	ASTStctElements(std::vector<std::pair<std::string, Type_t>> _elements) : elements(_elements) {};
 	Value* codegen() override;
 	ArrayRef<Type*> make_aref();
 };

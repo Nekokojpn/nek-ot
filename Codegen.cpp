@@ -1020,7 +1020,6 @@ Value* ASTAction::codegen() {
 
 Value* ASTSubst::codegen() {
 	if (this->id) {
-		//curvar = namedvalues_local[id->name];
 		if (this->expr) {
 			auto val = expr->codegen();
 			if (val->getType()->isPointerTy())
@@ -1073,10 +1072,10 @@ Value* ASTRet::codegen() {
 	return nullptr;
 }
 Value* ASTStruct::codegen() {
-	ArrayRef<Type*> elements = this->elements->make_aref();
+	auto elements = this->elements->make_aref();
 	auto stct = StructType::create(context,this->name);
 	stct->setBody(elements);
-	userdefined_stcts[this->name] = stct;
+	userdefined_stcts[this->name] = stct;//TODO ww
 	return nullptr;
 }
 Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
@@ -1114,8 +1113,8 @@ Value* ASTArrElements::codegen() {
 }
 ArrayRef<Type*> ASTStctElements::make_aref(){
 	std::vector<Type*> elem_v(this->elements.size());
-	for (int i = 0; i < elements.size(); i++) {
-		elem_v[i] = Codegen::getTypebyType(this->elements[i].first);
+	for (int i = 0; i < this->elements.size(); i++) {
+		elem_v[i] = Codegen::getTypebyType(elements[i].second);
 	}
 	ArrayRef<Type*> elements(elem_v);
 	return elements;

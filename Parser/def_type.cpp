@@ -4,11 +4,9 @@ std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
 	bool istyperef = false;
 	getNextToken();
+	std::string stct_name = curtok.val;
 	auto ty = getTypeFromCurtok();
-	std::string stct_name;
 ty_ref:
-	if (ty.ty == AType::Struct)
-		stct_name = curtok.val;
 	if (ty.ty != AType::Nop) {
 		if (ty.isArr) { // for array control
 			std::unique_ptr<ASTArrElements> elem;
@@ -120,7 +118,7 @@ ty_ref:
 			}
 		}
 	}
-	else { //Type ref
+	else { //Type inference
 		Type_t ty_;
 		if (curtok.ty == TK::tok_num_int) {
 			ty_.isArr = false;

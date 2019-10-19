@@ -26,16 +26,18 @@ std::unique_ptr<AST> Parser::def_stct() {
 
 std::unique_ptr<ASTStctElements> Parser::expr_stct() {
 	getNextToken();
-	std::vector<std::pair<Type_t, std::string>> elements;
+	std::vector<std::pair<std::string, Type_t>> elements;
 	while (true) {
-		auto ty = this->getTypeFromCurtok();
-		if (ty.ty == AType::Nop)break;
-
-		getNextToken();
 		if (curtok.ty != TK::tok_identifier)
 			error_unexpected(curtok);
-		elements.push_back(std::make_pair(ty, curtok.val));
+		auto id = curtok.val;
 		getNextToken();
+		if (curtok.ty != TK::tok_colon)
+			error_unexpected(curtok);
+		getNextToken();
+		auto ty = this->getTypeFromCurtok();
+		if (ty.ty == AType::Nop)break;
+		elements.push_back(std::make_pair(id, ty));
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
 

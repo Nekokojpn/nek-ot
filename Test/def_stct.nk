@@ -1,0 +1,9 @@
+fn main() -> i32{
+	stct mys{
+		i : i32,
+		j : i32
+	};
+	i := mys;
+	i.i = 10;
+	ret 0;
+}

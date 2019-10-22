@@ -1,4 +1,7 @@
 fn main(){
-	i := i128$100LL;
+	i := i32$100;
+	while(i > 0){
+		i = i - 1;
+	}
 	ret;
 }

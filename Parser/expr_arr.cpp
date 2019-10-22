@@ -21,12 +21,12 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		getNextToken();
 		if (curtok.ty != TK::tok_identifier)
 			error_unexpected(curtok);
-		auto identifier = curtok.val;
+		auto identifier = expr_identifiers(); //TODO FIx
 		getNextToken();
 		if (curtok.ty != TK::tok_rarrow)
 			error_expected("<-", curtok);
 		auto loc = curtok.loc;
-		auto ast_type = this->def_type(identifier);
+		auto ast_type = this->def_type(std::move(identifier));
 		if (curtok.ty != TK::tok_rb)
 			error("Expected", "Expected --> }", curtok);
 		getNextToken();

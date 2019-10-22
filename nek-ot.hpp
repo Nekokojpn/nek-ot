@@ -312,6 +312,7 @@ public:
 	static Type* getTypebyAType(AType& ty);
 	static Type* getTypebyType(Type_t& t);
 	static void gen_asm(std::string statement, std::string option);
+	static void init_on_inst();
 	//<-----
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }
@@ -327,17 +328,32 @@ public:
 	Location_t loc;
 	virtual Value* codegen() = 0;
 };
+class ASTIdentifierBase : public AST {
+public:
+	std::string name;
+	ASTIdentifierBase(const std::string& _name) : name(_name) {};
+	Value* codegen() override;
+};
+class ASTIdentifierArrayElementBase : public AST {
+public:
+	std::string name;
+	std::unique_ptr<AST> indexes;
+	ASTIdentifierArrayElementBase(const std::string& _name, std::unique_ptr<AST> _indexes) : name(_name), indexes(std::move(_indexes)) {};
+	Value* codegen() override;
+};
 
 class ASTIdentifier : public AST {
 public:
-	std::string name;
+	std::unique_ptr<AST> lhs; //lhs
+	std::unique_ptr<AST> rhs; //For stct, rhs;
 	TypeKind kind;
-	ASTIdentifier(const std::string& _name, TypeKind _kind) : name(_name), kind(_kind) {};
+	ASTIdentifier(std::unique_ptr<AST> _lhs, std::unique_ptr<AST> _rhs, TypeKind _kind) : lhs(std::move(_lhs)), rhs(std::move(_rhs)), kind(_kind) {};
 	Value* codegen() override;
 };
+/*
 class ASTIdentifierArrayElement : public AST {
 public:
-	std::string name;
+	std::unique_ptr<AST> id_base;
 	TypeKind kind;
 	std::vector<std::unique_ptr<AST>> expr_v;
 	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v, TypeKind _kind) : name(_name), expr_v(std::move(_expr_v)), kind(_kind) {};
@@ -350,6 +366,7 @@ public:
 	ASTIdentifierStctElement(std::string _name, std::vector<std::string> _elem_names) :name(_name), elem_names(_elem_names) {};
 	Value* codegen() override;
 };
+*/
 class ASTValue : public AST {
 public:
 	long long value;
@@ -381,6 +398,7 @@ class ASTType : public AST {
 public:
 	Type_t ty;
 	std::string name;
+	std::unique_ptr<AST> id;
 	/* FOR ARRAY ATTRIBUTES */
 	std::unique_ptr<ASTArrElements> elements;
 	//
@@ -389,8 +407,8 @@ public:
 	//
 	bool isGlobal;
 	std::unique_ptr<ASTSubst> expr;
-	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTSubst> _expr, std::string _stct_name, bool _isGlobal) : ty(_ty), name(_name), expr(std::move(_expr)), stct_name(_stct_name), isGlobal(_isGlobal) {};
-	ASTType(Type_t _ty, std::string _name, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name, bool _isGlobal) : ty(_ty), name(_name), elements(std::move(_elements)), stct_name(_stct_name), isGlobal(_isGlobal) {};
+	ASTType(Type_t _ty, std::unique_ptr<AST> _id, std::unique_ptr<ASTSubst> _expr, std::string _stct_name, bool _isGlobal) : ty(_ty), id(std::move(_id)), expr(std::move(_expr)), stct_name(_stct_name), isGlobal(_isGlobal) {};
+	ASTType(Type_t _ty, std::unique_ptr<AST> _id, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name, bool _isGlobal) : ty(_ty), id(std::move(_id)), elements(std::move(_elements)), stct_name(_stct_name), isGlobal(_isGlobal) {};
 	Value* codegen() override;
 };
 
@@ -470,9 +488,6 @@ class ASTCall : public AST {
 public:
 	std::string name;
 	std::vector<std::unique_ptr<AST>> args_expr;
-	// FOR INLINE ASM ATTRIBUTES
-	std::vector<std::string> asm_args;
-
 	ASTCall(std::string _name, std::vector<std::unique_ptr<AST>> _args_expr) : name(_name), args_expr(std::move(_args_expr)) {};
 	Value* codegen() override;
 };
@@ -545,6 +560,15 @@ public:
 	ASTSubst(std::unique_ptr<AST> _id) : id(std::move(_id)) {};
 	Value* codegen() override;
 };
+
+// [1][2] etc...
+class ASTArrayIndexes : public AST {
+public:
+	std::unique_ptr<AST> lhs;
+	std::unique_ptr<AST> rhs;
+	ASTArrayIndexes(std::unique_ptr <AST> _lhs, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), rhs(std::move(_rhs)) {};
+	Value* codegen() override;
+};
 /*
 class ASTImport : public AST {
 public:
@@ -553,50 +577,58 @@ public:
 class Parser {
 	int index;
 	Token_t curtok;
+	std::string curval; //for type;
 	std::unique_ptr<Codegen> cdgen;
 	std::map<std::string, Token_t> stcts;
 	std::vector<Token_t> tokens;
+
+	bool curtokIs(TK);
+
 	std::unique_ptr<AST> expr();
 	std::unique_ptr<AST> expr_add();
 	std::unique_ptr<AST> expr_mul();
 	std::unique_ptr<AST> expr_primary();
-
+	std::unique_ptr<AST> expr_dot();
+	std::unique_ptr<AST> bool_expr();
+	std::unique_ptr<AST> Parser::bool_expr_op();
+	std::unique_ptr<ASTArrElements> expr_arr();
+	std::unique_ptr<ASTStctElements> expr_stct(); 
 	std::unique_ptr<ASTStrLiteral> expr_str();
+	std::unique_ptr<ASTGoto> expr_goto();
+	std::unique_ptr<AST> expr_anno();
+	std::unique_ptr<AST> expr_star();
+	std::vector<std::unique_ptr<AST>> expr_block(bool);
+	std::unique_ptr<AST> expr_identifier();
+	std::unique_ptr<ASTSubst> subst_expr(std::unique_ptr<AST>);
+	std::unique_ptr<AST> expr_var();
+	std::unique_ptr<AST> expr_array_indexes(); //return an ASTArrayIndex;
 
-	std::unique_ptr<ASTType> def_type(const std::string& _id);
+	std::unique_ptr<ASTType> def_type(std::unique_ptr<AST>);
 	std::unique_ptr<ASTString> def_string();
 	std::unique_ptr<ASTFunc> def_func();
 	std::unique_ptr<ASTAction> def_action();
-	std::unique_ptr<ASTCall> func_call(const std::string& _id, bool isdoll);
-	std::vector<std::unique_ptr<AST>> expr_block(bool isOneExpr);
-	std::unique_ptr<ASTIf> bool_statement();
-	std::unique_ptr<AST> bool_expr();
-	std::unique_ptr<AST> Parser::bool_expr_op();
-	std::unique_ptr<ASTFor> for_statement();
-	std::unique_ptr<ASTWhile> while_statement();
-	std::unique_ptr<AST> expr_identifier();
-	std::unique_ptr<ASTSubst> subst_expr(const std::string& _id, TypeKind ty_kind);
 	std::unique_ptr<ASTRet> def_ret();
 	std::unique_ptr<AST> def_stct();
-	std::unique_ptr<ASTArrElements> expr_arr();
-	std::unique_ptr<ASTStctElements> expr_stct();
-	std::unique_ptr<AST> expr_dot(std::string& identifier);
 	std::unique_ptr<ASTBrk> def_brk();
-	std::unique_ptr<AST> expr_star();
-	std::unique_ptr<ASTGoto> expr_goto();
-	std::unique_ptr<ASTLabel> def_label(std::string& identifier);
-	std::unique_ptr<AST> expr_anno();
+	std::unique_ptr<ASTLabel> def_label(std::string&);
+
+	std::unique_ptr<ASTCall> func_call(std::string, bool);
+	std::unique_ptr<ASTIf> bool_statement();
+	std::unique_ptr<ASTFor> for_statement();
+	std::unique_ptr<ASTWhile> while_statement();
+
+	std::unique_ptr<AST> expr_identifiers(); //Gen ASTIdentifier
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:
-	Parser(std::vector<Token_t> _tokens);
+	Parser(std::vector<Token_t>);
 	std::vector<std::unique_ptr<AST>> parse();
-	void codegen(std::vector<std::unique_ptr<AST>> _ast);
+	void codegen(std::vector<std::unique_ptr<AST>>);
 	void dump();
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
 	Type_t getTypeFromCurtok();
-	void add_userdefined_stct(Token_t& cur);
-	bool find_userdefined_stct(std::string stct_name);
+	void add_userdefined_stct(Token_t&);
+	bool find_userdefined_stct(std::string);
 };

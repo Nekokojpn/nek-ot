@@ -179,19 +179,8 @@ std::unique_ptr<ASTString> Parser::def_string() {
 }
 
 std::unique_ptr<AST> Parser::expr_identifier() {
-	auto id = curtok.val;
-	getNextToken();
-	/*
-	std::unique_ptr<ASTBinOp> expr_dot;
-	auto lhs = std::make_unique<ASTIdentifier>(id);
-	while(curtok.ty == TK::tok_dot) {
-		getNextToken();
-		if (curtok.ty != TK::tok_identifier)
-			error_unexpected(curtok);
-		auto rhs = std::make_unique<ASTIdentifier>(curtok.val);
-		getNextToken();
-	}
-	*/
+	this->curval = curtok.val;
+	auto identifier = expr_identifiers();
 	if (curtok.ty == TK::tok_semi) {
 		return nullptr;
 	}
@@ -200,17 +189,17 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 				curtok.ty == TK::tok_darrow ||
 				curtok.ty == TK::tok_plpl ||
 				curtok.ty == TK::tok_mimi) {
-		auto ast = subst_expr(id, TypeKind::Value);
+		auto ast = subst_expr(std::move(identifier));
 		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_cleq ||
 				curtok.ty == TK::tok_colon) {
-		auto ast = def_type(id);
+		auto ast = def_type(std::move(identifier));
 		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_lp ||
 				curtok.ty == TK::tok_doll) {
-		auto ast = func_call(id, curtok.ty == TK::tok_doll ? true : false);
+		auto ast = func_call(curval, curtok.ty == TK::tok_doll ? true : false);
 		return std::move(ast);
 	}
 	return nullptr;
@@ -384,30 +373,23 @@ std::unique_ptr<ASTWhile> Parser::while_statement() {
 }
 
 
-std::unique_ptr<ASTCall> Parser::func_call(const std::string& _id, bool isdoll) {
+std::unique_ptr<ASTCall> Parser::func_call(std::string func_name, bool isdoll) {
+	//not allowed for stct has a function. E.g. stct.func()
+
 	getNextToken();
 	std::vector<std::unique_ptr<AST>> argsIdentifier;
-	std::vector<std::string> asmArgs;
 	while (true) {
-		if (_id != "asm")
-			if (curtok.ty != TK::tok_rp)
-				argsIdentifier.push_back(std::move(expr()));
-			else
-				break;
-		else {
-			getNextToken();
-			asmArgs.push_back(curtok.val);
-			getNextToken();
-			getNextToken();
-		}
+		if (curtok.ty != TK::tok_rp)
+			argsIdentifier.push_back(std::move(expr()));
+		else
+			break;
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
 	}
 	if (!isdoll && curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
 	auto loc = curtok.loc;
-	auto ast = std::make_unique<ASTCall>(_id, std::move(argsIdentifier));
-	ast->asm_args = asmArgs;
+	auto ast = std::make_unique<ASTCall>(func_name, std::move(argsIdentifier));
 	ast->loc = loc;
 	getNextToken();
 	return std::move(ast);

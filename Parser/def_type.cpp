@@ -1,34 +1,35 @@
 #include "../nek-ot.hpp"
 
-std::unique_ptr<ASTType> Parser::def_type(const std::string& _id) {
+std::unique_ptr<ASTType> Parser::def_type(std::unique_ptr<AST> ast_id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
-	bool istyperef = false;
+	bool istypeinf = false;
 	getNextToken();
 	std::string stct_name = curtok.val;
 	auto ty = getTypeFromCurtok();
-ty_ref:
+ty_inf:
 	if (ty.ty != AType::Nop) {
 		if (ty.isArr) { // for array control
 			std::unique_ptr<ASTArrElements> elem;
 			if (!isonlydef) {
-				
 				if (curtok.ty == TK::tok_lb) { // The array declaration has a body.
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id,
+					auto ast = std::make_unique<ASTType>(ty, std::move(ast_id),
 						std::move(expr_arr()), 
 						stct_name, this->cdgen->IsGlobal()
 						);
+					ast->name = this->curval;
 					ast->loc = loc;
 					return std::move(ast);
 				}
 				else if (curtok.ty == TK::tok_semi) { // The array declaration has no body.
 					getNextToken();
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id,
+					auto ast = std::make_unique<ASTType>(ty, std::move(ast_id),
 						std::move(elem),
 						stct_name,
 						this->cdgen->IsGlobal()
 						);
+					ast->name = this->curval;
 					ast->loc = loc;
 					return std::move(ast);
 				}
@@ -36,11 +37,12 @@ ty_ref:
 			else {
 				if (curtok.ty == TK::tok_semi) {
 					auto loc = curtok.loc;
-					auto ast = std::make_unique<ASTType>(ty, _id,
+					auto ast = std::make_unique<ASTType>(ty, std::move(ast_id),
 						std::move(elem),
 						stct_name,
 						this->cdgen->IsGlobal()
 						);
+					ast->name = this->curval;
 					ast->loc = loc;
 					getNextToken();
 					return std::move(ast);
@@ -56,19 +58,20 @@ ty_ref:
 					getNextToken();
 					auto loc = curtok.loc;
 					auto ast = std::make_unique<ASTType>(ty,
-						_id,
+						std::move(ast_id),
 						std::move(expr_),
 						stct_name,
 						this->cdgen->IsGlobal()
 						);
+					ast->name = this->curval;
 					ast->loc = loc;
 					return std::move(ast);
 				}
-				if (!istyperef && curtok.ty != TK::tok_lp &&
+				if (!istypeinf && curtok.ty != TK::tok_lp &&
 					curtok.ty != TK::tok_doll)
 					error_unexpected(curtok);
 				if (curtok.ty == TK::tok_doll)doll = true;
-				if(!istyperef) getNextToken();
+				if(!istypeinf) getNextToken();
 				if (curtok.ty == TK::tok_rp) {
 					getNextToken();
 					if (curtok.ty != TK::tok_semi)
@@ -76,26 +79,28 @@ ty_ref:
 					getNextToken();
 					auto loc = curtok.loc;
 					auto ast = std::make_unique<ASTType>(ty,
-						_id,
+						std::move(ast_id),
 						std::move(expr_),
 						stct_name,
 						this->cdgen->IsGlobal()
 						);
+					ast->name = this->curval;
 					ast->loc = loc;
 					return std::move(ast);
 				}
 				auto loc = curtok.loc;
 				auto ast = std::make_unique<ASTType>(ty,
-					_id,
-					std::make_unique<ASTSubst>(std::make_unique<ASTIdentifier>(_id, TypeKind::Value),
+					std::move(ast_id),
+					std::make_unique<ASTSubst>(std::move(ast_id),
 					std::move(expr())),
 					stct_name,
 					cdgen->IsGlobal()
 					);
+				ast->name = this->curval;
 				ast->loc = loc;
-				if (!istyperef && !doll && curtok.ty != TK::tok_rp)
+				if (!istypeinf && !doll && curtok.ty != TK::tok_rp)
 					error_expected(")", curtok);
-				if (!istyperef && !doll)
+				if (!istypeinf && !doll)
 					getNextToken();
 				if (curtok.ty != TK::tok_semi)
 					error_expected(";", curtok);
@@ -108,11 +113,12 @@ ty_ref:
 				getNextToken();
 				auto loc = curtok.loc;
 				auto ast = std::make_unique<ASTType>(ty,
-					_id,
+					std::move(ast_id),
 					std::move(expr_),
 					stct_name,
 					this->cdgen->IsGlobal()
 					);
+				ast->name = this->curval;
 				ast->loc = loc;
 				return std::move(ast);
 			}
@@ -132,8 +138,8 @@ ty_ref:
 			ty_.ty = AType::F64;
 			ty = ty_;
 		}
-		istyperef = true;
-		goto ty_ref;
+		istypeinf = true;
+		goto ty_inf;
 	}
 	auto loc = curtok.loc;
 	error_unexpected(curtok);

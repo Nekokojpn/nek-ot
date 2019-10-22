@@ -112,14 +112,16 @@ std::unique_ptr<AST> Parser::expr_primary() {
 			kind = TypeKind::Pointer;
 		}
 		auto loc = curtok.loc;
-		auto identifier = std::make_unique<ASTIdentifier>(curtok.val, kind);
+		auto name = curtok.val;
+		auto identifier = expr_identifiers();
 		identifier->loc = loc;
-		getNextToken();
+		//getNextToken();
 		if (curtok.ty == TK::tok_lp ||
 			curtok.ty == TK::tok_doll) { //Function call.
-			auto funccall = func_call(identifier->name, curtok.ty == TK::tok_doll ? true : false);
+			auto funccall = func_call(name, curtok.ty == TK::tok_doll ? true : false);
 			return std::move(funccall);
 		}
+		/*
 		else if (curtok.ty == TK::tok_lpb) { //Array
 			std::vector<std::unique_ptr<AST>> expr_v;
 			while (curtok.ty == TK::tok_lpb) { //Array
@@ -139,15 +141,16 @@ std::unique_ptr<AST> Parser::expr_primary() {
 				return ast;
 			}
 			auto loc = curtok.loc;
-			auto ast = std::make_unique<ASTIdentifierArrayElement>(identifier->name, std::move(expr_v), kind);
+			auto ast = std::make_unique<ASTIdentifier>(identifier->name, std::move(expr_v), kind);
 			ast->loc = loc;
 			return std::move(ast);
 		}
+		
 		else if (curtok.ty == TK::tok_dot) { //struct, class etc.
 			auto loc = curtok.loc;
 			auto ast = expr_dot(identifier->name);
 			ast->loc = loc;
-		}
+		}*/
 		else if (curtok.ty == TK::tok_plpl) {
 			auto loc = curtok.loc;
 			// ‚È‚É‚µ‚Ä‚½‚Á‚¯

@@ -18,6 +18,10 @@ static Value* underscore;
 static std::map<std::string, BasicBlock*> jmp_labels;
 static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
 
+//ASTArrayIndexes------>
+std::vector<ArrayRef<Value*>> idx_list;
+//<------
+
 //AST Identifier
 AllocaInst* current_inst;
 bool isPtr = false;
@@ -390,6 +394,11 @@ void Codegen::gen_asm(std::string statement, std::string option) {
 	return;
 }
 
+void Codegen::init_on_inst() {
+	current_inst = nullptr;
+	return;
+}
+
 void Parser::dump() {
 	module->dump();
 	return;
@@ -441,19 +450,60 @@ Type* Codegen::getTypebyType(Type_t& t) {
 	return ty;
 }
 
+Value* ASTIdentifierBase::codegen() {
+	//For a var control E.g, identifier = 10;
+	if (!current_inst) {
+		auto value = namedvalues_local[this->name];
+		if (constantfoldings[this->name])
+			curvar_v.push_back(constantfoldings[this->name]);
+		if (!value) {
+			auto global = namedvalues_global[this->name];
+			if (!global) {
+				auto str = namedvalues_str[this->name];
+				if (!str) {
+					if (underscore)
+						return underscore;
+					error("Unsolved value name", "Unsolved value name --> " + this->name, this->loc);
+				}
+				return str;
+			}
+			current_inst = global;
+			return global;
+		}
+		current_inst = value;
+		return value;
+	}
+	//For a stct control E.g, identifier.item = 10;
+	else {
+		if (!current_inst->getAllocatedType()->isStructTy())
+			error_codegen("Type unkown error.", this->loc);
+		auto stct = userdefined_stcts_elements[userdefined_stcts[current_inst->getAllocatedType()->getStructName()]];
+		if (stct.size() > 0) {
+			//TODO: Type check
+			if (stct.find(this->name) != stct.end()) {
+				auto gep = builder.CreateStructGEP(current_inst, stct[this->name].idx);
+		
+			}
+			else
+				error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
+		}
+		else
+			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " has no member.", this->loc);
+	}
+}
 
-Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
-	auto value = namedvalues_local[name]; 
-	if(constantfoldings[name])
-		curvar_v.push_back(constantfoldings[name]);
+Value* ASTIdentifierArrayElementBase::codegen() {
+	auto value = namedvalues_local[this->name];
+	if (constantfoldings[this->name])
+		curvar_v.push_back(constantfoldings[this->name]);
 	if (!value) {
-		auto global = namedvalues_global[name];
+		auto global = namedvalues_global[this->name];
 		if (!global) {
-			auto str = namedvalues_str[name];
+			auto str = namedvalues_str[this->name];
 			if (!str) {
 				if (underscore)
 					return underscore;
-				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
+				error("Unsolved value name", "Unsolved value name --> " + this->name, this->loc);
 			}
 			return str;
 		}
@@ -461,73 +511,49 @@ Value* ASTIdentifier::codegen() { //global‚Ælocal‚Ì‹æ•Ê‚È‚µ.
 		return global;
 	}
 	current_inst = value;
-	if (this->kind == TypeKind::Pointer) {
-		isPtr = true;
-		if (value->getAllocatedType()->isPointerTy()) {
-			isPtr = false;
+	//Build a idx_list
+	idx_list.clear();
+	this->indexes->codegen();
+	Value* gep;
+	for (int i = idx_list.size() - 1; i >= 0; i--) {
+		if (i == idx_list.size() - 1)
+			gep = builder.CreateInBoundsGEP(current_inst, idx_list[i]);
+		else
+			gep = builder.CreateInBoundsGEP(gep, idx_list[i]);
+	}
+	return gep;
+}
+
+Value* ASTArrayIndexes::codegen() {
+	//Disired identifier already set to current_inst
+	std::vector<Value*> ind;
+	ind.push_back(builder.getInt64(0));
+	ind.push_back(this->lhs->codegen());
+	ArrayRef<Value*> index(ind);
+	idx_list.push_back(index);
+	return nullptr;
+}
+
+Value* ASTIdentifier::codegen() {
+	auto value = this->lhs->codegen();
+	if (!this->rhs) { //Is not a stct.
+		if (this->kind == TypeKind::Pointer) {
+			current_inst = nullptr;
+			return value;
+		}
+		else if (this->kind == TypeKind::Reference) {
+			current_inst = nullptr;
+			return value;
+		}
+		else {
+			current_inst = nullptr;
 			return builder.CreateLoad(value);
 		}
 	}
-	else if (this->kind == TypeKind::Reference)
-		return builder.CreateLoad(value);
-	else
-		isPtr = false;
-	if (!value->getAllocatedType()->isArrayTy())
-		return value;
-	else
-		return value;
-}
-
-Value* ASTIdentifierArrayElement::codegen() {
-	auto value = namedvalues_local[name];
-	Value* val = nullptr;
-	if (!value) {
-		value = namedvalues_global[name];
-		if (!value) {
-			val = namedvalues_str[name];
-			if (!val)
-				error("Unsolved value name", "Unsolved value name --> " + name, this->loc);
-		}
+	else { //Is a stct.
+		auto value2 = this->rhs->codegen();
 	}
-	else {
-		// is array type
-		if (!value->getAllocatedType()->isArrayTy()) {
-			val = builder.CreateLoad(value);
-			value = nullptr;
-		}
-	}
-	current_inst = value;
-	if (this->kind == TypeKind::Pointer)
-		isPtr = true;
-	else
-		isPtr = false;
-	Value* gep;
-	std::vector<Value*> p;
-	if(value)
-		p.push_back(builder.getInt64(0));
-	if (expr_v[0]) current_inst = nullptr;
-	auto index = expr_v[0]->codegen();
-	if (index->getType()->isPointerTy())
-		index = builder.CreateLoad(index);
-	p.push_back(index);
-	ArrayRef<Value*> pp(p);
-	if(value)
-		gep = builder.CreateInBoundsGEP(value, pp);
-	else
-		gep = builder.CreateInBoundsGEP(val, pp);
-	for (int i = 1; i < expr_v.size(); i++) {
-		std::vector<Value*> p;
-		if(value)
-			p.push_back(builder.getInt64(0));
-		index = expr_v[i]->codegen();
-		if (index->getType()->isPointerTy())
-			index = builder.CreateLoad(index);
-		p.push_back(index);
-		ArrayRef<Value*> pp(p);
-		gep = builder.CreateInBoundsGEP(gep, pp);
-	}
-	return gep;
-	
+	return nullptr;
 }
 
 Value* ASTValue::codegen() {
@@ -813,6 +839,7 @@ Value* ASTFunc::codegen() {
 
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
+		Codegen::init_on_inst();
 	}
 	
 	auto retbb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
@@ -876,14 +903,6 @@ Value* ASTCall::codegen() {
 		Codegen::call_writef(argsRef);
 		return nullptr;
 	}
-	else if (name == "asm") {
-		if (this->asm_args.size() == 2)
-			Codegen::gen_asm(this->asm_args[0], this->asm_args[1]);
-		else {
-			add_err_msg("asm syntax: asm(string, string);");
-			error_codegen("Argument does not match!!", this->loc);
-		}
-	}
 	else {
 		auto inst = builder.CreateCall(functions_global[name], argsRef, "");
 		//inst->setCallingConv(CallingConv::X86_StdCall);
@@ -894,6 +913,7 @@ Value* ASTCall::codegen() {
 Value* ASTElse::codegen() {
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
+		Codegen::init_on_inst();
 	}
 	return nullptr;
 }
@@ -914,6 +934,7 @@ Value* ASTIf::codegen() {
 	gotocodegen = false;
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
+		Codegen::init_on_inst();
 	}
 
 
@@ -1008,6 +1029,7 @@ Value* ASTWhile::codegen() {
 	builder.SetInsertPoint(body_block);
 	for (int i = 0; i < body.size(); i++) {
 		body[i]->codegen();
+		Codegen::init_on_inst();
 	}
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
@@ -1034,6 +1056,7 @@ Value* ASTSubst::codegen() {
 			lambdavalue = id->codegen();
 			for (auto ast = body.begin(); ast != body.end(); ast++) {
 				ast->get()->codegen();
+				Codegen::init_on_inst();
 			}
 			lambdavalue = nullptr;
 			return nullptr;
@@ -1072,10 +1095,15 @@ Value* ASTRet::codegen() {
 	return nullptr;
 }
 Value* ASTStruct::codegen() {
-	auto elements = this->elements->make_aref();
+	std::vector<Type*> elem_v(this->elements->elements.size());
+	for (int i = 0; i < this->elements->elements.size(); i++) {
+		elem_v[i] = Codegen::getTypebyType(this->elements->elements[i].second);
+	}
+	ArrayRef<Type*> elements(elem_v);
+	
 	auto stct = StructType::create(context,this->name);
 	stct->setBody(elements);
-	userdefined_stcts[this->name] = stct;//TODO ww
+	userdefined_stcts[this->name] = stct;
 	return nullptr;
 }
 Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
@@ -1122,6 +1150,7 @@ ArrayRef<Type*> ASTStctElements::make_aref(){
 Value* ASTStctElements::codegen() {
 	return nullptr;
 }
+/*
 Value* ASTIdentifierStctElement::codegen() {
 	if(!userdefined_stcts[this->name])
 		error("Compile error:", "Undefined value --> " + this->name, this->loc);
@@ -1134,6 +1163,7 @@ Value* ASTIdentifierStctElement::codegen() {
 	}
 	return builder.CreateLoad(gep);
 }
+*/
 Value* ASTBrk::codegen() {
 	builder.CreateBr(brk_bbs[brk_bbs.size()-1]);
 	return nullptr;

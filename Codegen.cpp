@@ -451,8 +451,23 @@ Type* Codegen::getTypebyType(Type_t& t) {
 }
 
 Value* ASTIdentifierBase::codegen() {
+	//For a stct control E.g, identifier.item = 10;
+	if (current_inst && current_inst->getAllocatedType()->isStructTy()) {
+		auto stct = userdefined_stcts_elements[userdefined_stcts[current_inst->getAllocatedType()->getStructName()]];
+		if (stct.size() > 0) {
+			//TODO: Type check
+			if (stct.find(this->name) != stct.end()) {
+				auto gep = builder.CreateStructGEP(current_inst, stct[this->name].idx);
+
+			}
+			else
+				error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
+		}
+		else
+			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " has no member.", this->loc);
+	}
 	//For a var control E.g, identifier = 10;
-	if (!current_inst) {
+	else {
 		auto value = namedvalues_local[this->name];
 		if (constantfoldings[this->name])
 			curvar_v.push_back(constantfoldings[this->name]);
@@ -472,23 +487,6 @@ Value* ASTIdentifierBase::codegen() {
 		}
 		current_inst = value;
 		return value;
-	}
-	//For a stct control E.g, identifier.item = 10;
-	else {
-		if (!current_inst->getAllocatedType()->isStructTy())
-			error_codegen("Type unkown error.", this->loc);
-		auto stct = userdefined_stcts_elements[userdefined_stcts[current_inst->getAllocatedType()->getStructName()]];
-		if (stct.size() > 0) {
-			//TODO: Type check
-			if (stct.find(this->name) != stct.end()) {
-				auto gep = builder.CreateStructGEP(current_inst, stct[this->name].idx);
-		
-			}
-			else
-				error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
-		}
-		else
-			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " has no member.", this->loc);
 	}
 }
 
@@ -514,7 +512,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	//Build a idx_list
 	idx_list.clear();
 	this->indexes->codegen();
-	Value* gep;
+	Value* gep = nullptr;
 	for (int i = idx_list.size() - 1; i >= 0; i--) {
 		if (i == idx_list.size() - 1)
 			gep = builder.CreateInBoundsGEP(current_inst, idx_list[i]);
@@ -552,6 +550,7 @@ Value* ASTIdentifier::codegen() {
 	}
 	else { //Is a stct.
 		auto value2 = this->rhs->codegen();
+
 	}
 	return nullptr;
 }
@@ -838,8 +837,8 @@ Value* ASTFunc::codegen() {
 		retvalue = builder.CreateAlloca(builder.GetInsertBlock()->getParent()->getReturnType());
 
 	for (int i = 0; i < body.size(); i++) {
-		body[i]->codegen();
 		Codegen::init_on_inst();
+		body[i]->codegen();
 	}
 	
 	auto retbb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
@@ -912,8 +911,8 @@ Value* ASTCall::codegen() {
 
 Value* ASTElse::codegen() {
 	for (int i = 0; i < body.size(); i++) {
-		body[i]->codegen();
 		Codegen::init_on_inst();
+		body[i]->codegen();
 	}
 	return nullptr;
 }
@@ -933,8 +932,8 @@ Value* ASTIf::codegen() {
 	retcodegen = false;
 	gotocodegen = false;
 	for (int i = 0; i < body.size(); i++) {
-		body[i]->codegen();
 		Codegen::init_on_inst();
+		body[i]->codegen();
 	}
 
 
@@ -1028,8 +1027,8 @@ Value* ASTWhile::codegen() {
 	builder.CreateCondBr(astboolop, body_block, cont_block);
 	builder.SetInsertPoint(body_block);
 	for (int i = 0; i < body.size(); i++) {
-		body[i]->codegen();
 		Codegen::init_on_inst();
+		body[i]->codegen();
 	}
 	builder.CreateBr(while_block);
 	builder.SetInsertPoint(cont_block);
@@ -1055,8 +1054,8 @@ Value* ASTSubst::codegen() {
 		else {
 			lambdavalue = id->codegen();
 			for (auto ast = body.begin(); ast != body.end(); ast++) {
-				ast->get()->codegen();
 				Codegen::init_on_inst();
+				ast->get()->codegen();
 			}
 			lambdavalue = nullptr;
 			return nullptr;

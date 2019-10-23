@@ -10,7 +10,7 @@ std::unique_ptr<PassBuilder> pbuilder;
 
 static std::map<std::string, FunctionCallee> functions_global;
 static std::map<std::string, StructType*> userdefined_stcts;
-static std::map<StructType*, std::map<std::string, Stct_t>> userdefined_stcts_elements;
+static std::map<std::string, Stct_t> userdefined_stcts_elements;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
 static std::map<std::string, Value*> namedvalues_str;
@@ -453,14 +453,17 @@ Type* Codegen::getTypebyType(Type_t& t) {
 Value* ASTIdentifierBase::codegen() {
 	//For a stct control E.g, identifier.item = 10;
 	if (current_inst && current_inst->getAllocatedType()->isStructTy()) {
-		auto stct = userdefined_stcts_elements[userdefined_stcts[current_inst->getAllocatedType()->getStructName()]];
+		auto stct = userdefined_stcts_elements[current_inst->getAllocatedType()->getStructName()];
 			//TODO: Type check
-		if (stct.find(this->name) != stct.end()) {
-			auto gep = builder.CreateStructGEP(current_inst, stct[this->name].idx);
-
+		if (stct.elems.find(this->name) != stct.elems.end()) {
+			auto gep = builder.CreateStructGEP(current_inst, stct.elems[this->name].idx);
+			return gep;
 		}
-		else
+		else {
 			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
+			return nullptr;
+		}
+		
 	}
 	//For a var control E.g, identifier = 10;
 	else {
@@ -546,7 +549,19 @@ Value* ASTIdentifier::codegen() {
 	}
 	else { //Is a stct.
 		auto value2 = this->rhs->codegen();
-
+		if (this->kind == TypeKind::Pointer) {
+			current_inst = nullptr;
+			return value2;
+		}
+		else if (this->kind == TypeKind::Reference) {
+			current_inst = nullptr;
+			return value2;
+		}
+		else {
+			current_inst = nullptr;
+			return builder.CreateLoad(value2);
+		}
+		return value2;
 	}
 	return nullptr;
 }
@@ -1090,18 +1105,20 @@ Value* ASTRet::codegen() {
 	return nullptr;
 }
 Value* ASTStruct::codegen() {
-	std::vector<Type*> elem_v(this->elements->elements.size());
-	std::map<std::string, Stct_t> userdefd;
-	for (int i = 0; i < this->elements->elements.size(); i++) {
-		elem_v[i] = Codegen::getTypebyType(this->elements->elements[i].second.elem[this->elements->elements[i].second.elemname_list[i]]);
-		userdefd[this->elements->elements[i].first] = this->elements->elements[i].second;
+	std::vector<Type*> elem_v(this->elements->elements.elem_names.size());
+	Stct_t userdefd;
+	for (int i = 0; i < this->elements->elements.elem_names.size(); i++) {
+		auto cur = this->elements->elements.elems[this->elements->elements.elem_names[i]];
+		elem_v[i] = Codegen::getTypebyType(cur.elem_ty);
+		
 	}
+	userdefd = this->elements->elements;
 	ArrayRef<Type*> elements(elem_v);
 	
 	auto stct = StructType::create(context,this->name);
 	stct->setBody(elements);
 	userdefined_stcts[this->name] = stct;
-	userdefined_stcts_elements[stct] = userdefd;
+	userdefined_stcts_elements[this->elements->elements.stct_name] = userdefd;
 	return nullptr;
 }
 Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
@@ -1138,12 +1155,7 @@ Value* ASTArrElements::codegen() {
 	return nullptr;
 }
 ArrayRef<Type*> ASTStctElements::make_aref(){
-	std::vector<Type*> elem_v(this->elements.size());
-	for (int i = 0; i < this->elements.size(); i++) {
-		elem_v[i] = Codegen::getTypebyType(this->elements[i].second.elem[elements[i].second.elemname_list[i]]);
-	}
-	ArrayRef<Type*> elements(elem_v);
-	return elements;
+	return nullptr;
 }
 Value* ASTStctElements::codegen() {
 	return nullptr;

@@ -212,8 +212,14 @@ typedef struct {
 
 typedef struct {
 	unsigned long long idx;
-	std::map<std::string, Type_t> elem;
-	std::vector<std::string> elemname_list;
+	std::string elem_name;
+	Type_t elem_ty;
+} StctElm_t;
+
+typedef struct {
+	std::string stct_name;
+	std::map<std::string, StctElm_t> elems;
+	std::vector<std::string> elem_names;
 } Stct_t;
 
 typedef struct {
@@ -432,8 +438,8 @@ public:
 };
 class ASTStctElements : public AST {
 public:
-	std::vector<std::pair<std::string, Stct_t>> elements;
-	ASTStctElements(std::vector<std::pair<std::string, Stct_t>> _elements) : elements(_elements) {};
+	Stct_t elements;
+	ASTStctElements(Stct_t _elements) : elements(_elements) {};
 	Value* codegen() override;
 	ArrayRef<Type*> make_aref();
 };

@@ -454,17 +454,13 @@ Value* ASTIdentifierBase::codegen() {
 	//For a stct control E.g, identifier.item = 10;
 	if (current_inst && current_inst->getAllocatedType()->isStructTy()) {
 		auto stct = userdefined_stcts_elements[userdefined_stcts[current_inst->getAllocatedType()->getStructName()]];
-		if (stct.size() > 0) {
 			//TODO: Type check
-			if (stct.find(this->name) != stct.end()) {
-				auto gep = builder.CreateStructGEP(current_inst, stct[this->name].idx);
+		if (stct.find(this->name) != stct.end()) {
+			auto gep = builder.CreateStructGEP(current_inst, stct[this->name].idx);
 
-			}
-			else
-				error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
 		}
 		else
-			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " has no member.", this->loc);
+			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
 	}
 	//For a var control E.g, identifier = 10;
 	else {
@@ -1095,14 +1091,17 @@ Value* ASTRet::codegen() {
 }
 Value* ASTStruct::codegen() {
 	std::vector<Type*> elem_v(this->elements->elements.size());
+	std::map<std::string, Stct_t> userdefd;
 	for (int i = 0; i < this->elements->elements.size(); i++) {
-		elem_v[i] = Codegen::getTypebyType(this->elements->elements[i].second);
+		elem_v[i] = Codegen::getTypebyType(this->elements->elements[i].second.elem[this->elements->elements[i].second.elemname_list[i]]);
+		userdefd[this->elements->elements[i].first] = this->elements->elements[i].second;
 	}
 	ArrayRef<Type*> elements(elem_v);
 	
 	auto stct = StructType::create(context,this->name);
 	stct->setBody(elements);
 	userdefined_stcts[this->name] = stct;
+	userdefined_stcts_elements[stct] = userdefd;
 	return nullptr;
 }
 Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
@@ -1141,7 +1140,7 @@ Value* ASTArrElements::codegen() {
 ArrayRef<Type*> ASTStctElements::make_aref(){
 	std::vector<Type*> elem_v(this->elements.size());
 	for (int i = 0; i < this->elements.size(); i++) {
-		elem_v[i] = Codegen::getTypebyType(elements[i].second);
+		elem_v[i] = Codegen::getTypebyType(this->elements[i].second.elem[elements[i].second.elemname_list[i]]);
 	}
 	ArrayRef<Type*> elements(elem_v);
 	return elements;

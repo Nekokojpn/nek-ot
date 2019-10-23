@@ -204,15 +204,18 @@ typedef struct {
 	Location_t loc;
 } Token_t;
 typedef struct {
-	unsigned long long idx;
-	std::map<std::string, Type*> elem;
-} Stct_t;
-typedef struct {
 	AType ty;
 	bool isArr;
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
 }Type_t;
+
+typedef struct {
+	unsigned long long idx;
+	std::map<std::string, Type_t> elem;
+	std::vector<std::string> elemname_list;
+} Stct_t;
+
 typedef struct {
 	AllocaInst ainst;
 	bool isArr;
@@ -429,8 +432,8 @@ public:
 };
 class ASTStctElements : public AST {
 public:
-	std::vector<std::pair<std::string, Type_t>> elements;
-	ASTStctElements(std::vector<std::pair<std::string, Type_t>> _elements) : elements(_elements) {};
+	std::vector<std::pair<std::string, Stct_t>> elements;
+	ASTStctElements(std::vector<std::pair<std::string, Stct_t>> _elements) : elements(_elements) {};
 	Value* codegen() override;
 	ArrayRef<Type*> make_aref();
 };

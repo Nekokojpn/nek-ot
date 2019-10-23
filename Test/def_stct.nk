@@ -1,9 +1,13 @@
 fn main() -> i32{
+	stct org{
+		i : i32,
+		index : f64
+	};
 	stct mys{
 		i : i32,
-		j : i32
+		j : i32,
+		o : org
 	};
-	i := mys;
-	i.i = 10;
+	str := org;
 	ret 0;
 }

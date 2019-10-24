@@ -338,6 +338,9 @@ void Sys::IO::Input::CreateFunc() {
 	functions_global["input"] = input_func;
 	return;
 }
+void Sys::IO::List::CreateFunc() {
+	
+}
 
 void init_parse() {
 	module = std::make_unique<Module>("top", context);

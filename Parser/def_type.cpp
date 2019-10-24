@@ -2,11 +2,9 @@
 
 std::unique_ptr<ASTType> Parser::def_type(std::unique_ptr<AST> ast_id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
-	bool istypeinf = false;
 	getNextToken();
 	std::string stct_name = curtok.val;
 	auto ty = getTypeFromCurtok();
-ty_inf:
 	if (ty.ty != AType::Nop) {
 		if (ty.isArr) { // for array control
 			std::unique_ptr<ASTArrElements> elem;
@@ -67,11 +65,7 @@ ty_inf:
 					ast->loc = loc;
 					return std::move(ast);
 				}
-				if (!istypeinf && curtok.ty != TK::tok_lp &&
-					curtok.ty != TK::tok_doll)
-					error_unexpected(curtok);
-				if (curtok.ty == TK::tok_doll)doll = true;
-				if(!istypeinf) getNextToken();
+				/*
 				if (curtok.ty == TK::tok_rp) {
 					getNextToken();
 					if (curtok.ty != TK::tok_semi)
@@ -88,6 +82,7 @@ ty_inf:
 					ast->loc = loc;
 					return std::move(ast);
 				}
+				*/
 				auto loc = curtok.loc;
 				auto ast = std::make_unique<ASTType>(ty,
 					std::move(ast_id),
@@ -98,10 +93,6 @@ ty_inf:
 					);
 				ast->name = this->curval;
 				ast->loc = loc;
-				if (!istypeinf && !doll && curtok.ty != TK::tok_rp)
-					error_expected(")", curtok);
-				if (!istypeinf && !doll)
-					getNextToken();
 				if (curtok.ty != TK::tok_semi)
 					error_expected(";", curtok);
 				getNextToken();
@@ -123,23 +114,6 @@ ty_inf:
 				return std::move(ast);
 			}
 		}
-	}
-	else { //Type inference
-		Type_t ty_;
-		if (curtok.ty == TK::tok_num_int) {
-			ty_.isArr = false;
-			ty_.kind = TypeKind::Value;
-			ty_.ty = AType::I32;
-			ty = ty_;
-		}
-		else if (curtok.ty == TK::tok_num_double) {
-			ty_.isArr = false;
-			ty_.kind = TypeKind::Value;
-			ty_.ty = AType::F64;
-			ty = ty_;
-		}
-		istypeinf = true;
-		goto ty_inf;
 	}
 	auto loc = curtok.loc;
 	error_unexpected(curtok);

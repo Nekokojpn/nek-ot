@@ -186,6 +186,10 @@ public:
 			static void CreateFunc();
 		};
 	};
+	class List {
+	public:
+		static void CreateFunc();
+	};
 };
 
 enum class AType;

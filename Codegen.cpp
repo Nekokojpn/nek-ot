@@ -1065,15 +1065,6 @@ Value* ASTSubst::codegen() {
 		//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
 		return builder.CreateStore(val, ptr_);
 	}
-	else {
-		lambdavalue = id->codegen();
-		for (auto ast = body.begin(); ast != body.end(); ast++) {
-			Codegen::init_on_inst();
-			ast->get()->codegen();
-		}
-		lambdavalue = nullptr;
-		return nullptr;
-	}
 	
 }
 // This function prepares to generate a return IR. 
@@ -1188,9 +1179,15 @@ Value* ASTGoto::codegen() {
 	return nullptr;
 }
 Value* ASTTypeinf::codegen() {
+	std::vector<Value*> vs;
 	for (int i = 0; i < this->exprs.size(); i++) {
-		auto v = exprs[i]->codegen();
+		vs.push_back(exprs[i]->codegen());
 	}
-	‚±‚±‚©‚ç
+	if (exprs.size() == 1)
+		return vs[0];
+	else {
+		ArrayRef<Value*> vv(vs);
+		return builder.CreateAlloca(ArrayType::get(vs[0]->getType(), this->exprs.size()));
+	}
 	return nullptr;
 }

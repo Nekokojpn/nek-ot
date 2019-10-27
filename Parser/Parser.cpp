@@ -40,6 +40,7 @@ Type_t Parser::getTypeFromCurtok() {
 	std::vector<unsigned long long> arrsize_;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (ty == AType::Nop)goto proc;
 =======
 =======
@@ -69,6 +70,9 @@ Type_t Parser::getTypeFromCurtok() {
 >>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 =======
 >>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
+=======
+	if (ty == AType::Nop)goto proc;
+>>>>>>> parent of e62ca64... Impl simple type inference
 	getNextToken();
 	while (curtok.ty == TK::tok_lpb) {
 		isArr = true;

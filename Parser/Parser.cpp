@@ -26,7 +26,10 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 =======
 >>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 //get Arg_t from curtok.
@@ -36,8 +39,11 @@ Type_t Parser::getTypeFromCurtok() {
 	auto kind = TypeKind::Value;
 	std::vector<unsigned long long> arrsize_;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (ty == AType::Nop)goto proc;
 =======
+=======
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 	//Typeinference
 	if (ty == AType::Nop) {
 		switch (curtok.ty)
@@ -59,6 +65,9 @@ Type_t Parser::getTypeFromCurtok() {
 		}
 		goto proc;
 	}
+<<<<<<< HEAD
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
+=======
 >>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 	getNextToken();
 	while (curtok.ty == TK::tok_lpb) {
@@ -95,7 +104,10 @@ proc:
 	return arg;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> parent of e62ca64... Impl simple type inference
+=======
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 =======
 >>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 

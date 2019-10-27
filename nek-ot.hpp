@@ -316,7 +316,8 @@ enum class AType { //AllType
 	Struct,
 	Void,
 	Array,
-	List
+	List,
+	Ident
 };
 enum class TypeKind {
 	Value,

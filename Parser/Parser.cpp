@@ -323,12 +323,16 @@ std::unique_ptr<ASTCall> Parser::func_call(std::string func_name, bool isdoll) {
 }
 std::unique_ptr<ASTRet> Parser::def_ret() {
 	getNextToken();
-	auto rty = getTypeFromCurtok();
-	std::unique_ptr<ASTRet> ast;
-	if (curtok.ty == TK::tok_semi) {//void
+	Type_t rty;
+	if (!curtokIs(TK::tok_semi))
+		rty = getTypeFromCurtok();
+	else {
+		rty.isArr = false;
+		rty.kind = TypeKind::Value;
 		rty.ty = AType::Void;
 	}
-	else {
+	std::unique_ptr<ASTRet> ast;
+	if(!curtokIs(TK::tok_semi)) {
 		auto loc = curtok.loc;
 		ast = std::make_unique<ASTRet>(rty);
 		ast->loc = loc;

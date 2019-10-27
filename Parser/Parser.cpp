@@ -24,6 +24,50 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 		if (itr->first == stct_name)return true;
 	return false;
 }
+<<<<<<< HEAD
+=======
+//get Arg_t from curtok.
+Type_t Parser::getTypeFromCurtok() {
+	auto ty = getATypeByCurtok();
+	auto isArr = false;
+	auto kind = TypeKind::Value;
+	std::vector<unsigned long long> arrsize_;
+	if (ty == AType::Nop)goto proc;
+	getNextToken();
+	while (curtok.ty == TK::tok_lpb) {
+		isArr = true;
+		getNextToken();
+		if (curtok.ty == TK::tok_num_int) {
+			if (std::atoll(curtok.val.c_str()) > 0)
+				arrsize_.push_back(std::atoll(curtok.val.c_str()));
+			else {
+				add_err_msg("Array size must be higher than 0.");
+				error_unexpected(curtok);
+			}
+			getNextToken();
+		}
+		if (curtok.ty != TK::tok_rpb) {
+			error_unexpected(curtok);
+		}
+		getNextToken();
+	}
+	if (curtok.ty == TK::tok_star) {
+		getNextToken();
+		kind = TypeKind::Pointer;
+	}
+	else if (curtok.ty == TK::tok_amp) {
+		getNextToken();
+		kind = TypeKind::Reference;
+	}
+proc:
+	Type_t arg;
+	arg.isArr = isArr;
+	arg.ty = ty;
+	arg.kind = kind;
+	arg.arrsize = std::move(arrsize_);
+	return arg;
+}
+>>>>>>> parent of e62ca64... Impl simple type inference
 
 
 

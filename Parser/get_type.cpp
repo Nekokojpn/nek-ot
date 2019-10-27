@@ -94,9 +94,7 @@ AType Parser::getATypeByCurtok_inference() {
 		return AType::I64;
 	case TK::tok_num_long_long:
 		return AType::I64;
-	case TK::tok_identifier:
-		return AType::Ident;
-	case TK::tok_lb: //{0,1,2}
+	case TK::tok_lp: //{0,1,2}
 		return AType::Array;
 		break;
 	default:

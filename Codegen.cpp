@@ -338,7 +338,7 @@ void Sys::IO::Input::CreateFunc() {
 	functions_global["input"] = input_func;
 	return;
 }
-void Sys::List::CreateFunc() {
+void Sys::IO::List::CreateFunc() {
 	
 }
 
@@ -1054,27 +1054,38 @@ Value* ASTAction::codegen() {
 }
 
 Value* ASTSubst::codegen() {
-
-	if (this->typeinf) {
-		auto val = typeinf->codegen();
+	if (this->id) {
+		if (this->expr) {
+			auto val = expr->codegen();
+			if (val->getType()->isPointerTy())
+				val = builder.CreateLoad(val);
+			auto ptr = id->codegen();
+			Value* ptr_ = ptr;
+			//if (!ptr->getAllocatedType()->isPointerTy())
+			//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
+			return builder.CreateStore(val, ptr_);
+		}
+		else {
+			lambdavalue = id->codegen();
+			for (auto ast = body.begin(); ast != body.end(); ast++) {
+				Codegen::init_on_inst();
+				ast->get()->codegen();
+			}
+			lambdavalue = nullptr;
+			return nullptr;
+		}
+	}
+	/*   For array substination control ex. a[0] = 0;
+	else if (id2) {
+		auto val = this->expr->codegen();
+		auto ptr = id2->codegen();
 		if (val->getType()->isPointerTy())
 			val = builder.CreateLoad(val);
-		auto ptr = id->codegen();
-		Value* ptr_ = ptr;
-		//if (!ptr->getAllocatedType()->isPointerTy())
-		//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
-		return builder.CreateStore(val, ptr_);
+		return builder.CreateStore(val, ptr);
 	}
-	else {
-		lambdavalue = id->codegen();
-		for (auto ast = body.begin(); ast != body.end(); ast++) {
-			Codegen::init_on_inst();
-			ast->get()->codegen();
-		}
-		lambdavalue = nullptr;
+	else
 		return nullptr;
-	}
-	
+		*/
 }
 // This function prepares to generate a return IR. 
 Value* ASTRet::codegen() {
@@ -1185,12 +1196,5 @@ Value* ASTLabel::codegen() {
 Value* ASTGoto::codegen() {
 	gotocodegen = true;
 	jmp_bbs[this->label].push_back(builder.GetInsertBlock());
-	return nullptr;
-}
-Value* ASTTypeinf::codegen() {
-	for (int i = 0; i < this->exprs.size(); i++) {
-		auto v = exprs[i]->codegen();
-	}
-	‚±‚±‚©‚ç
 	return nullptr;
 }

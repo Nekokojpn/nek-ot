@@ -141,13 +141,6 @@ enum class TK {
 	tok_unknown
 
 };
-
-class AST;
-class ASTSubst;
-class ASTFunc;
-class ASTStctElements;
-class ASTArrElements;
-
 class Test {
 public:
 	static void CreateFunc();
@@ -219,12 +212,7 @@ typedef struct {
 	bool isArr;
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
-} Type_t;
-
-typedef struct {
-	Type_t ty;
-	std::vector<std::unique_ptr<AST>> expr;
-} Typeinf_t;
+}Type_t;
 
 typedef struct {
 	unsigned long long idx;
@@ -243,7 +231,7 @@ typedef struct {
 	bool isArr;
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
-} Alloca_t;
+}Alloca_t;
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);
@@ -318,10 +306,14 @@ enum class AType { //AllType
 	Char,
 	String,
 	Struct,
+<<<<<<< HEAD
 	Void,
 	Array,
 	List,
 	Ident
+=======
+	Void
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 };
 enum class TypeKind {
 	Value,
@@ -345,6 +337,11 @@ public:
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }
 };
+
+class ASTSubst;
+class ASTFunc;
+class ASTStctElements;
+class ASTArrElements;
 
 class AST {
 public:
@@ -373,6 +370,23 @@ public:
 	ASTIdentifier(std::unique_ptr<AST> _lhs, std::unique_ptr<AST> _rhs, TypeKind _kind) : lhs(std::move(_lhs)), rhs(std::move(_rhs)), kind(_kind) {};
 	Value* codegen() override;
 };
+/*
+class ASTIdentifierArrayElement : public AST {
+public:
+	std::unique_ptr<AST> id_base;
+	TypeKind kind;
+	std::vector<std::unique_ptr<AST>> expr_v;
+	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v, TypeKind _kind) : name(_name), expr_v(std::move(_expr_v)), kind(_kind) {};
+	Value* codegen();
+};
+class ASTIdentifierStctElement : public AST {
+public:
+	std::string name;
+	std::vector<std::string> elem_names;
+	ASTIdentifierStctElement(std::string _name, std::vector<std::string> _elem_names) :name(_name), elem_names(_elem_names) {};
+	Value* codegen() override;
+};
+*/
 class ASTValue : public AST {
 public:
 	long long value;
@@ -397,13 +411,6 @@ public:
 	Op op;
 	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
 	Value* codegen() override;
-};
-
-class ASTTypeinf : public AST {
-	Typeinf_t t;
-	std::vector<std::unique_ptr<AST>> exprs;
-	ASTTypeinf(Typeinf_t& _t, std::vector<std::unique_ptr<AST>> _exprs) : t(_t), exprs(std::move(_exprs)) {};
-	Value* codegen();
 };
 
 
@@ -566,13 +573,10 @@ public:
 class ASTSubst : public AST {
 public:
 	std::unique_ptr<AST> id;
-	std::unique_ptr<ASTTypeinf> typeinf;
-	/*
 	std::unique_ptr<AST> expr;
 	std::vector<std::unique_ptr<AST>> body;
-	*/
-	ASTSubst(std::unique_ptr<AST> _id, std::unique_ptr<ASTTypeinf> _typeinf) :id(std::move(_id)), typeinf(std::move(_typeinf)) {};
-	//ASTSubst(std::unique_ptr<AST> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
+	ASTSubst(std::unique_ptr<AST> _id, std::unique_ptr<AST> _expr) :id(std::move(_id)), expr(std::move(_expr)) {};
+	ASTSubst(std::unique_ptr<AST> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
 	ASTSubst(std::unique_ptr<AST> _id) : id(std::move(_id)) {};
 	Value* codegen() override;
 };
@@ -618,8 +622,6 @@ class Parser {
 	std::unique_ptr<ASTSubst> subst_expr(std::unique_ptr<AST>);
 	std::unique_ptr<AST> expr_var();
 	std::unique_ptr<AST> expr_array_indexes(); //return an ASTArrayIndex;
-	std::unique_ptr<AST> expr_identifiers(); //Gen ASTIdentifier
-	std::unique_ptr<ASTTypeinf> expr_typeinf();
 
 	std::unique_ptr<ASTType> def_type(std::unique_ptr<AST>);
 	std::unique_ptr<ASTString> def_string();
@@ -635,7 +637,7 @@ class Parser {
 	std::unique_ptr<ASTFor> for_statement();
 	std::unique_ptr<ASTWhile> while_statement();
 
-
+	std::unique_ptr<AST> expr_identifiers(); //Gen ASTIdentifier
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:
@@ -646,7 +648,6 @@ public:
 	void setOpt(bool b);
 	bool getOpt();
 	AType getATypeByCurtok();
-	AType getATypeByCurtok_inference();
 	Type_t getTypeFromCurtok();
 	void add_userdefined_stct(Token_t&);
 	bool find_userdefined_stct(std::string);

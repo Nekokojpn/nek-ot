@@ -25,14 +25,41 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 	return false;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 //get Arg_t from curtok.
 Type_t Parser::getTypeFromCurtok() {
 	auto ty = getATypeByCurtok();
 	auto isArr = false;
 	auto kind = TypeKind::Value;
 	std::vector<unsigned long long> arrsize_;
+<<<<<<< HEAD
 	if (ty == AType::Nop)goto proc;
+=======
+	//Typeinference
+	if (ty == AType::Nop) {
+		switch (curtok.ty)
+		{
+		case TK::tok_num_int:
+			ty = AType::I32;
+			break;
+		case TK::tok_num_double:
+			ty = AType::F64;
+			break;
+		case TK::tok_num_long:
+			ty = AType::I64;
+			break;
+		case TK::tok_num_long_long:
+			ty = AType::I64;
+			break;
+		default:
+			break;
+		}
+		goto proc;
+	}
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 	getNextToken();
 	while (curtok.ty == TK::tok_lpb) {
 		isArr = true;
@@ -67,8 +94,43 @@ proc:
 	arg.arrsize = std::move(arrsize_);
 	return arg;
 }
+<<<<<<< HEAD
 >>>>>>> parent of e62ca64... Impl simple type inference
+=======
+>>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 
+//get AType from curtok.
+AType Parser::getATypeByCurtok() {
+	if (curtok.ty == TK::tok_i16) {
+		return AType::I16;
+	}
+	else if (curtok.ty == TK::tok_i32) {
+		return AType::I32;
+	}
+	else if (curtok.ty == TK::tok_i64) {
+		return AType::I64;
+	}
+	else if (curtok.ty == TK::tok_i128) {
+		return AType::I128;
+	}
+	else if (curtok.ty == TK::tok_char) {
+		return AType::Char;
+	}
+	else if (curtok.ty == TK::tok_f32) {
+		return AType::F32;
+	}
+	else if (curtok.ty == TK::tok_f64) {
+		return AType::F64;
+	}
+	else if (curtok.ty == TK::tok_void) {
+		return AType::Void;
+	}
+	else {
+		if (find_userdefined_stct(curtok.val))
+			return AType::Struct;
+		return AType::Nop;
+	}
+}
 
 
 

@@ -306,18 +306,10 @@ enum class AType { //AllType
 	Char,
 	String,
 	Struct,
-<<<<<<< HEAD
-<<<<<<< HEAD
 	Void,
 	Array,
 	List,
 	Ident
-=======
-	Void
->>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
-=======
-	Void
->>>>>>> parent of ef5354f... Prepare for implement type inference of array and list.
 };
 enum class TypeKind {
 	Value,

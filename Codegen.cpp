@@ -338,7 +338,7 @@ void Sys::IO::Input::CreateFunc() {
 	functions_global["input"] = input_func;
 	return;
 }
-void Sys::IO::List::CreateFunc() {
+void Sys::List::CreateFunc() {
 	
 }
 

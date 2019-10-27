@@ -5,7 +5,7 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(std::unique_ptr<AST> ast_id) {
 	if (curtok.ty == TK::tok_equal) {
 		getNextToken();
 		auto loc = curtok.loc;
-		auto ast = std::make_unique<ASTSubst>(std::move(ast_id), std::move(expr_typeinf()));
+		auto ast = std::make_unique<ASTSubst>(std::move(ast_id), std::move(expr()));
 		ast->loc = loc;
 		if (curtok.ty != TK::tok_semi)
 			error_unexpected(curtok);

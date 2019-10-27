@@ -221,6 +221,10 @@ typedef struct {
 	TypeKind kind;
 } Type_t;
 
+typedef struct {
+	Type_t ty;
+	std::vector<std::unique_ptr<AST>> expr;
+} Typeinf_t;
 
 typedef struct {
 	unsigned long long idx;
@@ -396,11 +400,10 @@ public:
 };
 
 class ASTTypeinf : public AST {
-public:
-	Type_t t;
+	Typeinf_t t;
 	std::vector<std::unique_ptr<AST>> exprs;
-	ASTTypeinf(Type_t& _t, std::vector<std::unique_ptr<AST>> _exprs) : t(_t), exprs(std::move(_exprs)) {};
-	Value* codegen() override;
+	ASTTypeinf(Typeinf_t& _t, std::vector<std::unique_ptr<AST>> _exprs) : t(_t), exprs(std::move(_exprs)) {};
+	Value* codegen();
 };
 
 

@@ -86,7 +86,8 @@ std::unique_ptr<ASTType> Parser::def_type(std::unique_ptr<AST> ast_id) {
 				auto loc = curtok.loc;
 				auto ast = std::make_unique<ASTType>(ty,
 					std::move(ast_id),
-					std::make_unique<ASTSubst>(std::move(ast_id), std::move(expr_typeinf())),
+					std::make_unique<ASTSubst>(std::move(ast_id),
+					std::move(expr())),
 					stct_name,
 					cdgen->IsGlobal()
 					);

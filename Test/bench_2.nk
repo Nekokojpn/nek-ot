@@ -1,6 +1,6 @@
 fn main(){
-	MAX := 447LL;
-	DN := 4LL;
+	MAX := i64$447LL;
+	DN := i64$4LL;
 	x := i64;
 	y := i64;
 	sx := i64;
@@ -14,7 +14,7 @@ fn main(){
 
 	n := i32;
 	sn := i32;
-	h := 0;
+	h := i32$0;
 	y = 0LL;
 	while(y < 384){
 		x = 0LL;

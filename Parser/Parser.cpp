@@ -290,7 +290,7 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 		error("Expected", "Expected --> (", curtok);
 	if (curtok.ty == TK::tok_doll) doll = true;
 	getNextToken();
-	auto boolast = bool_expr();
+	auto boolast = expr();
 	if (!doll && curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
 	if (!doll)getNextToken();
@@ -346,15 +346,7 @@ std::unique_ptr<ASTFor> Parser::for_statement() {
 
 std::unique_ptr<ASTWhile> Parser::while_statement() {
 	getNextToken();
-	bool doll = false;
-	if (curtok.ty != TK::tok_lp && curtok.ty != TK::tok_doll)
-		error("Expected", "Expected --> (", curtok);
-	if (curtok.ty == TK::tok_doll) doll = true;
-	getNextToken();
-	auto boolast = bool_expr();
-	if (!doll && curtok.ty != TK::tok_rp)
-		error("Expected", "Expected --> )", curtok);
-	if(!doll)getNextToken();
+	auto boolast = expr();
 	std::unique_ptr<ASTWhile> ast;
 	if (curtok.ty == TK::tok_lb) {
 		auto loc = curtok.loc;

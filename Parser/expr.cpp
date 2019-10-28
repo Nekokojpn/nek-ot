@@ -2,9 +2,62 @@
 
 std::unique_ptr<AST> Parser::expr() {
 
-	std::unique_ptr<AST> ast = expr_add();
+	std::unique_ptr<AST> ast = bool_expr();
 	return ast;
 }
+
+std::unique_ptr<AST> Parser::bool_expr() {
+	auto lhs = bool_expr_op();
+	while (true) {
+		Op op;
+		if (consume(TK::tok_ampamp)) {
+			op = Op::Ampamp;
+		}
+		else if (consume(TK::tok_pipepipe)) {
+			op = Op::Pipepipe;
+		}
+		else break;
+		auto rhs = bool_expr();
+		auto loc = curtok.loc;
+		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
+		lhs->loc = loc;
+	}
+	return std::move(lhs);
+}
+
+std::unique_ptr<AST> Parser::bool_expr_op() {
+	auto lhs = expr_add();
+	while (true) {
+		Op op;
+		if (consume(TK::tok_lt)) {
+			op = Op::LThan;
+		}
+		else if (consume(TK::tok_lteq)) {
+			op = Op::LThanEqual;
+		}
+		else if (consume(TK::tok_rt)) {
+			op = Op::RThan;
+		}
+		else if (consume(TK::tok_rteq)) {
+			op = Op::RThanEqual;
+		}
+		else if (consume(TK::tok_eqeq)) {
+			op = Op::EqualEqual;
+		}
+		else if (consume(TK::tok_emeq)) {
+			op = Op::NotEqual;
+		}
+		else {
+			break;
+		}
+		auto rhs = expr_add();
+		auto loc = curtok.loc;
+		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
+		lhs->loc = loc;
+	}
+	return std::move(lhs);
+}
+
 std::unique_ptr<AST> Parser::expr_add() {
 	auto lhs = expr_mul();
 	while (true) {
@@ -115,7 +168,7 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		auto name = curtok.val;
 		auto identifier = expr_identifiers();
 		identifier->loc = loc;
-		//getNextToken();
+		//getNextToken(); 
 		if (curtok.ty == TK::tok_lp ||
 			curtok.ty == TK::tok_doll) { //Function call.
 			auto funccall = func_call(name, curtok.ty == TK::tok_doll ? true : false);
@@ -174,13 +227,6 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		add_err_msg("Have you forgotten ) ?");
 		add_err_msg("Hint: You specified nested expression must start with ( and end with ).");
 		error_expected(")", curtok);
-	}
-	else if (curtok.ty == TK::tok_doll) {
-		getNextToken();
-		auto loc = curtok.loc;
-		auto ast = expr();
-		ast->loc = loc;
-		return std::move(ast);
 	}
 	else if (curtok.ty == TK::tok_minus) {
 		getNextToken();

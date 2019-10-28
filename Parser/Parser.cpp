@@ -24,35 +24,11 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 		if (itr->first == stct_name)return true;
 	return false;
 }
-//get Arg_t from curtok.
 Type_t Parser::getTypeFromCurtok() {
 	auto ty = getATypeByCurtok();
 	auto isArr = false;
 	auto kind = TypeKind::Value;
 	std::vector<unsigned long long> arrsize_;
-
-	if (ty == AType::Nop)goto proc;
-	//Typeinference
-	if (ty == AType::Nop) {
-		switch (curtok.ty)
-		{
-		case TK::tok_num_int:
-			ty = AType::I32;
-			break;
-		case TK::tok_num_double:
-			ty = AType::F64;
-			break;
-		case TK::tok_num_long:
-			ty = AType::I64;
-			break;
-		case TK::tok_num_long_long:
-			ty = AType::I64;
-			break;
-		default:
-			break;
-		}
-		goto proc;
-	}
 	if (ty == AType::Nop)goto proc;
 	getNextToken();
 	while (curtok.ty == TK::tok_lpb) {

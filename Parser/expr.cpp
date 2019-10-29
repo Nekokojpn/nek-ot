@@ -160,6 +160,13 @@ label1:
 		getNextToken(); //eat num
 		return std::move(value);
 	}
+	//Array
+	else if (curtok.ty == TK::tok_lb) {
+		auto loc = curtok.loc;
+		auto elems = expr_arr();
+		elems->loc = loc;
+		return std::move(elems);
+	}
 	else if (curtok.ty == TK::tok_dq) {
 		auto loc = curtok.loc;
 		auto ast = std::make_unique<ASTString>("", std::move(expr_str()));

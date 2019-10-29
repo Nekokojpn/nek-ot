@@ -448,6 +448,8 @@ Type* Codegen::getTypebyAType(AType& ty) {
 }
 Type* Codegen::getTypebyType(Type_t& t) {
 	auto ty = getTypebyAType(t.ty);
+	if (t.isArr)
+		ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
 	if (t.kind == TypeKind::Pointer)
 		ty = ty->getPointerTo();
 	return ty;
@@ -755,7 +757,7 @@ Value* ASTType::codegen() {
 	auto type = Codegen::getTypebyType(this->ty);
 	if (this->ty.ty != AType::Nop) {
 fr:
-		if (!this->ty.isArr) {
+		if (!type->isArrayTy()) {
 			AllocaInst* allocainst;
 			//If local variable
 			if (!this->isGlobal) {

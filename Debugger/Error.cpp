@@ -44,9 +44,12 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	}
 	Console::SetConsoleTextWhite();
 	for (int i = 0; i < column - 1; i++)
-		std::cerr << " ";
+		if (source[line][i] == '\t')
+			std::cerr << "    ";
+		else
+			std::cerr << " ";
 	Console::SetConsoleTextRed();
-	std::cerr << "     ^" << std::endl;
+	std::cerr << "    ^" << std::endl;
 	Console::SetConsoleTextBlue();
 	printf("%5d|", line + ll++);
 	Console::SetConsoleTextRed();

@@ -752,52 +752,59 @@ Value* ASTBinOp::codegen() {
 }
 
 Value* ASTType::codegen() {
-	if (!this->ty.isArr) {
-		AllocaInst* allocainst;
-		//If local variable
-		if (!this->isGlobal) {
-			if (this->ty.ty != AType::Struct)
-				allocainst = builder.CreateAlloca(Codegen::getTypebyType(this->ty));
-			else
-				allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
-			namedvalues_local[this->name] = allocainst;
+	auto type = Codegen::getTypebyType(this->ty);
+	if (this->ty.ty != AType::Nop) {
+fr:
+		if (!this->ty.isArr) {
+			AllocaInst* allocainst;
+			//If local variable
+			if (!this->isGlobal) {
+				if (this->ty.ty != AType::Struct)
+					allocainst = builder.CreateAlloca(type);
+				else
+					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
+				namedvalues_local[this->name] = allocainst;
+			}
+			//If global variable
+			else {
+				if (this->ty.ty != AType::Struct)
+					allocainst = builder.CreateAlloca(type);
+				else
+					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
+				namedvalues_local[this->name] = allocainst;
+			}
+			if (this->expr) {
+				auto value = this->expr->codegen();
+				if (!value)
+					return nullptr;
+				return value;
+			}
+			return allocainst;
 		}
-		//If global variable
 		else {
-			if (this->ty.ty != AType::Struct)
-				allocainst = builder.CreateAlloca(Codegen::getTypebyType(this->ty));
+			ArrayType* ty = ArrayType::get(type, this->ty.arrsize[this->ty.arrsize.size() - 1]);
+			long long cnt = 1;
+			while (cnt < this->ty.arrsize.size()) {
+				ty = ArrayType::get(ty, this->ty.arrsize[this->ty.arrsize.size() - cnt]);
+				cnt++;
+			}
+			auto allocainst = builder.CreateAlloca(ty);
+
+			if (name != "_")
+				namedvalues_local[name] = allocainst;
 			else
-				allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
-			namedvalues_local[this->name] = allocainst;
+				underscore = allocainst;
+
+			if (this->elements) {
+				this->elements->subst(allocainst, this->ty.arrsize);
+			}
+			return allocainst;
 		}
-		if (this->expr) {
-			auto value = this->expr->codegen();
-			//constantfoldings[this->name] = curvar_v[0];
-			//curvar_v.clear();
-			if (!value)
-				return nullptr;
-			return value;
-		}
-		return allocainst;
 	}
 	else {
-		ArrayType* ty = ArrayType::get(Codegen::getTypebyType(this->ty), this->ty.arrsize[this->ty.arrsize.size() - 1]);
-		long long cnt = 1;
-		while (cnt < this->ty.arrsize.size()) {
-			ty = ArrayType::get(ty, this->ty.arrsize[this->ty.arrsize.size() - cnt]);
-			cnt++;
-		}
-		auto allocainst = builder.CreateAlloca(ty);
-		
-		if (name != "_")
-			namedvalues_local[name] = allocainst;
-		else
-			underscore = allocainst;
-
-		if (this->elements) {
-			this->elements->subst(allocainst, this->ty.arrsize);
-		}
-		return allocainst;
+		auto v = this->expr->expr->codegen();
+		type = v->getType();
+		goto fr;
 	}
 }
 
@@ -1061,8 +1068,6 @@ Value* ASTSubst::codegen() {
 				val = builder.CreateLoad(val);
 			auto ptr = id->codegen();
 			Value* ptr_ = ptr;
-			//if (!ptr->getAllocatedType()->isPointerTy())
-			//	ptr_ = builder.CreatePointerCast(ptr, ptr->getAllocatedType()->getPointerElementType());
 			return builder.CreateStore(val, ptr_);
 		}
 		else {
@@ -1075,17 +1080,6 @@ Value* ASTSubst::codegen() {
 			return nullptr;
 		}
 	}
-	/*   For array substination control ex. a[0] = 0;
-	else if (id2) {
-		auto val = this->expr->codegen();
-		auto ptr = id2->codegen();
-		if (val->getType()->isPointerTy())
-			val = builder.CreateLoad(val);
-		return builder.CreateStore(val, ptr);
-	}
-	else
-		return nullptr;
-		*/
 }
 // This function prepares to generate a return IR. 
 Value* ASTRet::codegen() {
@@ -1163,20 +1157,7 @@ ArrayRef<Type*> ASTStctElements::make_aref(){
 Value* ASTStctElements::codegen() {
 	return nullptr;
 }
-/*
-Value* ASTIdentifierStctElement::codegen() {
-	if(!userdefined_stcts[this->name])
-		error("Compile error:", "Undefined value --> " + this->name, this->loc);
-	if(!namedvalues_local[this->name])
-		error("Compile error:", "Undefined stct --> " + this->name, this->loc);
-	auto cur = userdefined_stcts_elements[userdefined_stcts[this->name]];
-	auto gep = builder.CreateStructGEP(namedvalues_local[this->name], cur[elem_names[0]].idx);
-	for (int i = 1; i < this->elem_names.size(); i++) {
-		gep = builder.CreateStructGEP(gep, cur[elem_names[i]].idx);
-	}
-	return builder.CreateLoad(gep);
-}
-*/
+
 Value* ASTBrk::codegen() {
 	builder.CreateBr(brk_bbs[brk_bbs.size()-1]);
 	return nullptr;

@@ -67,11 +67,7 @@ ty_inf:
 					ast->loc = loc;
 					return std::move(ast);
 				}
-				if (!istypeinf && curtok.ty != TK::tok_lp &&
-					curtok.ty != TK::tok_doll)
-					error_unexpected(curtok);
-				if (curtok.ty == TK::tok_doll)doll = true;
-				if(!istypeinf) getNextToken();
+				expr_ = std::make_unique<ASTSubst>()
 				if (curtok.ty == TK::tok_rp) {
 					getNextToken();
 					if (curtok.ty != TK::tok_semi)

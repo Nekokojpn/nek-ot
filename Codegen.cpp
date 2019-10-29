@@ -350,10 +350,6 @@ void init_parse() {
 	pmbuilder->populateFunctionPassManager(*fpm);
 	fpm->doInitialization();
 }
-AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) {
-	IRBuilder<> tmpB(&function->getEntryBlock(), function->getEntryBlock().begin());
-	return tmpB.CreateAlloca(Type::getInt32Ty(context), nullptr, name.c_str());
-}
 
 void Codegen::call_writefln(llvm::ArrayRef<llvm::Value*> args)
 {

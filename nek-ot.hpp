@@ -515,11 +515,9 @@ public:
 };
 class ASTFor : public AST {
 public:
-	std::vector<std::unique_ptr<AST>> start;
-	std::unique_ptr<AST> proto; //BoolOp
+	std::unique_ptr<ASTArrElements> proto;
 	std::vector<std::unique_ptr<AST>> body;
-	std::vector<std::unique_ptr<AST>> end;
-	//ASTFor(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body, std::unique_ptr<ASTSubst> _end) : proto(std::move(_proto)), body(std::move(_body)), end(std::move(_end)) {};
+	ASTFor(std::unique_ptr<ASTArrElements> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
 };
 class ASTWhile : public AST {
@@ -582,6 +580,7 @@ class Parser {
 	std::vector<Token_t> tokens;
 
 	bool curtokIs(TK);
+	bool nexttokIs(TK);
 
 	std::unique_ptr<AST> expr();
 	std::unique_ptr<AST> expr_add();

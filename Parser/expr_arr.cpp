@@ -22,7 +22,6 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		if (curtok.ty != TK::tok_identifier)
 			error_unexpected(curtok);
 		auto identifier = expr_identifiers(); //TODO FIx
-		getNextToken();
 		if (curtok.ty != TK::tok_rarrow)
 			error_expected("<-", curtok);
 		auto loc = curtok.loc;

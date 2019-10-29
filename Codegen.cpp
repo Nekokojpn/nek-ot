@@ -448,8 +448,10 @@ Type* Codegen::getTypebyAType(AType& ty) {
 }
 Type* Codegen::getTypebyType(Type_t& t) {
 	auto ty = getTypebyAType(t.ty);
+	/*
 	if (t.isArr)
 		ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
+		*/
 	if (t.kind == TypeKind::Pointer)
 		ty = ty->getPointerTo();
 	return ty;
@@ -1027,6 +1029,22 @@ Value* ASTIf::codegen() {
 	}
 }
 Value* ASTFor::codegen() {
+	/*
+	std::make_unique<ASTType>()
+	ArrayType* ty = ArrayType::get(Codegen::getTypebyType(this->proto->arr_type->ty), this->proto->elements.size()-1);
+
+	auto allocainst = builder.CreateAlloca(ty);
+
+	if (this->proto- != "_")
+		namedvalues_local[name] = allocainst;
+	else
+		underscore = allocainst;
+
+	if (this->elements) {
+		this->elements->subst(allocainst, this->ty.arrsize);
+	}
+	return allocainst;
+	*/
 	return nullptr;
 }
 

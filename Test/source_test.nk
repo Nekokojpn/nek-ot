@@ -1,7 +1,7 @@
 fn main(){
 	i := i32 100;
 	while(i > 0){
-		i = ++i;
+		i = i - 1;
 	}
 	ret;
 }

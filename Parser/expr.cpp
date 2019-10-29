@@ -79,7 +79,7 @@ std::unique_ptr<AST> Parser::expr_add() {
 	return std::move(lhs);
 }
 std::unique_ptr<AST> Parser::expr_mul() {
-	auto lhs = expr_primary();
+	auto lhs = expr_plmi();
 	while (true) {
 		Op op;
 		if (consume(TK::tok_star)) {
@@ -103,14 +103,35 @@ std::unique_ptr<AST> Parser::expr_mul() {
 		else {
 			break;
 		}
-		auto rhs = expr_primary();
+		auto rhs = expr_plmi();
 		auto loc = curtok.loc;
 		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::move(rhs));
 		lhs->loc = loc;
 	}
 	return std::move(lhs);
 }
+std::unique_ptr<AST> Parser::expr_plmi() {
+	auto lhs = expr_primary();
+	while (true) {
+		Op op;
+		if (consume(TK::tok_plpl)) {
+			op = Op::Plus;
+		}
+		else if (consume(TK::tok_mimi)) {
+			op = Op::Minus;
+		}
+		else {
+			break;
+		}
+		lhs = std::make_unique<ASTBinOp>(std::move(lhs), op, std::make_unique<ASTValue>(1));
+		lhs->loc = curtok.loc;
+	}
+	return std::move(lhs);
+}
+
 std::unique_ptr<AST> Parser::expr_primary() {
+	bool xsign = false;
+label1:
 	if (curtok.ty == TK::tok_num_int) {
 		auto loc = curtok.loc;
 		auto value = std::make_unique<ASTValue>(std::atoi(curtok.val.c_str()));
@@ -145,9 +166,6 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		ast->loc = loc;
 		return std::move(ast);
 	}
-	else if (curtok.ty == TK::tok_plpl || curtok.ty == TK::tok_mimi) {
-		// marge string operator
-	}
 	else if (curtok.ty == TK::tok_identifier || curtok.ty == TK::tok_amp || curtok.ty == TK::tok_star) {
 		auto kind = TypeKind::Value;
 		if (curtok.ty == TK::tok_amp) {
@@ -168,42 +186,11 @@ std::unique_ptr<AST> Parser::expr_primary() {
 		auto name = curtok.val;
 		auto identifier = expr_identifiers();
 		identifier->loc = loc;
-		//getNextToken(); 
 		if (curtok.ty == TK::tok_lp ||
 			curtok.ty == TK::tok_doll) { //Function call.
 			auto funccall = func_call(name, curtok.ty == TK::tok_doll ? true : false);
 			return std::move(funccall);
 		}
-		/*
-		else if (curtok.ty == TK::tok_lpb) { //Array
-			std::vector<std::unique_ptr<AST>> expr_v;
-			while (curtok.ty == TK::tok_lpb) { //Array
-				getNextToken();
-				expr_v.push_back(std::move(expr()));
-				if (curtok.ty != TK::tok_rpb) {
-					add_err_msg("Have you forgotten ] ?");
-					add_err_msg("Hint: The specified array element accessor is invalid! Starts with [ and ends with ].");
-					error_unexpected(curtok);
-				}	
-				getNextToken();
-			}
-			if (curtok.ty == TK::tok_dot) {
-				auto loc = curtok.loc;
-				auto ast = expr_dot(identifier->name);
-				ast->loc = loc;
-				return ast;
-			}
-			auto loc = curtok.loc;
-			auto ast = std::make_unique<ASTIdentifier>(identifier->name, std::move(expr_v), kind);
-			ast->loc = loc;
-			return std::move(ast);
-		}
-		
-		else if (curtok.ty == TK::tok_dot) { //struct, class etc.
-			auto loc = curtok.loc;
-			auto ast = expr_dot(identifier->name);
-			ast->loc = loc;
-		}*/
 		else if (curtok.ty == TK::tok_plpl) {
 			auto loc = curtok.loc;
 			// ‚È‚É‚µ‚Ä‚½‚Á‚¯
@@ -230,16 +217,8 @@ std::unique_ptr<AST> Parser::expr_primary() {
 	}
 	else if (curtok.ty == TK::tok_minus) {
 		getNextToken();
-		auto lloc = curtok.loc;
-		auto lhs = std::make_unique<ASTValue>(0);
-		lhs->loc = lloc;
-		auto rloc = curtok.loc;
-		auto rhs = expr();
-		rhs->loc = rloc;
-		auto bloc = curtok.loc;
-		auto binop = std::make_unique<ASTBinOp>(std::move(lhs), Op::Minus, std::move(rhs));
-		binop->loc = bloc;
-		return std::move(binop);
+		xsign = true;
+		goto label1;
 	}
 	add_err_msg("You specified token is unkown for the expression.");
 	error_unexpected(curtok);

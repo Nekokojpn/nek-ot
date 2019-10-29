@@ -366,23 +366,6 @@ public:
 	ASTIdentifier(std::unique_ptr<AST> _lhs, std::unique_ptr<AST> _rhs, TypeKind _kind) : lhs(std::move(_lhs)), rhs(std::move(_rhs)), kind(_kind) {};
 	Value* codegen() override;
 };
-/*
-class ASTIdentifierArrayElement : public AST {
-public:
-	std::unique_ptr<AST> id_base;
-	TypeKind kind;
-	std::vector<std::unique_ptr<AST>> expr_v;
-	ASTIdentifierArrayElement(std::string _name, std::vector<std::unique_ptr<AST>> _expr_v, TypeKind _kind) : name(_name), expr_v(std::move(_expr_v)), kind(_kind) {};
-	Value* codegen();
-};
-class ASTIdentifierStctElement : public AST {
-public:
-	std::string name;
-	std::vector<std::string> elem_names;
-	ASTIdentifierStctElement(std::string _name, std::vector<std::string> _elem_names) :name(_name), elem_names(_elem_names) {};
-	Value* codegen() override;
-};
-*/
 class ASTValue : public AST {
 public:
 	long long value;
@@ -603,8 +586,8 @@ class Parser {
 	std::unique_ptr<AST> expr();
 	std::unique_ptr<AST> expr_add();
 	std::unique_ptr<AST> expr_mul();
+	std::unique_ptr<AST> expr_plmi();
 	std::unique_ptr<AST> expr_primary();
-	std::unique_ptr<AST> expr_dot();
 	std::unique_ptr<AST> bool_expr();
 	std::unique_ptr<AST> Parser::bool_expr_op();
 	std::unique_ptr<ASTArrElements> expr_arr();

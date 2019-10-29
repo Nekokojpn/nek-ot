@@ -1,10 +1,7 @@
-fn abs(x : i32) -> i32 {
-	if(x > 0)
-		ret x;
-	else
-		ret 0-x;
-}
 fn main(){
-	i := abs(0-5);
+	i := 0;
+	while(i < 100){
+		i = i++;
+	}
 	ret;
 }

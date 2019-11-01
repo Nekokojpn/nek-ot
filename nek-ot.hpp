@@ -190,6 +190,10 @@ public:
 	public:
 		static void CreateFunc();
 	};
+	class Range {
+	public:
+		static void CreateFunc();
+	};
 };
 
 enum class AType;
@@ -512,12 +516,16 @@ public:
 	std::unique_ptr<ASTElse> ast_else;
 	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
+
+	BasicBlock* bodyBB;
+	BasicBlock* contBB;
 };
 class ASTFor : public AST {
 public:
-	std::unique_ptr<ASTArrElements> proto;
-	std::vector<std::unique_ptr<AST>> body;
-	ASTFor(std::unique_ptr<ASTArrElements> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
+	std::unique_ptr<AST> typedeff;
+	std::unique_ptr<ASTIf> proto;
+	std::unique_ptr<AST> last;
+	ASTFor(std::unique_ptr<AST> _typedeff, std::unique_ptr<ASTIf> _proto, std::unique_ptr<AST> _last) : typedeff(std::move(_typedeff)), proto(std::move(_proto)), last(std::move(_last)) {};
 	Value* codegen() override;
 };
 class ASTWhile : public AST {

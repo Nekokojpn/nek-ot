@@ -340,19 +340,22 @@ std::unique_ptr<ASTFor> Parser::for_statement() {
 	if (curtok.ty != TK::tok_lp)
 		error_unexpected(curtok);
 	getNextToken();
-	auto exp = expr_arr();
+	auto typedeff = expr_identifier();
+	auto proto = expr();
+	if (!curtokIs(TK::tok_semi))
+		error_unexpected(curtok);
+	getNextToken();
+	auto last = expr_identifier();
 	if (!curtokIs(TK::tok_rp))
 		error_unexpected(curtok);
 	getNextToken();
 	if (curtokIs(TK::tok_lb)) {
-		getNextToken();
-		auto ast = std::make_unique<ASTFor>(std::move(exp), expr_block(false));
+		auto ast = std::make_unique<ASTFor>(std::move(typedeff), std::make_unique<ASTIf>(std::move(proto), expr_block(false)), std::move(last));
 		ast->loc = curtok.loc;
 		return std::move(ast);
 	}
 	else {
-		getNextToken();
-		auto ast = std::make_unique<ASTFor>(std::move(exp), expr_block(true));
+		auto ast = std::make_unique<ASTFor>(std::move(typedeff), std::make_unique<ASTIf>(std::move(proto), expr_block(true)), std::move(last));		
 		ast->loc = curtok.loc;
 		return std::move(ast);
 	}

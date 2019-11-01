@@ -339,7 +339,30 @@ void Sys::IO::Input::CreateFunc() {
 	return;
 }
 void Sys::List::CreateFunc() {
-	
+	StructType* st;
+	{
+		std::vector<Type*> args;
+		args.push_back(builder.getInt64Ty()); //elem
+		args.push_back(builder.getInt64Ty()->getPointerTo()); //back
+		args.push_back(builder.getInt64Ty()->getPointerTo()); //next
+		ArrayRef<Type*> argsA(args);
+		st = StructType::create(context, "List");
+		st->setBody(argsA);
+	}
+}
+
+void Sys::Range::CreateFunc() {
+	/*
+	Function* range_func;
+	{
+		std::vector<Type*> args;
+		args.push_back(builder.getInt64Ty()); //start
+		args.push_back(builder.getInt64Ty()); //end -1
+		args.push_back(builder.getInt64Ty()); //diff
+		FunctionType* func_type = FunctionType::get(ArrayType::get(builder.getInt64Ty();
+		
+	}
+	*/
 }
 
 void init_parse() {
@@ -389,6 +412,7 @@ void Codegen::call_writef(llvm::ArrayRef<llvm::Value*> args)
 	llvm::CallInst* inst = builder.CreateCall(func, args);
 	inst->setCallingConv(func->getCallingConv());
 }
+
 void Codegen::gen_asm(std::string statement, std::string option) {
 	llvm::InlineAsm* IA = InlineAsm::get(FunctionType::get(builder.getVoidTy(), false), statement, option, true, false);
 	std::vector<Value*> vec;
@@ -956,6 +980,9 @@ Value* ASTIf::codegen() {
 	auto tmp_retcodegen = retcodegen;
 	retcodegen = false;
 	gotocodegen = false;
+
+	this->bodyBB = builder.GetInsertBlock();
+
 	for (int i = 0; i < body.size(); i++) {
 		Codegen::init_on_inst();
 		body[i]->codegen();
@@ -973,6 +1000,8 @@ Value* ASTIf::codegen() {
 		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
 		builder.CreateCondBr(astboolop, if_block, cont);
 		builder.SetInsertPoint(before);
+		this->contBB = cont;
+
 		if(!retcodegen && !gotocodegen)
 			builder.CreateBr(cont);
 		for (int i = 0; i < blocks.size(); i++) {
@@ -1029,22 +1058,16 @@ Value* ASTIf::codegen() {
 	}
 }
 Value* ASTFor::codegen() {
-	/*
-	std::make_unique<ASTType>()
-	ArrayType* ty = ArrayType::get(Codegen::getTypebyType(this->proto->arr_type->ty), this->proto->elements.size()-1);
+	typedeff->codegen();
+	auto bb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+	builder.CreateBr(bb);
 
-	auto allocainst = builder.CreateAlloca(ty);
-
-	if (this->proto- != "_")
-		namedvalues_local[name] = allocainst;
-	else
-		underscore = allocainst;
-
-	if (this->elements) {
-		this->elements->subst(allocainst, this->ty.arrsize);
-	}
-	return allocainst;
-	*/
+	builder.SetInsertPoint(bb);
+	proto->codegen();
+	builder.SetInsertPoint(this->proto->bodyBB);
+	last->codegen();
+	builder.CreateBr(bb);
+	builder.SetInsertPoint(this->proto->contBB);
 	return nullptr;
 }
 

@@ -1,6 +1,6 @@
 fn main(){
-	for(_ | _ <- i32[10]{0..9}){
-		writefln("%d", _);
+	for(i := 0; i < 100; i = i + 1;){
+		writefln("hello");
 	}
 	ret;
 }

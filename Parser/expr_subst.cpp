@@ -9,6 +9,7 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(std::unique_ptr<AST> ast_id) {
 		ast->loc = loc;
 		if (curtok.ty != TK::tok_semi)
 			error_unexpected(curtok);
+		getNextToken();
 		return std::move(ast);
 	}
 	//<--------------------Subst

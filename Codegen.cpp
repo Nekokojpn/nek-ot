@@ -472,10 +472,10 @@ Type* Codegen::getTypebyAType(AType& ty) {
 }
 Type* Codegen::getTypebyType(Type_t& t) {
 	auto ty = getTypebyAType(t.ty);
-	/*
+	
 	if (t.isArr)
 		ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
-		*/
+		
 	if (t.kind == TypeKind::Pointer)
 		ty = ty->getPointerTo();
 	return ty;
@@ -541,11 +541,12 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	current_inst = value;
 	//Build a idx_list
 	idx_list.clear();
-	this->indexes->codegen();
+	
 	Value* gep = nullptr;
+	
 	for (int i = idx_list.size() - 1; i >= 0; i--) {
 		if (i == idx_list.size() - 1)
-			gep = builder.CreateInBoundsGEP(current_inst, idx_list[i]);
+			gep = builder.CreateInBoundsGEP(current_inst, this->indexes->codegen());
 		else
 			gep = builder.CreateInBoundsGEP(gep, idx_list[i]);
 	}
@@ -555,7 +556,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 Value* ASTArrayIndexes::codegen() {
 	//Disired identifier already set to current_inst
 	std::vector<Value*> ind;
-	ind.push_back(builder.getInt64(0));
+	ind.push_back(builder.getInt32(0));
 	ind.push_back(this->lhs->codegen());
 	ArrayRef<Value*> index(ind);
 	idx_list.push_back(index);
@@ -810,7 +811,8 @@ fr:
 			return allocainst;
 		}
 		else {
-			ArrayType* ty = ArrayType::get(type, this->ty.arrsize[this->ty.arrsize.size() - 1]);
+			//ArrayType* ty = ArrayType::get(type, this->ty.arrsize[this->ty.arrsize.size() - 1]);
+			auto ty = type;
 			long long cnt = 1;
 			while (cnt < this->ty.arrsize.size()) {
 				ty = ArrayType::get(ty, this->ty.arrsize[this->ty.arrsize.size() - cnt]);
@@ -1171,6 +1173,7 @@ Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_siz
 			p.push_back(builder.getInt64(i));
 			ArrayRef<Value*> pp(p);
 			gep = builder.CreateInBoundsGEP(arr, pp);
+			//gep = builder.CreateInBoundsGEP(builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),5)), pp);
 			builder.CreateStore(this->elements[i]->codegen(), gep);
 		}
 	}

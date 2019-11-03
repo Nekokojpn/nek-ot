@@ -254,6 +254,8 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 		ret = getTypeFromCurtok();
 	}
 	else {
+		ret.isArr = false;
+		ret.kind = TypeKind::Value;
 		ret.ty = AType::Void;
 	}
 

@@ -20,6 +20,7 @@ static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
 
 //ASTArrayIndexes------>
 std::vector<Value*> idx_list;
+auto isArrTy = false;
 //<------
 
 //AST Identifier
@@ -58,14 +59,19 @@ void Test::CreateFunc() {
 	llvm::Function* test_func;
 	{
 		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt32Ty());
+		args.push_back(builder.getInt32Ty()->getPointerTo());
 		args.push_back(builder.getInt32Ty());
 		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
 		test_func = llvm::Function::Create(
 			func_type, llvm::Function::ExternalLinkage, "test", module.get());
 		test_func->setCallingConv(llvm::CallingConv::X86_StdCall);
 	}
+	/*
+	builder.SetInsertPoint(BasicBlock::Create(context, "", test_func));
+	builder.CreateConstInBoundsGEP1_32(builder.getInt32Ty(), builder.CreateLoad(builder.CreateAlloca(builder.getInt32Ty()->getPointerTo())), 0);
 	functions_global["test"] = test_func;
+	module->dump();
+	*/
 	return;
 }
 
@@ -542,9 +548,16 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	//Build a idx_list
 
 	Value* gep = nullptr;
+	if (value->getAllocatedType()->isPointerTy())isArrTy = true;
+	else isArrTy = false;
 	this->indexes->codegen();
 	//TODO multi dimen
 	ArrayRef<Value*> v(idx_list);
+	if (isArrTy) {
+		gep = builder.CreateLoad(value);
+		return builder.CreateInBoundsGEP(gep, v);
+
+	}
 	gep = builder.CreateInBoundsGEP(value, v);
 	return gep;
 }
@@ -552,7 +565,8 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 Value* ASTArrayIndexes::codegen() {
 	//Disired identifier already set to current_inst
 	std::vector<Value*> ind;
-	ind.push_back(builder.getInt32(0));
+	if(!isArrTy)
+		ind.push_back(builder.getInt32(0));
 	auto l = this->lhs->codegen();
 	if (l->getType()->isPointerTy())
 		l = builder.CreateLoad(l);
@@ -842,8 +856,8 @@ Value* ASTProto::codegen() {
 	for (int i = 0; i < args.size(); i++) {
 		Type* ty;
 		if (args[i].isArr == true)
-			//ty = Codegen::getTypebyType(args[i])->getPointerTo();
-			ty = Codegen::getTypebyType(args[i]);
+			ty = Codegen::getTypebyType(args[i])->getArrayElementType()->getPointerTo();
+			//ty = Codegen::getTypebyType(args[i]);
 		else if (args[i].kind == TypeKind::Pointer)
 			ty = Codegen::getTypebyType(args[i])->getPointerTo();
 		else
@@ -888,6 +902,7 @@ Value* ASTFunc::codegen() {
 
 	for (int i = 0; i < body.size(); i++) {
 		Codegen::init_on_inst();
+
 		body[i]->codegen();
 	}
 	

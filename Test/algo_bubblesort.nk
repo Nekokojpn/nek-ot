@@ -19,6 +19,7 @@ fn display(arr : i32[15]){
 }
 fn main() {
 	target := i32[15]{6,7,1,12,10,15,4,3,11,13,9,5,14,8,2};
+	display(target);
 	i := 0;
 	j := 0;
 	tmp := 0;

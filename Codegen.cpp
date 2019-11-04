@@ -19,7 +19,7 @@ static std::map<std::string, BasicBlock*> jmp_labels;
 static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
 
 //ASTArrayIndexes------>
-std::vector<ArrayRef<Value*>> idx_list;
+std::vector<Value*> idx_list;
 //<------
 
 //AST Identifier
@@ -540,16 +540,12 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	}
 	current_inst = value;
 	//Build a idx_list
-	idx_list.clear();
-	
+
 	Value* gep = nullptr;
-	
-	for (int i = idx_list.size() - 1; i >= 0; i--) {
-		if (i == idx_list.size() - 1)
-			gep = builder.CreateInBoundsGEP(current_inst, this->indexes->codegen());
-		else
-			gep = builder.CreateInBoundsGEP(gep, idx_list[i]);
-	}
+	this->indexes->codegen();
+	//TODO multi dimen
+	ArrayRef<Value*> v(idx_list);
+	gep = builder.CreateInBoundsGEP(value, v);
 	return gep;
 }
 
@@ -557,9 +553,11 @@ Value* ASTArrayIndexes::codegen() {
 	//Disired identifier already set to current_inst
 	std::vector<Value*> ind;
 	ind.push_back(builder.getInt32(0));
-	ind.push_back(this->lhs->codegen());
-	ArrayRef<Value*> index(ind);
-	idx_list.push_back(index);
+	auto l = this->lhs->codegen();
+	if (l->getType()->isPointerTy())
+		l = builder.CreateLoad(l);
+	ind.push_back(l);
+	idx_list = ind;
 	return nullptr;
 }
 
@@ -844,7 +842,8 @@ Value* ASTProto::codegen() {
 	for (int i = 0; i < args.size(); i++) {
 		Type* ty;
 		if (args[i].isArr == true)
-			ty = Codegen::getTypebyType(args[i])->getPointerTo();
+			//ty = Codegen::getTypebyType(args[i])->getPointerTo();
+			ty = Codegen::getTypebyType(args[i]);
 		else if (args[i].kind == TypeKind::Pointer)
 			ty = Codegen::getTypebyType(args[i])->getPointerTo();
 		else
@@ -926,6 +925,7 @@ Value* ASTCall::codegen() {
 			continue;
 		}
 		else if (current_inst && current_inst->getAllocatedType()->isArrayTy()) {
+			
 			auto array_ty = current_inst->getAllocatedType()->getArrayElementType();
 			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
 			while (array_ty->isArrayTy()) {

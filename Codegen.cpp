@@ -56,6 +56,7 @@ void Parser::setOpt(bool b) {
 }
 
 void Test::CreateFunc() {
+	/*
 	llvm::Function* test_func;
 	{
 		std::vector<llvm::Type*> args;
@@ -66,13 +67,14 @@ void Test::CreateFunc() {
 			func_type, llvm::Function::ExternalLinkage, "test", module.get());
 		test_func->setCallingConv(llvm::CallingConv::X86_StdCall);
 	}
-	/*
+	
 	builder.SetInsertPoint(BasicBlock::Create(context, "", test_func));
 	builder.CreateConstInBoundsGEP1_32(builder.getInt32Ty(), builder.CreateLoad(builder.CreateAlloca(builder.getInt32Ty()->getPointerTo())), 0);
 	functions_global["test"] = test_func;
 	module->dump();
-	*/
+	
 	return;
+	*/
 }
 
 

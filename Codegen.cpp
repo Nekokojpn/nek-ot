@@ -1082,11 +1082,22 @@ Value* ASTFor::codegen() {
 	builder.CreateBr(bb);
 
 	builder.SetInsertPoint(bb);
-	proto->codegen();
-	builder.SetInsertPoint(this->proto->bodyBB);
+	auto bb2 = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+	
+
+	//builder.CreateBr(bb2);
+	builder.SetInsertPoint(bb2);
+	for (int i = 0; i < this->proto->body.size(); i++) {
+		this->proto->body[i]->codegen();
+	}
 	last->codegen();
 	builder.CreateBr(bb);
-	builder.SetInsertPoint(this->proto->contBB);
+
+	auto cond = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+
+	builder.SetInsertPoint(bb);
+	builder.CreateCondBr(this->proto->proto->codegen(), bb2, cond);
+	builder.SetInsertPoint(cond);
 	return nullptr;
 }
 

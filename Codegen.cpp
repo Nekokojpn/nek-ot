@@ -56,6 +56,7 @@ void Parser::setOpt(bool b) {
 }
 
 void Test::CreateFunc() {
+	/*
 	llvm::Function* test_func;
 	{
 		std::vector<llvm::Type*> args;
@@ -66,13 +67,14 @@ void Test::CreateFunc() {
 			func_type, llvm::Function::ExternalLinkage, "test", module.get());
 		test_func->setCallingConv(llvm::CallingConv::X86_StdCall);
 	}
-	/*
+	
 	builder.SetInsertPoint(BasicBlock::Create(context, "", test_func));
 	builder.CreateConstInBoundsGEP1_32(builder.getInt32Ty(), builder.CreateLoad(builder.CreateAlloca(builder.getInt32Ty()->getPointerTo())), 0);
 	functions_global["test"] = test_func;
 	module->dump();
-	*/
+	
 	return;
+	*/
 }
 
 
@@ -1080,11 +1082,22 @@ Value* ASTFor::codegen() {
 	builder.CreateBr(bb);
 
 	builder.SetInsertPoint(bb);
-	proto->codegen();
-	builder.SetInsertPoint(this->proto->bodyBB);
+	auto bb2 = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+	
+
+	//builder.CreateBr(bb2);
+	builder.SetInsertPoint(bb2);
+	for (int i = 0; i < this->proto->body.size(); i++) {
+		this->proto->body[i]->codegen();
+	}
 	last->codegen();
 	builder.CreateBr(bb);
-	builder.SetInsertPoint(this->proto->contBB);
+
+	auto cond = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+
+	builder.SetInsertPoint(bb);
+	builder.CreateCondBr(this->proto->proto->codegen(), bb2, cond);
+	builder.SetInsertPoint(cond);
 	return nullptr;
 }
 

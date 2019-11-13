@@ -199,11 +199,11 @@ label1:
 			return std::move(funccall);
 		}
 		else if (curtok.ty == TK::tok_plpl) {
-			auto loc = curtok.loc;
-			// ‚È‚É‚µ‚Ä‚½‚Á‚¯
+			afs.push_back(std::make_unique<ASTBinOp>(std::move(identifier), Op::Plus, std::make_unique<ASTValue>(1)));
+			//;
 		}
 		else if (curtok.ty == TK::tok_mimi) {
-
+			afs.push_back(std::make_unique<ASTBinOp>(std::move(identifier), Op::Minus, std::make_unique<ASTValue>(1)));
 		}
 		return std::move(identifier);
 	}

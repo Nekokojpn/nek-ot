@@ -200,6 +200,9 @@ TK gettoken() {
 			if (cc == '>') { // arrow
 				return TK::tok_arrow;
 			}
+			else if (cc == '-') {
+				return TK::tok_mimi;
+			}
 			/*
 			else if (isdigit(cc)) {
 				bool point = false;
@@ -223,7 +226,14 @@ TK gettoken() {
 			undo_char();
 			return TK::tok_minus;
 		}
-		if (cc == '+')	return TK::tok_plus;
+		if (cc == '+') {
+			get_char();
+			if (cc == '+') {
+				return TK::tok_plpl;
+			}
+			undo_char();
+			return TK::tok_plus;
+		}
 		if (cc == '*')	return TK::tok_star;
 		if (cc == '/') {
 			get_char();

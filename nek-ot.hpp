@@ -589,6 +589,7 @@ class Parser {
 
 	bool curtokIs(TK);
 	bool nexttokIs(TK);
+	std::vector<std::unique_ptr<AST>> afs;
 
 	std::unique_ptr<AST> expr();
 	std::unique_ptr<AST> expr_add();

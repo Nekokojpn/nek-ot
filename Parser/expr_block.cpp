@@ -70,6 +70,15 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr
 		else getNextToken();
 		if (isOneExpr)
 			break;
+		//finally
+		{
+			if (afs.size() > 0) {
+				for (int i = 0; i < afs.size(); i++) {
+					asts.push_back(std::move(afs[i]));
+				}
+				afs.clear();
+			}
+		}
 	}
 	if (!isOneExpr && curtok.ty == TK::tok_eof) {
 		add_err_msg("Have you forgotten } ?");

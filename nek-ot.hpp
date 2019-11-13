@@ -1,7 +1,7 @@
 #pragma once
 
 //#define HIGH_DEBUGG			//ハイ・レベルデバッグ
-#define DEBUGG						//デバッグモード.
+//#define DEBUGG						//デバッグモード.
 
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/STLExtras.h"
@@ -581,6 +581,8 @@ public:
 */
 class Parser {
 	int index;
+	int opt;
+	int sopt; //size opt
 	Token_t curtok;
 	std::string curval; //for type;
 	std::unique_ptr<Codegen> cdgen;
@@ -632,8 +634,10 @@ public:
 	std::vector<std::unique_ptr<AST>> parse();
 	void codegen(std::vector<std::unique_ptr<AST>>);
 	void dump();
-	void setOpt(bool b);
-	bool getOpt();
+	void setOpt(int level);
+	int getOpt();
+	void setSOpt(int level);
+	int getSOpt();
 	AType getATypeByCurtok();
 	Type_t getTypeFromCurtok();
 	void add_userdefined_stct(Token_t&);

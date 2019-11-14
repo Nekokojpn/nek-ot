@@ -1,4 +1,4 @@
-fn main(){
+fn main() -> i32{
 	MAX := 447LL;
 	DN := 4LL;
 	x := i64;
@@ -51,5 +51,5 @@ fn main(){
 		y = y + 1LL;
 	}
 	writefln("%d", h);
-	ret;
+	ret 0;
 }

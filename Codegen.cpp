@@ -335,13 +335,14 @@ void Sys::IO::Printfln::CreateFunc() {
 }
 
 void Sys::IO::Input::CreateFunc() {
+
 	llvm::Function* input_func;
 	{
 		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt32Ty()->getPointerTo());
-		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
+		//args.push_back(builder.getInt32Ty());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
 		input_func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "input", module.get());
+			func_type, llvm::Function::ExternalLinkage, "?input@@YAHXZ", module.get());
 		input_func->setCallingConv(llvm::CallingConv::X86_StdCall);
 	}
 	functions_global["input"] = input_func;

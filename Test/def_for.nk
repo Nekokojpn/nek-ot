@@ -1,5 +1,5 @@
 fn main(){
-	for(i := 0; i < 100; i = i + 1;){
+	for(i := 0; i < 100; i = i+1;){
 		writefln("hello");
 	}
 	ret;

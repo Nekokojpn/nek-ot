@@ -140,8 +140,9 @@ int main(int argc, char** argv) {
   else
 	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o opt.bc out.bc");
 
+
   system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe opt.bc");
-  system("clang -l C:\\nek-ot\\User32.lib opt.s input.s");
+  system("clang -l C:\\nek-ot\\User32.lib opt.s .\\stdlib\\io.s");
   
 #ifdef DEBUGG
   std::cout << "-----LLVM IR-----" << std::endl;

@@ -38,7 +38,6 @@ std::vector<BasicBlock*> retbbs;
 
 std::vector<BasicBlock*> brk_bbs;
 
-bool opt = true;
 bool retcodegen = false;
 bool gotocodegen = false;
 auto isStringCodegen = false;
@@ -48,11 +47,17 @@ Module* getModule() {
 	return module.get();
 }
 
-bool Parser::getOpt() {
-	return opt;
+int Parser::getOpt() {
+	return this->opt;
 }
-void Parser::setOpt(bool b) {
-	opt = b;
+void Parser::setOpt(int level) {
+	this->opt = level;
+}
+void Parser::setSOpt(int level) {
+	this->sopt = level;
+}
+int Parser::getSOpt() {
+	return this->sopt;
 }
 
 void Test::CreateFunc() {
@@ -241,8 +246,6 @@ void Sys::IO::Printf::CreateFunc() {
 
 	// return;
 	builder.CreateRetVoid();
-	if(opt)
-		fpm->run(*func);
 }
 
 void Sys::IO::Printfln::CreateFunc() {
@@ -329,8 +332,6 @@ void Sys::IO::Printfln::CreateFunc() {
 
 	// return;
 	builder.CreateRetVoid();
-	if (opt)
-		fpm->run(*func);
 }
 
 void Sys::IO::Input::CreateFunc() {

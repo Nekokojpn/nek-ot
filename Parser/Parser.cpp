@@ -181,13 +181,11 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 	this->curval = curtok.val;
 	auto identifier = expr_identifiers();
 	if (curtok.ty == TK::tok_semi) {
-		return nullptr;
+		return std::move(identifier);
 	}
 	else if (curtok.ty == TK::tok_equal || 
 				curtok.ty == TK::tok_lpb || 
-				curtok.ty == TK::tok_darrow ||
-				curtok.ty == TK::tok_plpl ||
-				curtok.ty == TK::tok_mimi) {
+				curtok.ty == TK::tok_darrow) {
 		auto ast = subst_expr(std::move(identifier));
 		return std::move(ast);
 	}
@@ -201,7 +199,9 @@ std::unique_ptr<AST> Parser::expr_identifier() {
 		auto ast = func_call(curval, curtok.ty == TK::tok_doll ? true : false);
 		return std::move(ast);
 	}
-	return nullptr;
+	else { //Expr
+		return std::move(identifier);
+	}
 }
 
 std::unique_ptr<ASTFunc> Parser::def_func() {

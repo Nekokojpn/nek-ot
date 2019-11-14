@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
 	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o opt.bc out.bc");
 
   system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe opt.bc");
-  system("clang -l C:\\nek-ot\\User32.lib opt.s");
+  system("clang -l C:\\nek-ot\\User32.lib opt.s input.s");
   
 #ifdef DEBUGG
   std::cout << "-----LLVM IR-----" << std::endl;

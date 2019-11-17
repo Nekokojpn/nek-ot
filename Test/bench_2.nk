@@ -1,3 +1,5 @@
+import "io";
+
 fn main() -> i32{
 	MAX := 447LL;
 	DN := 4LL;

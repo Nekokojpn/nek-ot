@@ -27,9 +27,6 @@ auto isArrTy = false;
 AllocaInst* current_inst;
 bool isPtr = false;
 
-AllocaInst* curvar;
-std::vector<double> curvar_v;
-std::map<std::string, double> constantfoldings;
 
 Value* lambdavalue;
 
@@ -451,8 +448,8 @@ Type* Codegen::getTypebyAType(AType& ty) {
 		return builder.getDoubleTy();
 		break;
 	case AType::F64:
-		return builder.getDoubleTy();
-		break;
+return builder.getDoubleTy();
+break;
 	case AType::Char:
 		return builder.getInt8Ty();
 		break;
@@ -469,10 +466,10 @@ Type* Codegen::getTypebyAType(AType& ty) {
 }
 Type* Codegen::getTypebyType(Type_t& t) {
 	auto ty = getTypebyAType(t.ty);
-	
+
 	if (t.isArr)
 		ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
-		
+
 	if (t.kind == TypeKind::Pointer)
 		ty = ty->getPointerTo();
 	return ty;
@@ -482,7 +479,7 @@ Value* ASTIdentifierBase::codegen() {
 	//For a stct control E.g, identifier.item = 10;
 	if (current_inst && current_inst->getAllocatedType()->isStructTy()) {
 		auto stct = userdefined_stcts_elements[current_inst->getAllocatedType()->getStructName()];
-			//TODO: Type check
+		//TODO: Type check
 		if (stct.elems.find(this->name) != stct.elems.end()) {
 			auto gep = builder.CreateStructGEP(current_inst, stct.elems[this->name].idx);
 			return gep;
@@ -491,13 +488,11 @@ Value* ASTIdentifierBase::codegen() {
 			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
 			return nullptr;
 		}
-		
+
 	}
 	//For a var control E.g, identifier = 10;
 	else {
 		auto value = namedvalues_local[this->name];
-		if (constantfoldings[this->name])
-			curvar_v.push_back(constantfoldings[this->name]);
 		if (!value) {
 			auto global = namedvalues_global[this->name];
 			if (!global) {
@@ -519,8 +514,6 @@ Value* ASTIdentifierBase::codegen() {
 
 Value* ASTIdentifierArrayElementBase::codegen() {
 	auto value = namedvalues_local[this->name];
-	if (constantfoldings[this->name])
-		curvar_v.push_back(constantfoldings[this->name]);
 	if (!value) {
 		auto global = namedvalues_global[this->name];
 		if (!global) {
@@ -546,9 +539,27 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	ArrayRef<Value*> v(idx_list);
 	if (isArrTy) {
 		gep = builder.CreateLoad(value);
-		builder.CreateLoad(value->getArraySize());
 		return builder.CreateInBoundsGEP(gep, v);
 
+	}
+	if (idx_list.size() == 1) {
+		if (auto ci = dyn_cast<ConstantInt>(idx_list[0])) {
+			if (ci->getValue().getZExtValue() >= value->getAllocatedType()->getArrayNumElements())
+				error_codegen("The specified index is out of range.", this->loc);
+		}
+		else {
+			//Judges on executing
+			//TODO: Insert ICmp slt ir codes.
+		}
+	}
+	else {
+		if (auto ci = dyn_cast<ConstantInt>(idx_list[1])) {
+			if(ci->getValue().getZExtValue() >= value->getAllocatedType()->getArrayNumElements())
+				error_codegen("The specified index is out of range.", this->loc);
+		}
+		else {
+
+		}
 	}
 	gep = builder.CreateInBoundsGEP(value, v);
 	return gep;
@@ -603,17 +614,7 @@ Value* ASTIdentifier::codegen() {
 }
 
 Value* ASTValue::codegen() {
-	/*
-	if (curvar) {
-		if (curvar->getType()->getElementType() == builder.getInt32Ty()) {
-			if (this->value >= 2147483648)
-				error("Compile error", "Overflow occurs", this->loc);
-			else if (this->value < -2147483648LL)
-				error("Compile error", "Exceeded i32 minimum.", this->loc);
-		}
-	}
-	curvar_v.push_back(value);
-	*/
+
 	if (this->isLongLong == true)
 		return builder.getInt64(value);
 	if(this->isDouble == true)
@@ -634,7 +635,6 @@ Value* ASTString::codegen() { //—vC³
 }
 
 Value* ASTBinOp::codegen() {
-	long size = curvar_v.size();
 	Value* l = lhs->codegen();
 	Value* r = rhs->codegen();
 	if (!l || !r)

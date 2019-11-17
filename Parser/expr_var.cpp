@@ -7,11 +7,17 @@ std::unique_ptr<AST> Parser::expr_var() {
 	getNextToken();
 	//If array ty
 	if (curtokIs(TK::tok_lpb)) {
+		auto loc = curtok.loc;
 		auto index = expr_array_indexes();
-		return std::make_unique<ASTIdentifierArrayElementBase>(name, std::move(index));
+		auto ast = std::make_unique<ASTIdentifierArrayElementBase>(name, std::move(index));
+		ast->loc = loc;
+		return std::move(ast);
 	}
 	//If var ty
 	else {
-		return std::make_unique<ASTIdentifierBase>(name);
+		auto loc = curtok.loc;
+		auto ast = std::make_unique<ASTIdentifierBase>(name);
+		ast->loc = loc;
+		return std::move(ast);
 	}
 }

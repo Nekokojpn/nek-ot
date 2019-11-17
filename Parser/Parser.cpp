@@ -445,6 +445,7 @@ void Parser::codegen(std::vector<std::unique_ptr<AST>> _ast) {
 	return;
 }
 std::vector<std::unique_ptr<AST>> Parser::parse() {
+	//Top level parser
 	std::vector<std::unique_ptr<AST>> asts;
 	while (curtok.ty != TK::tok_eof) {
 		this->cdgen->setIsGlobal(true);
@@ -456,6 +457,9 @@ std::vector<std::unique_ptr<AST>> Parser::parse() {
 		else if (curtok.ty == TK::tok_identifier) {
 			auto ast = expr_identifier();
 			asts.push_back(std::move(ast));
+		}
+		else if (curtok.ty == TK::tok_import) {
+			def_import();
 		}
 		else getNextToken();
 	}

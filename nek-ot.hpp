@@ -241,6 +241,8 @@ typedef struct {
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, Location_t& loc);
 void error(std::string title, std::string message, uint32_t line, uint32_t column);
+void error(std::string message, Token_t& curtok);
+void error_onlymsg(std::string message);
 void error_expected(std::string lit, Token_t& curtok);
 void error_unexpected(Token_t& curtok);
 void warning(std::string title, std::string message, uint32_t line, uint32_t column);
@@ -581,8 +583,6 @@ public:
 */
 class Parser {
 	int index;
-	int opt;
-	int sopt; //size opt
 	Token_t curtok;
 	std::string curval; //for type;
 	std::unique_ptr<Codegen> cdgen;
@@ -627,6 +627,7 @@ class Parser {
 	std::unique_ptr<ASTWhile> while_statement();
 
 	std::unique_ptr<AST> expr_identifiers(); //Gen ASTIdentifier
+	void def_import();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:
@@ -634,12 +635,9 @@ public:
 	std::vector<std::unique_ptr<AST>> parse();
 	void codegen(std::vector<std::unique_ptr<AST>>);
 	void dump();
-	void setOpt(int level);
-	int getOpt();
-	void setSOpt(int level);
-	int getSOpt();
 	AType getATypeByCurtok();
 	Type_t getTypeFromCurtok();
 	void add_userdefined_stct(Token_t&);
 	bool find_userdefined_stct(std::string);
+	std::vector<std::string> imports;
 };

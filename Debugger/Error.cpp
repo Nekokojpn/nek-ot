@@ -9,9 +9,6 @@ void add_err_msg(std::string _errmsg) {
 }
 
 void error(std::string title, std::string message, uint32_t line, uint32_t column) {
-	std::cerr << std::endl;
-	Console::SetConsoleTextWhite();
-	std::cerr << "nek-ot compiler error repoting:" << std::endl;
 
 	if (source.size() <= line && source[line].size() <= column) {
 		std::cerr << std::endl;
@@ -61,11 +58,27 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextGray();
 	exit(1);
 }
+
+void error_onlymsg(std::string message) {
+
+	std::cerr << std::endl;
+	Console::SetConsoleTextRed();
+	std::cerr << "Error: Compile error" << std::endl;
+
+	
+	std::cerr << std::endl << message << std::endl;
+
+	exit(1);
+}
+
 void error(std::string title, std::string message, Location_t& loc) {
 	error(title, message, loc.location_begin_line, loc.location_begin_column);
 }
 void error(std::string title, std::string message, Token_t& curtok) {
 	error(title, message, curtok.loc);
+}
+void error(std::string message, Token_t& curtok) {
+	error("Compile error",message, curtok);
 }
 
 void error_unexpected(Token_t& curtok) {

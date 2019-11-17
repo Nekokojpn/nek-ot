@@ -25,147 +25,159 @@ void compile() {
 }
 
 int main(int argc, char** argv) {
-#ifdef DEBUGG
-	std::chrono::system_clock::time_point start_tokenize, end_toknize, start_parse, end_parse, start_codegen, end_codegen;
-#endif
-#ifdef DEBUGG
+
+	std::vector<std::string> args;
+	bool isDumpllvm = false;
+	bool isDumpTime = false;
+	for (int i = 2; i < argc; i++) {
+		if (strcmp(argv[i], "-O0") == 0)
+			args.push_back("-O0");
+		else if (strcmp(argv[i], "-O1") == 0)
+			args.push_back("-O1");
+		else if (strcmp(argv[i], "-O2") == 0)
+			args.push_back("-O2");
+		else if (strcmp(argv[i], "-O3") == 0)
+			args.push_back("-O3");
+		else if (strcmp(argv[i], "-Ofast") == 0)
+			args.push_back("-Ofast");
+		else if (strcmp(argv[i], "-Os") == 0)
+			args.push_back("-Os");
+		else if (strcmp(argv[i], "-Og") == 0)
+			args.push_back("-Og");
+		else if (strcmp(argv[i], "-dllvm") == 0)
+			isDumpllvm = true;
+		else if (strcmp(argv[i], "-time") == 0)
+			isDumpTime = true;
+		else {
+			std::string a = argv[i];
+			error_onlymsg("Unkown argument --> " + a);
+		}
+	}
+
+	std::chrono::system_clock::time_point start_tokenize, end_toknize, start_parse, end_parse, start_codegen, end_codegen, start_opt, end_opt, start_llc, end_llc, start_clang, end_clang;
+
 	if (load_source(argv[1]) == 1)
 		exit(1);
-#else
-  if (load_source(static_cast<std::string>(argv[1])) == 1)
-    return 1;
-#endif
-#ifdef DEBUGG
-  start_tokenize = std::chrono::system_clock::now();
-#endif
-  TK tok = gettoken();
-  while (tok != TK::tok_eof) {
-	if(tok!=TK::tok_nope)
-		 tokens.push_back(tok);
-    tok = gettoken();
-  }
-  int it = tokens.size();
+	if (isDumpTime)
+		start_tokenize = std::chrono::system_clock::now();
+	TK tok = gettoken();
+	while (tok != TK::tok_eof) {
+		if (tok != TK::tok_nope)
+			tokens.push_back(tok);
+		tok = gettoken();
+	}
+	int it = tokens.size();
 #ifdef HIGH_DEBUGG
-  std::cout << "-----Token dump-----" << std::endl;
+	std::cout << "-----Token dump-----" << std::endl;
 #endif //  HIGHDEBUGG
-  std::vector<Token_t> tytokens(tokens.size());
-  for (int i = 0; i < it; i++) {
-    Token_t t;
-    t.ty = tokens[i];
-    t.val = literals[i];
-	t.loc = locs[i];
-    tytokens[i] = t;
+	std::vector<Token_t> tytokens(tokens.size());
+	for (int i = 0; i < it; i++) {
+		Token_t t;
+		t.ty = tokens[i];
+		t.val = literals[i];
+		t.loc = locs[i];
+		tytokens[i] = t;
 #ifdef  HIGH_DEBUGG
-	std::cout  << locs[i].location_begin_line << ":" << locs[i].location_begin_column << "     " << (int)tokens[i] << " " << literals[i] << "   " << std::endl;
+		std::cout << locs[i].location_begin_line << ":" << locs[i].location_begin_column << "     " << (int)tokens[i] << " " << literals[i] << "   " << std::endl;
 #endif //  HIGHDEBUGG
-  }
-  Token_t t;
-  t.ty = TK::tok_eof;
-  tytokens.push_back(t);
-  tytoken_size = tytokens.size();
-#ifdef DEBUGG
-  end_toknize = std::chrono::system_clock::now();
-#endif
-  // Parser--->  
-#ifdef DEBUGG
-  start_parse = std::chrono::system_clock::now();
-#endif
-  auto parser = Parser(tytokens);
-  char o0[] = "-O0";
-  char o1[] = "-O1";
-  char o2[] = "-O2";
-  char o3[] = "-O3";
-  char o4[] = "-Ofast";
-  char os[] = "-Os";
-  char og[] = "-Og";
-  parser.setOpt(3);
-  /*
-  for (int i = 2; i <= argc; i++) {
-	  if (*argv[i] == *o0)
-		  parser.setOpt(0);
-	  else if (*argv[i] == *o1)
-		  parser.setOpt(1);
-	  else if (*argv[i] == *o2)
-		  parser.setOpt(2);
-	  else if (*argv[i] == *o3)
-		  parser.setOpt(3);
-	  else if (*argv[i] == *o4)
-		  parser.setOpt(4);
-	  else if (*argv[i] == *os)
-		  parser.setSOpt(1);
-	  else if (*argv[i] == *og)
-		  parser.setSOpt(0);
-	  else
-		  parser.setOpt(0);
-  }
-  */
-  init_parse();
-  
-  Test::CreateFunc();
-  //Sys::IO::OutPuti8Ptr::CreateFunc();
-  //Sys::Cast::CastInt32toInt8ptr::CreateFunc();
-  //Sys::Cast::CastInt32toInt8Array::CreateFunc();
-  Sys::IO::Printf::CreateFunc();
-  Sys::IO::Printfln::CreateFunc();
-  Sys::IO::Input::CreateFunc();
+	}
+	Token_t t;
+	t.ty = TK::tok_eof;
+	tytokens.push_back(t);
+	tytoken_size = tytokens.size();
+	if (isDumpTime)
+		end_toknize = std::chrono::system_clock::now();
+	// Parser--->  
+	if (isDumpTime)
+		start_parse = std::chrono::system_clock::now();
+	auto parser = Parser(tytokens);
 
-#ifdef DEBUGG
-  std::cout << "Generating LLVM IR..." << std::endl;
-#endif
+	init_parse();
 
-  auto parsed_ast = parser.parse();
-#ifdef DEBUGG
-  end_parse = std::chrono::system_clock::now();
-  start_codegen = std::chrono::system_clock::now();
-#endif
-  parser.codegen(std::move(parsed_ast));
-#ifdef DEBUGG
-  end_codegen = std::chrono::system_clock::now();
-#endif
-  std::cout << std::endl;
+	Test::CreateFunc();
 
-  compile();
-  if(parser.getOpt() == 0)
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -O0 -o opt.bc out.bc");
-  else if (parser.getOpt() == 1)
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -O1 -o opt.bc out.bc");
-  else if (parser.getOpt() == 2)
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -O2 -o opt.bc out.bc");
-  else if (parser.getOpt() == 3)
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -O3 -o opt.bc out.bc");
-  else if (parser.getOpt() == 4)
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Ofast -o opt.bc out.bc");
-  else if (parser.getSOpt() == 0)
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Og -o opt.bc out.bc");
-  else
-	  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o opt.bc out.bc");
+	if (isDumpllvm)
+		std::cout << "Generating LLVM IR..." << std::endl;
 
 
-  system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe opt.bc");
-  system("clang -l C:\\nek-ot\\User32.lib opt.s .\\stdlib\\io.s");
-  
-#ifdef DEBUGG
-  std::cout << "-----LLVM IR-----" << std::endl;
-  parser.dump();
-  std::cout << "-----time-----" << std::endl;
-  double tokenize_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end_toknize - start_tokenize)
-	  .count() /
-	  1000000.0);
-  double parse_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end_parse - start_parse)
-	  .count() /
-	  1000000.0);
-  double codegen_time = static_cast<double>(
-	  std::chrono::duration_cast<std::chrono::microseconds>(end_codegen - start_codegen)
-	  .count() /
-	  1000000.0);
-  double all_time = tokenize_time + parse_time + codegen_time;
-  printf("All time %lf[s]\n", all_time);
-  printf("Tokenize time %lf[s]\n", tokenize_time);
-  printf("Parse time %lf[s]\n", parse_time);
-  printf("Codegen time %lf[s]\n", codegen_time);
-#endif
-  
-  return 0;
+	auto parsed_ast = parser.parse();
+	if (isDumpTime) {
+		end_parse = std::chrono::system_clock::now();
+		start_codegen = std::chrono::system_clock::now();
+	}
+	parser.codegen(std::move(parsed_ast));
+	if (isDumpTime)
+		end_codegen = std::chrono::system_clock::now();
+	std::cout << std::endl;
+
+	compile();
+	std::string optArg = "";
+	for (int i = 0; i < args.size(); i++) {
+		optArg += " " + args[i];
+	}
+	if (isDumpTime)
+		start_opt = std::chrono::system_clock::now();
+	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o opt.bc out.bc");
+	if (isDumpTime){
+		end_opt = std::chrono::system_clock::now();
+		start_llc = std::chrono::system_clock::now();
+	}
+	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe opt.bc");
+	if (isDumpTime)
+		end_llc = std::chrono::system_clock::now();
+
+	std::string s = "";
+	for (int i = 0; i < parser.imports.size(); i++) {
+		s += " stdlib//" + parser.imports[i] + ".s";
+	}
+
+	if (isDumpTime)
+		start_clang = std::chrono::system_clock::now();
+	std::string cmline = "clang -l C:\\nek-ot\\User32.lib opt.s" + s;
+	if (isDumpTime)
+		end_clang = std::chrono::system_clock::now();
+
+	system(cmline.c_str());
+
+	if (isDumpllvm) {
+		std::cout << "-----LLVM IR-----" << std::endl;
+		parser.dump();
+	}
+	if (isDumpTime) {
+		std::cout << "-----time-----" << std::endl;
+		double tokenize_time = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::microseconds>(end_toknize - start_tokenize)
+			.count() /
+			1000000.0);
+		double parse_time = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::microseconds>(end_parse - start_parse)
+			.count() /
+			1000000.0);
+		double codegen_time = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::microseconds>(end_codegen - start_codegen)
+			.count() /
+			1000000.0);
+		double opt_time = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::microseconds>(end_opt - start_opt)
+			.count() /
+			1000000.0);
+		double llc_time = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::microseconds>(end_llc - start_llc)
+			.count() /
+			1000000.0);
+		double clang_time = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::microseconds>(end_clang - start_clang)
+			.count() /
+			1000000.0);
+		double all_time = tokenize_time + parse_time + codegen_time + opt_time + llc_time + clang_time;
+		printf("All time %lf[s]\n", all_time);
+		printf("Tokenize time %lf[s]\n", tokenize_time);
+		printf("Parse time %lf[s]\n", parse_time);
+		printf("Codegen time %lf[s]\n", codegen_time);
+		printf("Optimization time %lf[s]\n", opt_time);
+		printf("IR compile time %lf[s]\n", llc_time);
+		printf("Link time %lf[s]\n", clang_time);
+	}
+
+	return 0;
 }

@@ -47,19 +47,6 @@ Module* getModule() {
 	return module.get();
 }
 
-int Parser::getOpt() {
-	return this->opt;
-}
-void Parser::setOpt(int level) {
-	this->opt = level;
-}
-void Parser::setSOpt(int level) {
-	this->sopt = level;
-}
-int Parser::getSOpt() {
-	return this->sopt;
-}
-
 void Test::CreateFunc() {
 	/*
 	llvm::Function* test_func;
@@ -559,6 +546,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	ArrayRef<Value*> v(idx_list);
 	if (isArrTy) {
 		gep = builder.CreateLoad(value);
+		builder.CreateLoad(value->getArraySize());
 		return builder.CreateInBoundsGEP(gep, v);
 
 	}
@@ -973,9 +961,15 @@ Value* ASTCall::codegen() {
 		return nullptr;
 	}
 	else {
-		auto inst = builder.CreateCall(functions_global[name], argsRef, "");
-		//inst->setCallingConv(CallingConv::X86_StdCall);
-		return inst;
+		if (functions_global.find(this->name) != functions_global.end()) {
+			auto inst = builder.CreateCall(functions_global[name], argsRef, "");
+			//inst->setCallingConv(CallingConv::X86_StdCall);
+			return inst;
+		}
+		else {
+			std::string s = "There is no function name --> " + this->name;
+			error_codegen(s, this->loc);
+		}
 	}
 }
 

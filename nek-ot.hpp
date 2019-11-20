@@ -179,18 +179,15 @@ public:
 			static void CreateFunc();
 		};
 	};
-	class Inline {
-	public:
-		class Asm {
-		public:
-			static void CreateFunc();
-		};
-	};
 	class List {
 	public:
 		static void CreateFunc();
 	};
 	class Range {
+	public:
+		static void CreateFunc();
+	};
+	class Random {
 	public:
 		static void CreateFunc();
 	};
@@ -338,6 +335,7 @@ public:
 	//<-----
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }
+	static void declareFunction(std::string func_name, std::string ac_func_name);
 };
 
 class ASTSubst;

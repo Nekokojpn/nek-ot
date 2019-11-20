@@ -3,7 +3,6 @@ import "io";
 fn main() -> i32{
 	i := i32 input();
 	arr := i32[5]{1,2,3,4,5};
-	a := 10;
-	arr[a] = 0;
+	r := rand();
 	ret i;
 }

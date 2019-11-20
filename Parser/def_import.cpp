@@ -17,6 +17,10 @@ void Parser::def_import() {
 		Sys::IO::Printfln::CreateFunc();
 		Sys::IO::Input::CreateFunc();
 	}
+	else if (str == "random") {
+		this->imports.push_back("random");
+		Sys::Random::CreateFunc();
+	}
 	else {
 		std::string s = "There is no lib name --> " + str;
 		error(s, curtok);

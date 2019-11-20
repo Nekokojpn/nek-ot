@@ -359,6 +359,24 @@ void Sys::Range::CreateFunc() {
 	*/
 }
 
+void Sys::Random::CreateFunc() {
+	Codegen::declareFunction("random", "?random@@YAHXZ");
+}
+
+void Codegen::declareFunction(std::string func_name, std::string ac_func_name) {
+	llvm::Function* func;
+	{
+		std::vector<llvm::Type*> args;
+		//args.push_back(builder.getInt32Ty());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
+		func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, ac_func_name, module.get());
+		func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global[func_name] = func;
+	return;
+}
+
 void init_parse() {
 	module = std::make_unique<Module>("top", context);
 	fpm = std::make_unique<legacy::FunctionPassManager>(module.get());

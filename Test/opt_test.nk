@@ -1,0 +1,20 @@
+import "io";
+fn mumble(x : i32) -> i32{
+	if(x < 9)
+		ret x*5;
+	else
+		ret x*20;
+}
+fn main(){
+	//Loop Unrolling
+	sum := 0;
+	for(i := 1; i <= 10; i = i + 1;){
+		sum = sum + i;
+	}
+	writefln("%d", sum);
+
+	//Inline expansion
+	a := mumble(10);
+	writefln("%d", a);
+	ret;
+}

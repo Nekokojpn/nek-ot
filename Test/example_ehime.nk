@@ -1,0 +1,22 @@
+import "io";
+
+fn main() -> i32{
+	writefln("Hello world");
+
+	num_int := 0;
+	num_long := 100L;
+	num_double := 1.0;
+
+	sum := i32 0;
+	for(i := 0; i < 10; i++){
+		sum += i;
+	}
+	writefln("%d", sum);
+
+	if(sum < 100)
+		writefln("sum is smaller than 100.");
+	else
+		writefln("sum is bigger than 100.");
+
+	ret 0;
+}

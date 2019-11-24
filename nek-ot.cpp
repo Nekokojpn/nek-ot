@@ -117,23 +117,23 @@ int main(int argc, char** argv) {
 	}
 	if (isDumpTime)
 		start_opt = std::chrono::system_clock::now();
-	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o opt.bc out.bc");
+	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\out.bc");
 	if (isDumpTime){
 		end_opt = std::chrono::system_clock::now();
 		start_llc = std::chrono::system_clock::now();
 	}
-	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe opt.bc");
+	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc");
 	if (isDumpTime)
 		end_llc = std::chrono::system_clock::now();
 
 	std::string s = "";
 	for (int i = 0; i < parser.imports.size(); i++) {
-		s += " stdlib//" + parser.imports[i] + ".s";
+		s += " D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\stdlib\\" + parser.imports[i] + ".s";
 	}
 
 	if (isDumpTime)
 		start_clang = std::chrono::system_clock::now();
-	std::string cmline = "clang -l C:\\nek-ot\\User32.lib opt.s" + s;
+	std::string cmline = "clang -l C:\\nek-ot\\User32.lib D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.s" + s;
 	if (isDumpTime)
 		end_clang = std::chrono::system_clock::now();
 

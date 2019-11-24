@@ -1,3 +1,4 @@
+import "io";
 fn fibo(n : i32) -> i32{
 	val := i32(0);
 	if(n < 2){

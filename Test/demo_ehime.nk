@@ -1,8 +1,138 @@
 import "io";
 import "file";
 
+fn mandelbrot(c_x : f64, c_y : f64, n : i32) -> i32 {
+	x_n := 0.0;
+	y_n := 0.0;
+	x_n_1 := 0.0;
+	y_n_1 := 0.0;
+
+	for(i := 0; i < n; i = i + 1;){
+		x_n_1 = x_n * x_n - y_n * y_n + c_x;
+		y_n_1 = 2 * x_n * y_n + c_y;
+
+		if(x_n_1 * x_n_1 + y_n_1 * y_n_1 > 4.0){
+			ret n;
+		} else {
+			x_n = x_n_1;
+			y_n = y_n_1;
+		}
+	}
+	ret 0;
+}
+fn mandel(){	
+	times := 500;
+	x_max := 1.0;
+	x_min := 0-2.0;
+	y_max := 1.0;
+	y_min := 0-1.0;
+	dx := 0.02;
+	dy := 0.02;
+	x := 0.0;
+	x_length := f64 (x_max - x_min) / dx;
+	for(y := f64 y_max; y > y_min; y = y - dy;){
+		x = x_min;
+		while(x < x_max){
+			if(mandelbrot(x, y, 300) == 0){
+				writef(" ");
+			} else {
+				writef("*");
+			}
+			x = x + dx;
+		}
+		writefln(" ");
+		y = y - dy;
+	}
+	ret;
+}
+
+fn display(arr : i32[15]){
+	k := i32 15;
+	l := 0;
+	while(k > 0) {
+		l = 0;
+		while(l < 15) {
+			if(arr[l] >= k) {
+				writef("*");
+			}
+			else {
+				writef(" ");
+			}
+			l = l + 1;
+		}
+		writefln(" ");
+		k = k - 1;
+	}
+	ret;
+}
+
+fn bubblesort() {
+	target := i32[15]{6,7,1,12,10,15,4,3,11,13,9,5,14,8,2};
+	i := 0;
+	j := 0;
+	tmp := 0;
+	while(i < 15) {
+		j = i + 1;
+		while(j < 15) {
+			display(target);
+			if(target[i] > target[j]) {
+				tmp = target[i];
+				target[i] = target[j];
+				target[j] = tmp;
+			}
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+	display(target);
+	ret;
+}
+
+fn display_select(){
+	writefln("***Choose menu***")
+	writefln("1. MandelBrot set");
+	writefln("2. Bubble sort visualization");
+	writefln("1. MandelBrot set");
+	writefln("1. MandelBrot set");
+	writefln("*****************");
+	ret;
+}
 fn main(){
-	str := "str";
-	fwrite("te.txt", "unko");
+	writefln("***********************************************");
+	writefln("*                                             *");
+	writefln("*  *   *  *****  *****         ******  *****  *");
+	writefln("*  **  *  *      *             *    *    *    *");
+	writefln("*  * * *  *****  *      *****  *    *    *    *");
+	writefln("*  *  **  *      *             *    *    *    *");
+	writefln("*  *   *  *****  *****         ******    *    *");
+	writefln("*                                             *");
+	writefln("***********************************************");
+	writefln(" ");
+	a := i32 0;
+	display_select();
+	writef("input->");
+	a = input();
+	while(a != 9){
+		if(a == 1){
+			mandel();
+			writefln(" ");
+			writefln("Yay! did it!");
+			goto next;
+		}
+		if(a == 2){
+			bubblesort();
+			writefln(" ");
+			writefln("Yay! did it!");
+			goto next;
+		}
+
+		writefln("What is %d", a);
+		writefln(" ");
+	@next:
+		display_select();
+		writef("input->");
+		a = input();
+	}
+
 	ret;
 }

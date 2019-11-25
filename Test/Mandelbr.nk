@@ -1,12 +1,11 @@
+import "io";
 fn mandelbrot(c_x : f64, c_y : f64, n : i32) -> i32 {
-	x_n := f64$0.0;
-	y_n := f64$0.0;
-	x_n_1 := f64$0.0;
-	y_n_1 := f64$0.0;
-	i := i32$0;
-	i := i32$0;
+	x_n := 0.0;
+	y_n := 0.0;
+	x_n_1 := 0.0;
+	y_n_1 := 0.0;
 
-	while(i < n){
+	for(i := 0; i < n; i = i + 1;){
 		x_n_1 = x_n * x_n - y_n * y_n + c_x;
 		y_n_1 = 2 * x_n * y_n + c_y;
 
@@ -16,29 +15,26 @@ fn mandelbrot(c_x : f64, c_y : f64, n : i32) -> i32 {
 			x_n = x_n_1;
 			y_n = y_n_1;
 		}
-		i = i + 1;
 	}
 	ret 0;
 }
 fn main(){	
-	times := i32$500;
-	x_max := f64$1.0;
-	x_min := f64$-2.0;
-	y_max := f64$1.0;
-	y_min := f64$-1.0;
-	dx := f64$0.02;
-	dy := f64$0.02;
-	x := f64$0.0;
-	y := f64$0.0;
-	x_length := f64$(x_max - x_min) / dx;
-	y = y_max;
-	while(y > y_min){
+	times := 500;
+	x_max := 1.0;
+	x_min := 0-2.0;
+	y_max := 1.0;
+	y_min := 0-1.0;
+	dx := 0.02;
+	dy := 0.02;
+	x := 0.0;
+	x_length := f64 (x_max - x_min) / dx;
+	for(y := f64 y_max; y > y_min; y = y - dy;){
 		x = x_min;
 		while(x < x_max){
 			if(mandelbrot(x, y, 300) == 0){
-				writef("*");
-			} else {
 				writef(" ");
+			} else {
+				writef("*");
 			}
 			x = x + dx;
 		}

@@ -1,0 +1,8 @@
+import "io";
+import "file";
+
+fn main(){
+	str := "str";
+	fwrite("te.txt", "unko");
+	ret;
+}

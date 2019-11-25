@@ -167,6 +167,10 @@ public:
 			public: 
 				static void CreateFunc();
 		};
+		class File {
+			public:
+				static void CreateFunc();
+		};
 	};
 	class Cast {
 	public:

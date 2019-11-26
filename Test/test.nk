@@ -1,8 +1,5 @@
 import "io";
-
-fn main() -> i32{
-	i := i32 input();
-	arr := i32[5]{1,2,3,4,5};
-	r := rand();
-	ret i;
+fn main() -> f64{
+	str := string "unko";
+	ret 0;
 }

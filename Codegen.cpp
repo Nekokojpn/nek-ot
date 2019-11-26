@@ -482,8 +482,8 @@ Type* Codegen::getTypebyAType(AType& ty) {
 		return builder.getDoubleTy();
 		break;
 	case AType::F64:
-return builder.getDoubleTy();
-break;
+		return builder.getDoubleTy();
+		break;
 	case AType::Char:
 		return builder.getInt8Ty();
 		break;

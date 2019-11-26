@@ -126,7 +126,7 @@ fn main(){
 			goto next;
 		}
 
-		writefln("What is %d", a);
+		writefln("What is %d!", a);
 		writefln(" ");
 	@next:
 		display_select();

@@ -88,6 +88,9 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_f64) {
 		return AType::F64;
 	}
+	else if (curtok.ty == TK::tok_string) {
+		return AType::String;
+	}
 	else if (curtok.ty == TK::tok_void) {
 		return AType::Void;
 	}

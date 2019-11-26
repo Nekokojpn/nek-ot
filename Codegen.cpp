@@ -1167,11 +1167,17 @@ Value* ASTSubst::codegen() {
 	if (this->id) {
 		if (this->expr) {
 			auto val = expr->codegen();
-			if (val->getType()->isPointerTy())
+			if (!isStringCodegen && val->getType()->isPointerTy())
 				val = builder.CreateLoad(val);
 			auto ptr = id->codegen();
 			Value* ptr_ = ptr;
-			return builder.CreateStore(val, ptr_);
+			if (!isStringCodegen)
+				return builder.CreateStore(val, ptr_);
+			else {
+
+				auto n = builder.CreateConstInBoundsGEP2_64(val, 0, 0);
+				return builder.CreateStore(n, ptr_);
+			}
 		}
 		else {
 			lambdavalue = id->codegen();

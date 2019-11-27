@@ -13,6 +13,7 @@ static std::map<std::string, StructType*> userdefined_stcts;
 static std::map<std::string, Stct_t> userdefined_stcts_elements;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
+static std::map<AllocaInst*, bool> namedvalues_local_isinitialized;
 static std::map<std::string, Value*> namedvalues_str;
 static Value* underscore;
 static std::map<std::string, BasicBlock*> jmp_labels;
@@ -541,8 +542,14 @@ Value* ASTIdentifierBase::codegen() {
 			current_inst = global;
 			return global;
 		}
-		current_inst = value;
-		return value;
+		if (namedvalues_local_isinitialized[value] == true) {
+			current_inst = value;
+			return value;
+		}
+		else {
+			add_err_msg("Variables must be initialized before use.");
+			error_codegen("Variable '" + this->name + "' is not initialized!", this->loc);
+		}
 	}
 }
 
@@ -562,7 +569,13 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 		current_inst = global;
 		return global;
 	}
-	current_inst = value;
+	if (namedvalues_local_isinitialized[value] == true) {
+		current_inst = value;
+	}
+	else {
+		add_err_msg("Variables must be initialized before use.");
+		error_codegen("Variable '" + this->name + "' is not initialized!", this->loc);
+	}
 	//Build a idx_list
 
 	Value* gep = nullptr;
@@ -842,6 +855,7 @@ fr:
 			}
 			if (this->expr) {
 				auto value = this->expr->codegen();
+				namedvalues_local_isinitialized[allocainst] = true;
 				if (!value)
 					return nullptr;
 				return value;
@@ -858,13 +872,15 @@ fr:
 			}
 			auto allocainst = builder.CreateAlloca(ty);
 
-			if (name != "_")
+			if (name != "_") {
 				namedvalues_local[name] = allocainst;
+			}
 			else
 				underscore = allocainst;
 
 			if (this->elements) {
 				this->elements->subst(allocainst, this->ty.arrsize);
+				namedvalues_local_isinitialized[allocainst] = true;
 			}
 			return allocainst;
 		}
@@ -883,7 +899,7 @@ Value* ASTProto::codegen() {
 		Type* ty;
 		if (args[i].isArr == true)
 			ty = Codegen::getTypebyType(args[i])->getArrayElementType()->getPointerTo();
-			//ty = Codegen::getTypebyType(args[i]);
+			
 		else if (args[i].kind == TypeKind::Pointer)
 			ty = Codegen::getTypebyType(args[i])->getPointerTo();
 		else
@@ -913,6 +929,7 @@ Value* ASTProto::codegen() {
 		auto alloca = builder.CreateAlloca(arg.getType());
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
+		namedvalues_local_isinitialized[alloca] = true;
 	}
 	mainFunc->setDSOLocal(true);
 	//mainFunc->setCallingConv(CallingConv::X86_StdCall);
@@ -947,7 +964,7 @@ Value* ASTFunc::codegen() {
 	retvalue = nullptr;
 	retbbs.clear();
 	namedvalues_local.clear();
-
+	namedvalues_local_isinitialized.clear();
 	return pr;
 }
 Value* ASTCall::codegen() {

@@ -1,0 +1,7 @@
+import "io";
+
+fn main(){
+	arr := i32[5]{1, 2, 3, 4, 5};
+	arr[10] = 0;
+	ret;
+}

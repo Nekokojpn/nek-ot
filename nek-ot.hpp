@@ -642,4 +642,5 @@ public:
 	void add_userdefined_stct(Token_t&);
 	bool find_userdefined_stct(std::string);
 	std::vector<std::string> imports;
+	bool isExpectedSemi = true;
 };

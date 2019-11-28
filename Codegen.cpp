@@ -19,6 +19,9 @@ static Value* underscore;
 static std::map<std::string, BasicBlock*> jmp_labels;
 static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
 
+static std::pair<bool, std::vector<Value*>> if_rets;
+static std::vector<BasicBlock*> if_rets_bb;
+
 //ASTArrayIndexes------>
 std::vector<Value*> idx_list;
 auto isArrTy = false;
@@ -854,8 +857,8 @@ fr:
 				namedvalues_local[this->name] = allocainst;
 			}
 			if (this->expr) {
-				auto value = this->expr->codegen();
 				namedvalues_local_isinitialized[allocainst] = true;
+				auto value = this->expr->codegen();
 				if (!value)
 					return nullptr;
 				return value;
@@ -1003,6 +1006,7 @@ Value* ASTCall::codegen() {
 	}
 	ArrayRef<Value*> argsRef(types);
 	//The system calls
+
 	if (name == "writefln") {
 		Codegen::call_writefln(argsRef);
 		return nullptr;
@@ -1025,9 +1029,13 @@ Value* ASTCall::codegen() {
 }
 
 Value* ASTElse::codegen() {
+	Value* finalret;
 	for (int i = 0; i < body.size(); i++) {
 		Codegen::init_on_inst();
-		body[i]->codegen();
+		finalret = body[i]->codegen();
+	}
+	if (if_rets.first) {
+		if_rets.second.push_back(finalret);
 	}
 	return nullptr;
 }
@@ -1049,11 +1057,16 @@ Value* ASTIf::codegen() {
 
 	this->bodyBB = builder.GetInsertBlock();
 
+	Value* finalret; 
+
 	for (int i = 0; i < body.size(); i++) {
 		Codegen::init_on_inst();
-		body[i]->codegen();
+		finalret = body[i]->codegen();
 	}
-
+	if (if_rets.first) {
+		if_rets.second.push_back(finalret);
+		if_rets_bb.push_back(if_block);
+	}
 
 	//if(!retcodegen)
 		//blocks.push_back(if_block);
@@ -1103,6 +1116,7 @@ Value* ASTIf::codegen() {
 
 			builder.SetInsertPoint(else_block);
 			curbb = else_block;
+			if (if_rets.first)if_rets_bb.push_back(else_block);
 			ast_else->codegen();
 			if (!retcodegen && !gotocodegen)
 				blocks.push_back(else_block);
@@ -1182,28 +1196,37 @@ Value* ASTAction::codegen() {
 
 Value* ASTSubst::codegen() {
 	if (this->id) {
+		if_rets.first = true;
 		if (this->expr) {
 			auto val = expr->codegen();
-			if (!isStringCodegen && val->getType()->isPointerTy())
+			if_rets.first = false;
+			if (!isStringCodegen && if_rets.second.size() == 0 && val->getType()->isPointerTy())
 				val = builder.CreateLoad(val);
 			auto ptr = id->codegen();
 			Value* ptr_ = ptr;
-			if (!isStringCodegen)
+			if (if_rets.second.size() == 0 && !isStringCodegen)
 				return builder.CreateStore(val, ptr_);
+			else if (if_rets.second.size() > 0) {
+				if (if_rets.second.size() < 2) {
+					add_err_msg("Syntax: <variable> = if(<bool expression>) <expression>; else <expression>;");
+					error_codegen("Expected --> else", this->loc);
+				}
+				if (if_rets_bb.size() != if_rets.second.size()) {
+					error_codegen("Invalid if block!", this->loc);
+				}
+				auto phi = builder.CreatePHI(if_rets.second[0]->getType(), if_rets.second.size());
+				for (int i = 0; i < if_rets.second.size(); i++) {
+					phi->addIncoming(if_rets.second[i], if_rets_bb[i]);
+				}
+				return builder.CreateStore(phi, ptr_);
+				if_rets.second.clear();
+				if_rets_bb.clear();
+			}
 			else {
 
 				auto n = builder.CreateConstInBoundsGEP2_64(val, 0, 0);
 				return builder.CreateStore(n, ptr_);
 			}
-		}
-		else {
-			lambdavalue = id->codegen();
-			for (auto ast = body.begin(); ast != body.end(); ast++) {
-				Codegen::init_on_inst();
-				ast->get()->codegen();
-			}
-			lambdavalue = nullptr;
-			return nullptr;
 		}
 	}
 }

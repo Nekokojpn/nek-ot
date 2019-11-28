@@ -290,15 +290,12 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 std::unique_ptr<ASTIf> Parser::bool_statement() {
 	//IF----->
 	getNextToken();
-	bool doll = false;
-	if (curtok.ty != TK::tok_lp && curtok.ty != TK::tok_doll)
+	if (curtok.ty != TK::tok_lp)
 		error("Expected", "Expected --> (", curtok);
-	if (curtok.ty == TK::tok_doll) doll = true;
 	getNextToken();
 	auto boolast = expr();
-	if (!doll && curtok.ty != TK::tok_rp)
+	if (curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
-	if (!doll)getNextToken();
 	std::unique_ptr<ASTIf> ast;
 	if (curtok.ty == TK::tok_lb) {
 		auto loc = curtok.loc;

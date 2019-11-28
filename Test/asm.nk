@@ -1,4 +1,0 @@
-fn main(){
-	asm("LFENCE;", "~{dirflag},~{fpsr},~{flags}");
-	ret;
-}

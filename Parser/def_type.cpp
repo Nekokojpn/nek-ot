@@ -74,9 +74,10 @@ std::unique_ptr<ASTType> Parser::def_type(std::unique_ptr<AST> ast_id) {
 				);
 			ast->name = this->curval;
 			ast->loc = loc;
-			if (curtok.ty != TK::tok_semi)
+			if (this->isExpectedSemi && curtok.ty != TK::tok_semi)
 				error_expected(";", curtok);
-			getNextToken();
+			if(this->isExpectedSemi)getNextToken();
+			this->isExpectedSemi = true;
 			return std::move(ast);
 		}
 		else {

@@ -1,5 +1,5 @@
 import "io";
-fn main() -> f64{
-	str := string "unko";
+fn main() -> i32{
+	x := 0;
 	ret 0;
 }

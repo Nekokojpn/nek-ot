@@ -1,7 +1,7 @@
 fn main() -> i32 { 
-	testMulExpr := i32((3+3)*(1+5)); 
-	testExpr := i32(3*3+1); 
-	i := i32(testMulExpr + 12);
-	m := i32((testMulExpr + i) * testExpr);
+	testMulExpr := (3+3)*(1+5); 
+	testExpr := 3*3+1; 
+	i := testMulExpr + 12;
+	m := (testMulExpr + i) * testExpr;
 	ret m;
 }

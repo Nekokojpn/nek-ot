@@ -227,8 +227,45 @@ label1:
 		xsign = true;
 		goto label1;
 	}
-	add_err_msg("You specified token is unkown for the expression.");
+	else if (curtok.ty == TK::tok_if) {
+		getNextToken();
+		if (!curtokIs(TK::tok_lp))
+			error_expected("(", curtok);
+		getNextToken();
+		auto boolast = expr();
+		if (!curtokIs(TK::tok_rp))
+			error_expected(")", curtok);
+		getNextToken();
+		std::unique_ptr<ASTIf> ast;
+		if (curtok.ty == TK::tok_lb) {
+			auto loc = curtok.loc;
+			ast = std::make_unique<ASTIf>(std::move(boolast), expr_block(false));
+			ast->loc = loc;
+		}
+		else {
+			auto loc = curtok.loc;
+			ast = std::make_unique<ASTIf>(std::move(boolast), expr_block(true));
+			ast->loc = loc;
+		}
+		if (!curtokIs(TK::tok_else)) {
+			add_err_msg("Syntax: <variable> = if(<bool expression>) <expression>; else <expression>;");
+			error_expected("else", curtok);
+		}
+		getNextToken();
+		isExpectedSemi = false;
+		if (curtok.ty == TK::tok_lb) {
+			auto loc = curtok.loc;
+			ast->ast_else = std::make_unique<ASTElse>(expr_block(false));
+			ast->loc = loc;
+			return std::move(ast);
+		}
+		else {
+			auto loc = curtok.loc;
+			ast->ast_else = std::make_unique<ASTElse>(expr_block(true));
+			ast->loc = loc;
+			return std::move(ast);
+		}
+	}
+	add_err_msg("You specified expression is unkown for this syntax.");
 	error_unexpected(curtok);
-	exit(1);
-
 }

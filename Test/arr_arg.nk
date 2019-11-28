@@ -2,7 +2,7 @@ fn func_arr(arr : i32[]) -> i32 {
 	ret arr[0];
 }
 fn main(){
-	arr := i32[2](){0,1};
+	arr := i32[2]{0,1};
 	writefln("%d", arr);
 	ret;
 }

@@ -1,3 +1,4 @@
+import "io";
 fn func_arr(arr : i32[]) -> i32 {
 	ret arr[0];
 }

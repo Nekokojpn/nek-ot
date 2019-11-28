@@ -1,3 +1,4 @@
+import "io";
 fn display(arr : i32[30]){
 	k := 30;
 	l := 0;

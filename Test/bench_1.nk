@@ -1,3 +1,4 @@
+import "io";
 fn main(){
 	MAX := 447;
 	STEP := 14.0 / 1048576.0;

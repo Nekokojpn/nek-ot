@@ -13,11 +13,13 @@ static std::map<std::string, StructType*> userdefined_stcts;
 static std::map<std::string, Stct_t> userdefined_stcts_elements;
 static std::map<std::string, AllocaInst*> namedvalues_global;
 static std::map<std::string, AllocaInst*> namedvalues_local;
-static std::map<AllocaInst*, bool> namedvalues_local_isinitialized;
+static std::map<std::string, bool> namedvalues_local_isinitialized;
 static std::map<std::string, Value*> namedvalues_str;
 static Value* underscore;
 static std::map<std::string, BasicBlock*> jmp_labels;
 static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
+
+bool isSubst = false;
 
 static std::pair<bool, std::vector<Value*>> if_rets;
 static std::vector<BasicBlock*> if_rets_bb;
@@ -505,9 +507,11 @@ Type* Codegen::getTypebyAType(AType& ty) {
 Type* Codegen::getTypebyType(Type_t& t) {
 	auto ty = getTypebyAType(t.ty);
 
-	if (t.isArr)
+	if (t.isArr && t.arrsize.size() > 0)
 		ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
-
+	if (t.isArr && t.arrsize.size() == 0) {
+		ty = ty->getPointerTo();
+	}
 	if (t.kind == TypeKind::Pointer)
 		ty = ty->getPointerTo();
 	return ty;
@@ -545,8 +549,9 @@ Value* ASTIdentifierBase::codegen() {
 			current_inst = global;
 			return global;
 		}
-		if (namedvalues_local_isinitialized[value] == true) {
+		if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
 			current_inst = value;
+			if (isSubst)namedvalues_local_isinitialized[this->name] = true;
 			return value;
 		}
 		else {
@@ -572,8 +577,9 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 		current_inst = global;
 		return global;
 	}
-	if (namedvalues_local_isinitialized[value] == true) {
+	if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
 		current_inst = value;
+		if (isSubst)namedvalues_local_isinitialized[this->name] = true;
 	}
 	else {
 		add_err_msg("Variables must be initialized before use.");
@@ -857,7 +863,7 @@ fr:
 				namedvalues_local[this->name] = allocainst;
 			}
 			if (this->expr) {
-				namedvalues_local_isinitialized[allocainst] = true;
+				namedvalues_local_isinitialized[this->name] = true;
 				auto value = this->expr->codegen();
 				if (!value)
 					return nullptr;
@@ -883,7 +889,7 @@ fr:
 
 			if (this->elements) {
 				this->elements->subst(allocainst, this->ty.arrsize);
-				namedvalues_local_isinitialized[allocainst] = true;
+				namedvalues_local_isinitialized[this->name] = true;
 			}
 			return allocainst;
 		}
@@ -900,9 +906,10 @@ Value* ASTProto::codegen() {
 
 	for (int i = 0; i < args.size(); i++) {
 		Type* ty;
-		if (args[i].isArr == true)
+		if (args[i].isArr == true && args[i].arrsize.size() > 0)
 			ty = Codegen::getTypebyType(args[i])->getArrayElementType()->getPointerTo();
-			
+		else if (args[i].isArr == true && args[i].arrsize.size() == 0)
+			ty = Codegen::getTypebyType(args[i]);
 		else if (args[i].kind == TypeKind::Pointer)
 			ty = Codegen::getTypebyType(args[i])->getPointerTo();
 		else
@@ -932,7 +939,7 @@ Value* ASTProto::codegen() {
 		auto alloca = builder.CreateAlloca(arg.getType());
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
-		namedvalues_local_isinitialized[alloca] = true;
+		namedvalues_local_isinitialized[this->name] = true;
 	}
 	mainFunc->setDSOLocal(true);
 	//mainFunc->setCallingConv(CallingConv::X86_StdCall);
@@ -1202,7 +1209,9 @@ Value* ASTSubst::codegen() {
 			if_rets.first = false;
 			if (!isStringCodegen && if_rets.second.size() == 0 && val->getType()->isPointerTy())
 				val = builder.CreateLoad(val);
+			isSubst = true;
 			auto ptr = id->codegen();
+			isSubst = false;
 			Value* ptr_ = ptr;
 			if (if_rets.second.size() == 0 && !isStringCodegen)
 				return builder.CreateStore(val, ptr_);

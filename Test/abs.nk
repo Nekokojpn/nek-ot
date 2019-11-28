@@ -1,3 +1,4 @@
+import "io";
 fn abs(a : i32) -> i32 {
 	if(a < 0)
 		ret 0 - a;

@@ -88,6 +88,6 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr
 		add_err_msg("Have you forgotten } ?");
 		error_expected("}", curtok);
 	}
-	getNextToken();
+	if(!isOneExpr)getNextToken();
 	return asts;
 }

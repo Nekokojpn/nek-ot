@@ -939,7 +939,7 @@ Value* ASTProto::codegen() {
 		auto alloca = builder.CreateAlloca(arg.getType());
 		builder.CreateStore(&arg, alloca);
 		namedvalues_local[arg.getName()] = alloca;
-		namedvalues_local_isinitialized[this->name] = true;
+		namedvalues_local_isinitialized[arg.getName()] = true;
 	}
 	mainFunc->setDSOLocal(true);
 	//mainFunc->setCallingConv(CallingConv::X86_StdCall);

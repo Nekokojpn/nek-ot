@@ -70,6 +70,8 @@ std::vector<std::unique_ptr<AST>> Parser::expr_block(bool isOneExpr) { //  {expr
 		else if (curtok.ty == TK::tok_num_int) {
 			auto ast = expr();
 			asts.push_back(std::move(ast));
+			if (!curtokIs(TK::tok_semi))error_expected(";", curtok);
+			getNextToken();
 		}
 		else getNextToken();
 		if (isOneExpr)

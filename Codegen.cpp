@@ -521,7 +521,10 @@ Type* Codegen::getTypebyType(Type_t& t) {
 		return ty;
 	}
 	else {
-
+		if (t.ty == AType::Struct) {
+			return nullptr;
+		}
+		return nullptr;
 	}
 }
 
@@ -724,17 +727,6 @@ Value* ASTBinOp::codegen() {
 	}
 	switch (op) {
 	case Op::Plus:
-		
-		/*
-		if (l->getType() && size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] + curvar_v[curvar_v.size() - 1];
-			if (l->getType() && l->getType() == builder.getInt32Ty()) {
-				if (curvar_v[curvar_v.size() - 2] >= 2147483648)
-					error("Compile error", "Exceeded i32 maximum.", this->loc);
-			}
-			curvar_v.pop_back();
-		}
-		*/
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
 			)
@@ -742,10 +734,6 @@ Value* ASTBinOp::codegen() {
 		else
 			return builder.CreateFAdd(l, r);
 	case Op::Minus:
-		/*if (size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] - curvar_v[curvar_v.size() - 1];
-			curvar_v.pop_back();
-		}*/
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
 			)
@@ -753,10 +741,6 @@ Value* ASTBinOp::codegen() {
 		else
 			return builder.CreateFSub(l, r);
 	case Op::Mul:
-		/*if (size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] * curvar_v[curvar_v.size() - 1];
-			curvar_v.pop_back();
-		}*/
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
 			)
@@ -764,10 +748,6 @@ Value* ASTBinOp::codegen() {
 		else
 			return builder.CreateFMul(l, r);
 	case Op::Div:
-		/*if (size + 2 == curvar_v.size()) {
-			curvar_v[curvar_v.size() - 2] = curvar_v[curvar_v.size() - 2] / curvar_v[curvar_v.size() - 1];
-			curvar_v.pop_back();
-		}*/
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
 			)
@@ -852,7 +832,7 @@ Value* ASTType::codegen() {
 	auto type = Codegen::getTypebyType(this->ty);
 	if (this->ty.ty != AType::Nop) {
 fr:
-		if (!type->isArrayTy()) {
+		if (!type || !type->isArrayTy()) {
 			AllocaInst* allocainst;
 			//If local variable
 			if (!this->isGlobal) {
@@ -991,6 +971,11 @@ Value* ASTCall::codegen() {
 	isPtr = false; 
 	for (int i = 0; i < args_expr.size(); i++, current_inst = nullptr, isPtr = false) {
 		auto ty = args_expr[i]->codegen();
+		Value* ty_load;
+		if (ty->getType()->isPointerTy())
+			ty_load = builder.CreateLoad(ty);
+		else
+			ty_load = ty;
 		if (!ty->getType()->isPointerTy()) {
 			types.push_back(ty);
 			continue;
@@ -1000,7 +985,8 @@ Value* ASTCall::codegen() {
 			types.push_back(ty);
 			continue;
 		}
-		else if (current_inst && current_inst->getAllocatedType()->isArrayTy() && !ty->getType()->isArrayTy()) {
+		
+		else if (current_inst && current_inst->getAllocatedType()->isArrayTy() && !ty_load->getType()->isArrayTy()) {
 			if (ty->getType()->isPointerTy())
 				ty = builder.CreateLoad(ty);
 			types.push_back(ty);

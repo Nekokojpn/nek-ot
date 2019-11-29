@@ -1,5 +1,7 @@
 import "io";
+
 fn main() -> i32{
-	x := 0;
+	arr := i32[5]{1,2,3,4,5};
+	writefln("%d", arr[2]);
 	ret 0;
 }

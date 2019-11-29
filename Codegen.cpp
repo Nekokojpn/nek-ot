@@ -499,6 +499,9 @@ Type* Codegen::getTypebyAType(AType& ty) {
 	case AType::Void:
 		return builder.getVoidTy();
 		break;
+	case AType::Struct:
+		return nullptr;
+		break;
 	default:
 		return nullptr;
 		break;
@@ -507,14 +510,19 @@ Type* Codegen::getTypebyAType(AType& ty) {
 Type* Codegen::getTypebyType(Type_t& t) {
 	auto ty = getTypebyAType(t.ty);
 
-	if (t.isArr && t.arrsize.size() > 0)
-		ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
-	if (t.isArr && t.arrsize.size() == 0) {
-		ty = ty->getPointerTo();
+	if (ty != nullptr) {
+		if (t.isArr && t.arrsize.size() > 0)
+			ty = ArrayType::get(ty, t.arrsize[0]);//TODO support multi dimention
+		if (t.isArr && t.arrsize.size() == 0) {
+			ty = ty->getPointerTo();
+		}
+		if (t.kind == TypeKind::Pointer)
+			ty = ty->getPointerTo();
+		return ty;
 	}
-	if (t.kind == TypeKind::Pointer)
-		ty = ty->getPointerTo();
-	return ty;
+	else {
+
+	}
 }
 
 Value* ASTIdentifierBase::codegen() {
@@ -991,6 +999,11 @@ Value* ASTCall::codegen() {
 			isStringCodegen = false;
 			types.push_back(ty);
 			continue;
+		}
+		else if (current_inst && current_inst->getAllocatedType()->isArrayTy() && !ty->getType()->isArrayTy()) {
+			if (ty->getType()->isPointerTy())
+				ty = builder.CreateLoad(ty);
+			types.push_back(ty);
 		}
 		else if (current_inst && current_inst->getAllocatedType()->isArrayTy()) {
 			

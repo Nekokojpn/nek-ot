@@ -502,6 +502,9 @@ Type* Codegen::getTypebyAType(AType& ty) {
 	case AType::Struct:
 		return nullptr;
 		break;
+	case AType::Bool:
+		return builder.getInt1Ty();
+		break;
 	default:
 		return nullptr;
 		break;
@@ -687,6 +690,10 @@ Value* ASTValue::codegen() {
 	if(this->isDouble == true)
 		return ConstantFP::get(context, APFloat(value_d));
 	return builder.getInt32(value);
+}
+
+Value* ASTBool::codegen() {
+	return builder.getInt1(this->value);
 }
 
 Value* ASTStrLiteral::codegen() {
@@ -1051,6 +1058,7 @@ Value* ASTIf::codegen() {
 	if (!astboolop)
 		return nullptr;
 
+	if (astboolop->getType()->isPointerTy())astboolop = builder.CreateLoad(astboolop);
 	auto curfunc = builder.GetInsertBlock()->getParent();
 
 	std::vector<BasicBlock*> blocks;

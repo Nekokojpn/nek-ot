@@ -94,6 +94,9 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_void) {
 		return AType::Void;
 	}
+	else if (curtok.ty == TK::tok_bool) {
+		return AType::Bool;
+	}
 	else {
 		if (find_userdefined_stct(curtok.val))
 			return AType::Struct;

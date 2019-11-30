@@ -70,6 +70,9 @@ enum class TK {
 	tok_xor,
 	tok_brk,
 	tok_goto,
+	tok_true,
+	tok_false,
+	tok_bool,
 
 	tok_ret,
 	tok_void,
@@ -316,7 +319,8 @@ enum class AType { //AllType
 	Void,
 	Array,
 	List,
-	Ident
+	Ident,
+	Bool
 };
 enum class TypeKind {
 	Value,
@@ -568,6 +572,13 @@ public:
 	ASTSubst(std::unique_ptr<AST> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
 	ASTSubst(std::unique_ptr<AST> _id) : id(std::move(_id)) {};
 	Value* codegen() override;
+};
+
+class ASTBool : public AST {
+public:
+	bool value;
+	ASTBool(bool _value) : value(_value) {};
+	Value* codegen();
 };
 
 // [1][2] etc...

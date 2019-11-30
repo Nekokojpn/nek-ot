@@ -266,6 +266,22 @@ label1:
 			return std::move(ast);
 		}
 	}
+	else if (curtokIs(TK::tok_true) || curtokIs(TK::tok_false)) {
+		if (curtokIs(TK::tok_true)) {
+			auto loc = curtok.loc;
+			auto ast = std::make_unique<ASTBool>(true);
+			ast->loc = loc;
+			getNextToken();
+			return std::move(ast);
+		}
+		else {
+			auto loc = curtok.loc;
+			auto ast = std::make_unique<ASTBool>(false);
+			ast->loc = loc;
+			getNextToken();
+			return std::move(ast);
+		}
+	}
 	add_err_msg("You specified expression is unkown for this syntax.");
 	error_unexpected(curtok);
 }

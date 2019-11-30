@@ -14,6 +14,6 @@ std::unique_ptr<ASTSubst> Parser::subst_expr(std::unique_ptr<AST> ast_id) {
 	}
 	//<--------------------Subst
 	else
-		error("Unexpected", "Unexpected token -->" + curtok.val, curtok);
+		error_unexpected(curtok);
 	return nullptr;
 }

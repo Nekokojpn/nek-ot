@@ -1,0 +1,13 @@
+import "io";
+
+fn main(){
+  f := bool true;
+  flag := true;
+  if(1 < 0)
+   writefln("ww");
+  if(f == false)
+   writefln("Hello");
+  if(flag)
+   writefln("World");
+  ret;
+}

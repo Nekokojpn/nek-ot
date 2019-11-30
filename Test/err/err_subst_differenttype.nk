@@ -1,0 +1,7 @@
+import "io";
+
+fn main(){
+ d := 10;
+ d = 1.1;
+ ret;
+}

@@ -1212,8 +1212,12 @@ Value* ASTSubst::codegen() {
 			auto ptr = id->codegen();
 			isSubst = false;
 			Value* ptr_ = ptr;
-			if (if_rets.second.size() == 0 && !isStringCodegen)
-				return builder.CreateStore(val, ptr_);
+			if (if_rets.second.size() == 0 && !isStringCodegen) {
+				if (ptr_->getType()->getPointerElementType() == val->getType())
+					return builder.CreateStore(val, ptr_);
+				else
+					error_codegen("Does not match the type of the declared variable", this->loc);
+			}
 			else if (if_rets.second.size() > 0) {
 				if (if_rets.second.size() < 2) {
 					add_err_msg("Syntax: <variable> = if(<bool expression>) <expression>; else <expression>;");
@@ -1224,7 +1228,10 @@ Value* ASTSubst::codegen() {
 				}
 				auto phi = builder.CreatePHI(if_rets.second[0]->getType(), if_rets.second.size());
 				for (int i = 0; i < if_rets.second.size(); i++) {
-					phi->addIncoming(if_rets.second[i], if_rets_bb[i]);
+					if (phi->getType() == if_rets.second[i]->getType())
+						phi->addIncoming(if_rets.second[i], if_rets_bb[i]);
+					else
+						error_codegen("if expressions must return the same type", this->loc);
 				}
 				return builder.CreateStore(phi, ptr_);
 				if_rets.second.clear();

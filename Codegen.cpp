@@ -1057,8 +1057,10 @@ Value* ASTIf::codegen() {
 	auto astboolop = proto->codegen(); //--> BoolOp
 	if (!astboolop)
 		return nullptr;
-
+	//type of astboolop must be i1.
 	if (astboolop->getType()->isPointerTy())astboolop = builder.CreateLoad(astboolop);
+	if (astboolop->getType() != builder.getInt1Ty())
+		error_codegen("The expression is must be reutrn bool", this->loc);
 	auto curfunc = builder.GetInsertBlock()->getParent();
 
 	std::vector<BasicBlock*> blocks;

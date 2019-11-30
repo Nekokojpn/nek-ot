@@ -295,6 +295,7 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 	getNextToken();
 	if (curtok.ty != TK::tok_lp)
 		error("Expected", "Expected --> (", curtok);
+	auto loc = curtok.loc;
 	getNextToken();
 	auto boolast = expr();
 	if (curtok.ty != TK::tok_rp)
@@ -302,12 +303,11 @@ std::unique_ptr<ASTIf> Parser::bool_statement() {
 	getNextToken();
 	std::unique_ptr<ASTIf> ast;
 	if (curtok.ty == TK::tok_lb) {
-		auto loc = curtok.loc;
+		
 		ast = std::make_unique<ASTIf>(std::move(boolast), expr_block(false));
 		ast->loc = loc;
 	}
 	else {
-		auto loc = curtok.loc;
 		ast = std::make_unique<ASTIf>(std::move(boolast), expr_block(true));
 		ast->loc = loc;
 	}

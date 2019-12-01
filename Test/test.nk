@@ -4,7 +4,10 @@ fn ab()->i32{
 	ret 0;
 }
 fn main() -> i32{
+	j := i32 10;
+	k := 11;
 	i := ab();
+	writefln("%d", i);
 	arr := i32[5]{1,2,3,4,5};
 	writefln("%d", arr[2]);
 	ret 0;

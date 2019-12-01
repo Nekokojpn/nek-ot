@@ -889,7 +889,6 @@ Value* ASTBinOp::codegen() {
 
 Value* ASTType::codegen() {
 	auto type = Codegen::getTypebyType(this->ty);
-	Value* typi;
 	if (this->ty.ty != AType::Nop) {
 fr:
 		if (!type || !type->isArrayTy()) {
@@ -910,13 +909,9 @@ fr:
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
 				namedvalues_local[this->name] = allocainst;
 			}
-			if (this->expr || typi) {
+			if (this->expr) {
 				namedvalues_local_isinitialized[this->name] = true;
-				Value* value;
-				if (this->expr)
-					value = this->expr->codegen();
-				else
-					value = typi;
+				auto value = this->expr->codegen();
 				if (auto* C = dyn_cast<Constant>(value))
 					if (auto CI = dyn_cast<ConstantInt>(C))
 						std::cout << CI->getValue().getZExtValue();
@@ -950,8 +945,8 @@ fr:
 		}
 	}
 	else {
-		typi = this->expr->expr->codegen();
-		type = typi->getType();
+		auto v = this->expr->expr->codegen();
+		type = v->getType();
 		goto fr;
 	}
 }

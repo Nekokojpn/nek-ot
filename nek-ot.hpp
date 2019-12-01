@@ -198,6 +198,10 @@ public:
 	public:
 		static void CreateFunc();
 	};
+	class Exit {
+	public:
+		static void CreateFunc();
+	};
 };
 
 enum class AType;
@@ -240,6 +244,14 @@ typedef struct {
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
 }Alloca_t;
+
+typedef union {
+	short s;
+	int i;
+	long l;
+	float f;
+	double d;
+} Val_u;
 //<-----
 
 void error(std::string title, std::string message, Token_t& curtok);
@@ -336,10 +348,13 @@ public:
 	//-----> LLVM functions
 	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
 	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
+	static void call_exit(int exitcode);
+	static void call_error(int exitcode);
 	static Type* getTypebyAType(AType& ty);
 	static Type* getTypebyType(Type_t& t);
 	static void gen_asm(std::string statement, std::string option);
 	static void init_on_inst();
+	static std::tuple<bool, int> getValueInt(Value* c);
 	//<-----
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }

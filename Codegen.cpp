@@ -398,6 +398,35 @@ void Codegen::declareFunction(std::string func_name, std::string ac_func_name) {
 	return;
 }
 
+void Sys::Exit::CreateFunc() {
+	/*
+	llvm::Function* func; 
+	{
+		std::vector<llvm::Type*> args;
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
+		func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "exit", module.get());
+		func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["exit"] = func;
+
+	llvm::Function* func;
+	{
+		std::vector<llvm::Type*> args;
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
+		func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "error", module.get());
+		//func->setCallingConv(llvm::CallingConv::X86_StdCall);
+		auto bb = BasicBlock::Create(context, "", func);
+		builder.SetInsertPoint(bb);
+		builder.CreateCall(functions_global["exit"], )
+	}
+	functions_global["error"] = func;
+	*/
+	//TODO:: IMPL error
+	return;
+}
+
 
 void init_parse() {
 	module = std::make_unique<Module>("top", context);
@@ -455,10 +484,32 @@ void Codegen::gen_asm(std::string statement, std::string option) {
 	return;
 }
 
+
+std::tuple<bool, int> Codegen::getValueInt(Value* c) {
+	if (auto* cs = dyn_cast<Constant>(c)) {
+		//Const.
+		if (auto ci = dyn_cast<ConstantInt>(cs)) {
+			return std::make_tuple<bool, int>(true, ci->getValue().getZExtValue());
+		}
+	}
+	else if (auto* ce = dyn_cast<ConstantExpr>(cs)) {
+		//TOOD: ConstExpr to Const value
+	}
+	//TODO: support other type. e.g. FP,.
+	return std::make_tuple<bool, int>(false, 0);
+}
+
+void Codegen::call_exit(int exitcode) {
+	std::vector<Value*> v;
+	ArrayRef<Value*> vv(v);
+	builder.CreateCall(functions_global["error"], vv);
+}
+
 void Codegen::init_on_inst() {
 	current_inst = nullptr;
 	return;
 }
+
 
 void Parser::dump() {
 	module->dump();
@@ -605,32 +656,33 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	if (value->getAllocatedType()->isPointerTy())isArrTy = true;
 	else isArrTy = false;
 	this->indexes->codegen();
-	//TODO multi dimen
+	//TODO multi dimen;
 	ArrayRef<Value*> v(idx_list);
 	if (isArrTy) {
 		gep = builder.CreateLoad(value);
 		return builder.CreateInBoundsGEP(gep, v);
 
 	}
-	if (idx_list.size() == 1) {
-		if (auto ci = dyn_cast<ConstantInt>(idx_list[0])) {
-			if (ci->getValue().getZExtValue() >= value->getAllocatedType()->getArrayNumElements())
-				error_codegen("The specified index is out of range.", this->loc);
-		}
-		else {
-			//Judges on executing
-			//TODO: Insert ICmp slt ir codes.
-		}
+	int i = idx_list.size() - 1;
+	auto ci = Codegen::getValueInt(idx_list[i]);
+	if (std::get<0>(ci)) {
+		if (std::get<1>(ci) >= value->getAllocatedType()->getArrayNumElements())
+			error_codegen("The specified index is out of range.", this->loc);
 	}
 	else {
-		if (auto ci = dyn_cast<ConstantInt>(idx_list[1])) {
-			if(ci->getValue().getZExtValue() >= value->getAllocatedType()->getArrayNumElements())
-				error_codegen("The specified index is out of range.", this->loc);
-		}
-		else {
-
-		}
+		//‚±‚±
+		/*
+		BasicBlock* bb_t = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+		BasicBlock* bb_f = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+		std::vector<Value*> v;
+		v.push_back(builder.CreateGlobalStringPtr("Error: The specified index is out of range."));
+		ArrayRef<Value*> vv(v);
+		Codegen::call_writefln(v);
+		Codegen::call_error(1);
+		builder.CreateCondBr(builder.CreateICmpSGE(idx_list[0], value), bb_t, bb_f);
+		*/
 	}
+	
 	gep = builder.CreateInBoundsGEP(value, v);
 	return gep;
 }
@@ -860,6 +912,9 @@ fr:
 			if (this->expr) {
 				namedvalues_local_isinitialized[this->name] = true;
 				auto value = this->expr->codegen();
+				if (auto* C = dyn_cast<Constant>(value))
+					if (auto CI = dyn_cast<ConstantInt>(C))
+						std::cout << CI->getValue().getZExtValue();
 				if (!value)
 					return nullptr;
 				return value;
@@ -1247,10 +1302,8 @@ Value* ASTSubst::codegen() {
 				if_rets.second.clear();
 				if_rets_bb.clear();
 			}
-			else {
-
-				auto n = builder.CreateConstInBoundsGEP2_64(val, 0, 0);
-				return builder.CreateStore(n, ptr_);
+			else { // May be string
+				return builder.CreateStore(val, ptr_);
 			}
 		}
 	}

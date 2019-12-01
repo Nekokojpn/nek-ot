@@ -1,0 +1,8 @@
+import "io";
+
+fn main(){
+  str := string "aa";
+  str1 := "yeee";
+  writefln("%s", str);
+  ret;
+}

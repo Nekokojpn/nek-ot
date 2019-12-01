@@ -1,0 +1,8 @@
+import "io";
+
+fn main(){
+ a := 0;
+ if(a)
+  writefln("aa");
+ ret;
+}

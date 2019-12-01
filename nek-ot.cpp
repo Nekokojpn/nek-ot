@@ -95,6 +95,7 @@ int main(int argc, char** argv) {
 	init_parse();
 
 	Test::CreateFunc();
+	Sys::Exit::CreateFunc();
 
 	if (isDumpllvm)
 		std::cout << "Generating LLVM IR..." << std::endl;

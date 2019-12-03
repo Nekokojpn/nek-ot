@@ -158,13 +158,8 @@ public:
 			static void CreateFunc();
 		};
 		class Printf {
-			
 		public:
 			static void CreateFunc();
-		};
-		class Printfln {
-			public:
-				static void CreateFunc();
 		};
 		class Input {
 			public: 
@@ -178,10 +173,6 @@ public:
 	class Cast {
 	public:
 		class CastInt32toInt8ptr {
-		public:
-			static void CreateFunc();
-		};
-		class CastInt32toInt8Array {
 		public:
 			static void CreateFunc();
 		};
@@ -346,7 +337,6 @@ class Codegen {
 	bool isNowGlobal = false;
 public:
 	//-----> LLVM functions
-	static void call_writefln(llvm::ArrayRef<llvm::Value*> args);
 	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
 	static void call_exit(int exitcode);
 	static void call_error(int exitcode);
@@ -359,6 +349,7 @@ public:
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }
 	static void declareFunction(std::string func_name, std::string ac_func_name);
+	static void declareFunction(ArrayRef<Type*> args, Type* ret, std::string fn_name, bool isVarARgs);
 };
 
 class ASTSubst;

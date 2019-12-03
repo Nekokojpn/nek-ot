@@ -1,5 +1,6 @@
+import "io";
 fn main(){
-	i := i32(0);
-	input(&i);
+	i := i32 0;
+	i = input();
 	ret;
 }

@@ -1,4 +1,6 @@
+import "io";
+
 fn main() -> void {
-	writefln("Hello world!");
+	writefln("Hello");
 	ret;
 }

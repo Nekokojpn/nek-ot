@@ -51,25 +51,7 @@ Module* getModule() {
 }
 
 void Test::CreateFunc() {
-	/*
-	llvm::Function* test_func;
-	{
-		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt32Ty()->getPointerTo());
-		args.push_back(builder.getInt32Ty());
-		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
-		test_func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "test", module.get());
-		test_func->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
 	
-	builder.SetInsertPoint(BasicBlock::Create(context, "", test_func));
-	builder.CreateConstInBoundsGEP1_32(builder.getInt32Ty(), builder.CreateLoad(builder.CreateAlloca(builder.getInt32Ty()->getPointerTo())), 0);
-	functions_global["test"] = test_func;
-	module->dump();
-	
-	return;
-	*/
 }
 
 
@@ -99,230 +81,20 @@ void Sys::Cast::CastInt32toInt8ptr::CreateFunc() {
 	//fpm->run(*mainFunc);
 	functions_global["casti32toi8ptr"] = mainFunc;
 }
-void Sys::Cast::CastInt32toInt8Array::CreateFunc() {
-	//cast --i32 to i8[]
-	/*
-	std::vector<Type*> putsArgs;
-	putsArgs.push_back(builder.getInt32Ty());
-	ArrayRef<Type*>  argsRef(putsArgs);
 
-	Function* mainFunc =
-		Function::Create(FunctionType::get(builder.getInt8Ty()->getArrayElementType(), argsRef, false),
-			Function::ExternalLinkage, "casti32toi8array", module.get());
-	curbb = BasicBlock::Create(context, "", mainFunc);
-	builder.SetInsertPoint(curbb);
-	for (auto& arg : mainFunc->args()) {
-		builder.CreateRet(builder.CreateIntCast(&arg.getType(), builder.getInt8Ty()->getArrayElementType()));
-		break;
-	}
-	fpm->run(*mainFunc);
-	functions_global["casti32toi8array"] = mainFunc;
-	*/
-}
 void Sys::IO::Printf::CreateFunc() {
-	// create function
-	llvm::Function* func;
+	Function* func;
 	{
-		// void writefln(const char*, ...)
-		std::vector<llvm::Type*> args;
+		std::vector<Type*> args;
 		args.push_back(builder.getInt8PtrTy());
 		bool is_var_args = true;
 		func = Function::Create(
-			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
-			llvm::Function::ExternalLinkage, "writef", module.get());
-		func->setCallingConv(llvm::CallingConv::C);
+			llvm::FunctionType::get(builder.getInt32Ty(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "printf", module.get());
 	}
-	llvm::Argument* args_[1];
-	assert(func->arg_size() == 1);
-	int i = 0;
-	for (auto itr = func->arg_begin(); itr != func->arg_end(); itr++) {
-		args_[i++] = itr;
-	}
-
-	llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "", func);
-	builder.SetInsertPoint(entry);
 	functions_global["writef"] = func;
-
-	// declare wvsprintfA
-	llvm::Function* wvsprintf_func;
-	{
-		// int32 wvsprintfA(char*, const char*, va_list)
-		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt8PtrTy());
-		args.push_back(builder.getInt8PtrTy());
-		args.push_back(builder.getInt8PtrTy());
-		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
-		wvsprintf_func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "wvsprintfA", module.get());
-		wvsprintf_func->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-	functions_global["wvsprintfA"] = wvsprintf_func;
-	// declare GetStdHandle
-	llvm::Function* getstdhandle_func;
-	{
-		// void* GetStdHandle(uint32)
-		llvm::FunctionType* func_type = llvm::FunctionType::get(
-			builder.getInt8PtrTy(), llvm::ArrayRef<llvm::Type*>{builder.getInt32Ty()}, false);
-		getstdhandle_func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "GetStdHandle", module.get());
-		getstdhandle_func->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-	functions_global["GetStdHandle"] = getstdhandle_func;
-	// declare WriteConsoleA
-	llvm::Function* writeconsolea_func;
-	{
-		// int32 WriteConsoleA(void*, const char*, uint32, uint32*, void*)
-		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt8PtrTy());
-		args.push_back(builder.getInt8PtrTy());
-		args.push_back(builder.getInt32Ty());
-		args.push_back(builder.getInt32Ty()->getPointerTo());
-		args.push_back(builder.getInt8PtrTy());
-		llvm::FunctionType* func_type = llvm::FunctionType::get(
-			builder.getInt32Ty(), args, false);
-		writeconsolea_func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "WriteConsoleA", module.get());
-		writeconsolea_func->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-	functions_global["WriteConsoleA"] = writeconsolea_func;
-	// char buf[256];
-	llvm::Value* buf = builder.CreateAlloca(builder.getInt8Ty(), builder.getInt32(256));
-	// int32 len_out[1];
-	llvm::Value* len_out = builder.CreateAlloca(builder.getInt32Ty());
-	// va_list ap[1];
-	llvm::Value* ap_ = builder.CreateAlloca(builder.getInt8PtrTy());
-	llvm::Value* ap = builder.CreateBitCast(ap_, builder.getInt8PtrTy());
-
-	// va_start(ap);
-	llvm::Function* vastart = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vastart);
-	builder.CreateCall(vastart, ap);
-
-	// len = wvsprintfA(buf, fmt, ap);
-	llvm::Value* len;
-	{
-		std::vector<llvm::Value*> args;
-		args.push_back(buf);
-		args.push_back(args_[0]);
-		args.push_back(builder.CreateLoad(ap_));
-		llvm::CallInst* inst = builder.CreateCall(wvsprintf_func, args);
-		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
-		len = inst;
-	}
-
-	// va_end(ap);
-	llvm::Function* vaend = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vaend);
-	builder.CreateCall(vaend, ap);
-
-
-	// handle = GetStdHandle(-11);//stdout
-	llvm::Value* handle;
-	{
-		llvm::CallInst* inst = builder.CreateCall(getstdhandle_func, builder.getInt32(-11));
-		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
-		handle = inst;
-	}
-
-	// WriteConsoleA(handle, buf, len, len_out, null);
-	{
-		std::vector<llvm::Value*> args;
-		args.push_back(handle);
-		args.push_back(buf);
-		args.push_back(len);
-		args.push_back(len_out);
-		args.push_back(llvm::ConstantPointerNull::getNullValue(builder.getInt8PtrTy()));
-		llvm::CallInst* inst = builder.CreateCall(writeconsolea_func, args);
-		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-
-	// return;
-	builder.CreateRetVoid();
 }
 
-void Sys::IO::Printfln::CreateFunc() {
-	// create function
-	llvm::Function* func;
-	{
-		// void writefln(const char*, ...)
-		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt8PtrTy());
-		bool is_var_args = true;
-		func = Function::Create(
-			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
-			llvm::Function::ExternalLinkage, "writefln", module.get());
-		func->setCallingConv(llvm::CallingConv::C);
-	}
-	llvm::Argument* args_[1];
-	assert(func->arg_size() == 1);
-	int i = 0;
-	for (auto itr = func->arg_begin(); itr != func->arg_end(); itr++) {
-		args_[i++] = itr;
-	}
-
-	llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "", func);
-	builder.SetInsertPoint(entry);
-	functions_global["writefln"] = func;
-
-	
-	// char buf[256];
-	llvm::Value* buf = builder.CreateAlloca(builder.getInt8Ty(), builder.getInt32(256));
-	// int32 len_out[1];
-	llvm::Value* len_out = builder.CreateAlloca(builder.getInt32Ty());
-	// va_list ap[1];
-	llvm::Value* ap_ = builder.CreateAlloca(builder.getInt8PtrTy());
-	llvm::Value* ap = builder.CreateBitCast(ap_, builder.getInt8PtrTy());
-
-	// va_start(ap);
-	llvm::Function* vastart = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vastart);
-	builder.CreateCall(vastart, ap);
-
-	// len = wvsprintfA(buf, fmt, ap);
-	llvm::Value* len;
-	{
-		std::vector<llvm::Value*> args;
-		args.push_back(buf);
-		args.push_back(args_[0]);
-		args.push_back(builder.CreateLoad(ap_));
-		llvm::CallInst* inst = builder.CreateCall(functions_global["wvsprintfA"], args);
-		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
-		len = inst;
-	}
-
-	// va_end(ap);
-	llvm::Function* vaend = llvm::Intrinsic::getDeclaration(module.get(), llvm::Intrinsic::vaend);
-	builder.CreateCall(vaend, ap);
-
-	// buf[len++] = '\r';
-	// buf[len++] = '\n';
-	
-	builder.CreateStore(builder.getInt8('\r'), builder.CreateGEP(buf, len));
-	len = builder.CreateAdd(len, builder.getInt32(1));
-	builder.CreateStore(builder.getInt8('\n'), builder.CreateGEP(buf, len));
-	len = builder.CreateAdd(len, builder.getInt32(1));
-	
-
-	// handle = GetStdHandle(-11);//stdout
-	llvm::Value* handle;
-	{
-		llvm::CallInst* inst = builder.CreateCall(functions_global["GetStdHandle"], builder.getInt32(-11));
-		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
-		handle = inst;
-	}
-
-	// WriteConsoleA(handle, buf, len, len_out, null);
-	{
-		std::vector<llvm::Value*> args;
-		args.push_back(handle);
-		args.push_back(buf);
-		args.push_back(len);
-		args.push_back(len_out);
-		args.push_back(llvm::ConstantPointerNull::getNullValue(builder.getInt8PtrTy()));
-		llvm::CallInst* inst = builder.CreateCall(functions_global["WriteConsoleA"], args);
-		inst->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-
-	// return;
-	builder.CreateRetVoid();
-}
 
 void Sys::IO::Input::CreateFunc() {
 
@@ -398,6 +170,18 @@ void Codegen::declareFunction(std::string func_name, std::string ac_func_name) {
 	return;
 }
 
+void declareFunction(ArrayRef<Type*> args, Type* ret, std::string fn_name, bool isVarARgs) {
+	Function* func;
+	{
+		auto func_type = FunctionType::get(ret, isVarARgs);
+		func = Function::Create(
+			func_type, Function::ExternalLinkage, fn_name, module.get());
+		func->setCallingConv(CallingConv::X86_StdCall);
+	}
+	functions_global[fn_name] = func;
+	return;
+}
+
 void Sys::Exit::CreateFunc() {
 	/*
 	llvm::Function* func; 
@@ -441,34 +225,17 @@ AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name) 
 	return tmpB.CreateAlloca(Type::getInt32Ty(context), nullptr, name.c_str());
 }
 
-void Codegen::call_writefln(llvm::ArrayRef<llvm::Value*> args)
-{
-	llvm::Module* module = builder.GetInsertBlock()->getParent()->getParent();
-	llvm::Function* func = module->getFunction("writefln");
-	if (func == nullptr) {
-		std::vector<llvm::Type*> args;
-		args.push_back(builder.getInt8PtrTy());
-		bool is_var_args = true;
-		func = llvm::Function::Create(
-			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
-			llvm::Function::ExternalLinkage, "writefln", module);
-		func->setCallingConv(llvm::CallingConv::C);
-	}
-
-	llvm::CallInst* inst = builder.CreateCall(func, args);
-	inst->setCallingConv(func->getCallingConv());
-}
 void Codegen::call_writef(llvm::ArrayRef<llvm::Value*> args)
 {
 	llvm::Module* module = builder.GetInsertBlock()->getParent()->getParent();
-	llvm::Function* func = module->getFunction("writef");
+	llvm::Function* func = module->getFunction("printf");
 	if (func == nullptr) {
 		std::vector<llvm::Type*> args;
 		args.push_back(builder.getInt8PtrTy());
 		bool is_var_args = true;
 		func = llvm::Function::Create(
-			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
-			llvm::Function::ExternalLinkage, "writef", module);
+			llvm::FunctionType::get(builder.getInt32Ty(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "printf", module);
 		func->setCallingConv(llvm::CallingConv::C);
 	}
 
@@ -1074,13 +841,12 @@ Value* ASTCall::codegen() {
 	}
 	ArrayRef<Value*> argsRef(types);
 	//The system calls
-
 	if (name == "writefln") {
-		Codegen::call_writefln(argsRef);
-		return nullptr;
-	}
-	else if (name == "writef") {
 		Codegen::call_writef(argsRef);
+		types.clear();
+		types.push_back(builder.CreateGlobalStringPtr("\n"));
+		ArrayRef<Value*> argsReff(types);
+		Codegen::call_writef(argsReff);
 		return nullptr;
 	}
 	else {

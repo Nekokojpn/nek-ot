@@ -14,7 +14,7 @@ void Parser::def_import() {
 	if (str == "io") {
 		this->imports.push_back("io");
 		Sys::IO::Printf::CreateFunc();
-		Sys::IO::Printfln::CreateFunc();
+		
 		Sys::IO::Input::CreateFunc();
 	}
 	else if (str == "random") {

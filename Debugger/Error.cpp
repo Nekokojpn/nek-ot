@@ -10,12 +10,13 @@ void add_err_msg(std::string _errmsg) {
 
 void error(std::string title, std::string message, uint32_t line, uint32_t column) {
 
-	if (source.size() <= line && source[line].size() <= column) {
+	if (source.size() <= line) {
 		std::cerr << std::endl;
 		Console::SetConsoleTextRed();
-		std::cerr << "Serious error: unknown error." << title << std::endl;
+		std::cerr << "error: " << title << std::endl;
 		exit(1);
 	}
+
 
 	std::cerr << std::endl;
 	Console::SetConsoleTextRed();

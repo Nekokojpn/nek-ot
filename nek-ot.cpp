@@ -25,10 +25,10 @@ void compile() {
 }
 
 int main(int argc, char** argv) {
-
 	std::vector<std::string> args;
 	bool isDumpllvm = false;
 	bool isDumpTime = false;
+	bool isDumpollvm = false;
 	for (int i = 2; i < argc; i++) {
 		if (strcmp(argv[i], "-O0") == 0)
 			args.push_back("-O0");
@@ -48,6 +48,8 @@ int main(int argc, char** argv) {
 			isDumpllvm = true;
 		else if (strcmp(argv[i], "-time") == 0)
 			isDumpTime = true;
+		else if (strcmp(argv[i], "-dollvm") == 0)
+			isDumpollvm = true;
 		else {
 			std::string a = argv[i];
 			error_onlymsg("Unkown argument --> " + a);
@@ -127,6 +129,11 @@ int main(int argc, char** argv) {
 	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc");
 	if (isDumpTime)
 		end_llc = std::chrono::system_clock::now();
+
+	if (isDumpollvm) {
+		system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llvm-dis.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc");
+		system("cat D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.ll");
+	}
 
 	std::string s = "";
 	for (int i = 0; i < parser.imports.size(); i++) {

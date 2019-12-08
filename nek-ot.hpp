@@ -144,6 +144,9 @@ enum class TK {
 	tok_unknown
 
 };
+
+
+
 class Test {
 public:
 	static void CreateFunc();
@@ -332,7 +335,6 @@ enum class TypeKind {
 };
 
 
-
 class Codegen {
 	bool isNowGlobal = false;
 public:
@@ -349,8 +351,49 @@ public:
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }
 	static void declareFunction(std::string func_name, std::string ac_func_name);
-	static void declareFunction(ArrayRef<Type*> args, Type* ret, std::string fn_name, bool isVarARgs);
 };
+
+extern std::unique_ptr<Module> module;
+extern LLVMContext context;
+extern IRBuilder<> builder;
+
+extern std::map<std::string, FunctionCallee> functions_global;
+extern std::map<std::string, StructType*> userdefined_stcts;
+extern std::map<std::string, Stct_t> userdefined_stcts_elements;
+extern std::map<std::string, AllocaInst*> namedvalues_global;
+extern std::map<std::string, AllocaInst*> namedvalues_local;
+extern std::map<std::string, bool> namedvalues_local_isinitialized;
+extern std::map<std::string, Value*> namedvalues_str;
+extern Value* underscore;
+extern std::map<std::string, BasicBlock*> jmp_labels;
+extern std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
+
+extern bool isSubst;
+
+extern std::pair<bool, std::vector<Value*>> if_rets;
+extern std::vector<BasicBlock*> if_rets_bb;
+
+//ASTArrayIndexes------>
+extern std::vector<Value*> idx_list;
+extern bool isArrTy;
+//<------
+
+//AST Identifier
+extern AllocaInst* current_inst;
+extern bool isPtr;
+
+
+extern Value* lambdavalue;
+
+extern AllocaInst* retvalue;
+extern std::vector<BasicBlock*> retbbs;
+
+extern std::vector<BasicBlock*> brk_bbs;
+
+extern bool retcodegen;
+extern bool gotocodegen;
+extern bool isStringCodegen;
+
 
 class ASTSubst;
 class ASTFunc;
@@ -361,12 +404,14 @@ class AST {
 public:
 	Location_t loc;
 	virtual Value* codegen() = 0;
+	virtual Type* getType() = 0;
 };
 class ASTIdentifierBase : public AST {
 public:
 	std::string name;
 	ASTIdentifierBase(const std::string& _name) : name(_name) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTIdentifierArrayElementBase : public AST {
 public:
@@ -374,6 +419,7 @@ public:
 	std::unique_ptr<AST> indexes;
 	ASTIdentifierArrayElementBase(const std::string& _name, std::unique_ptr<AST> _indexes) : name(_name), indexes(std::move(_indexes)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 
 class ASTIdentifier : public AST {
@@ -383,6 +429,7 @@ public:
 	TypeKind kind;
 	ASTIdentifier(std::unique_ptr<AST> _lhs, std::unique_ptr<AST> _rhs, TypeKind _kind) : lhs(std::move(_lhs)), rhs(std::move(_rhs)), kind(_kind) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTValue : public AST {
 public:
@@ -394,20 +441,24 @@ public:
 	ASTValue(double  _value, bool _isDouble) : value_d(_value), isDouble(true) {};
 	ASTValue(long long  _value, bool _isLongLong) : value(_value), isLongLong(true) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTStrLiteral : public AST {
 public:
 	std::string value;
 	ASTStrLiteral(std::string _value) : value(_value) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTBinOp : public AST {
 public:
 	std::unique_ptr<AST> lhs;
 	std::unique_ptr<AST> rhs;
 	Op op;
-	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)) {} ;
+	ASTBinOp(std::unique_ptr<AST> _lhs, Op _op, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), op(_op), rhs(std::move(_rhs)), curTy(nullptr) {} ;
+	Type* curTy;
 	Value* codegen() override;
+	Type* getType() override;
 };
 
 
@@ -427,6 +478,7 @@ public:
 	ASTType(Type_t _ty, std::unique_ptr<AST> _id, std::unique_ptr<ASTSubst> _expr, std::string _stct_name, bool _isGlobal) : ty(_ty), id(std::move(_id)), expr(std::move(_expr)), stct_name(_stct_name), isGlobal(_isGlobal) {};
 	ASTType(Type_t _ty, std::unique_ptr<AST> _id, std::unique_ptr<ASTArrElements> _elements, std::string _stct_name, bool _isGlobal) : ty(_ty), id(std::move(_id)), elements(std::move(_elements)), stct_name(_stct_name), isGlobal(_isGlobal) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 
 
@@ -436,6 +488,7 @@ public:
 	std::unique_ptr<ASTFunc> lambda;	
 	ASTAction(std::string _name, std::unique_ptr<ASTFunc> _lambda) : name(_name), lambda(std::move(_lambda)) {};
 	Value* codegen();
+	Type* getType() override;
 };
 class ASTStruct : public AST {
 public:
@@ -443,6 +496,7 @@ public:
 	std::unique_ptr<ASTStctElements> elements;
 	ASTStruct(std::string _name, std::unique_ptr<ASTStctElements> _elements) : name(_name), elements(std::move(_elements)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTStctElements : public AST {
 public:
@@ -450,6 +504,7 @@ public:
 	ASTStctElements(Stct_t _elements) : elements(_elements) {};
 	Value* codegen() override;
 	ArrayRef<Type*> make_aref();
+	Type* getType() override;
 };
 class ASTArrElements : public AST {
 public:
@@ -461,6 +516,7 @@ public:
 	ASTArrElements(std::vector<std::unique_ptr<AST>> _elements) : elements(std::move(_elements)) {};
 	Value* subst(Value* arr, std::vector<unsigned long long> arr_size_v);
 	Value* codegen() override;
+	Type* getType() override;
 };
 
 
@@ -470,6 +526,7 @@ public:
 	std::unique_ptr<ASTStrLiteral> expr_str;
 	ASTString(std::string _name, std::unique_ptr<ASTStrLiteral> _expr_str) : name(_name), expr_str(std::move(_expr_str)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTRet : public AST {
 public:
@@ -477,12 +534,14 @@ public:
 	std::unique_ptr<AST> expr_p;
 	ASTRet(Type_t _ret_type) : ret_type(_ret_type) {};
 	Value* codegen();
+	Type* getType() override;
 };
 
 class ASTBrk : public AST {
 public:
 	ASTBrk() {};
 	Value* codegen();
+	Type* getType() override;
 };
 
 class ASTProto : public AST {
@@ -493,6 +552,7 @@ public:
 	Type_t ret;
 	ASTProto(std::string _name, std::vector<Type_t> _args, std::vector<std::string> _identifier, Type_t _ret) : name(_name), args(_args), identifier(_identifier), ret(_ret) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTFunc : public AST {
 public:
@@ -500,6 +560,7 @@ public:
 	std::vector<std::unique_ptr<AST>> body;
 	ASTFunc(std::unique_ptr<ASTProto> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTCall : public AST {
 public:
@@ -507,12 +568,14 @@ public:
 	std::vector<std::unique_ptr<AST>> args_expr;
 	ASTCall(std::string _name, std::vector<std::unique_ptr<AST>> _args_expr) : name(_name), args_expr(std::move(_args_expr)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTElse : public AST {
 public:
 	std::vector<std::unique_ptr<AST>> body;
 	ASTElse(std::vector<std::unique_ptr<AST>> _body) : body(std::move(_body)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 /*
 class ASTIfExpr : public AST {
@@ -530,6 +593,7 @@ public:
 	std::unique_ptr<ASTElse> ast_else;
 	ASTIf(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
+	Type* getType() override;
 
 	BasicBlock* bodyBB;
 	BasicBlock* contBB;
@@ -541,6 +605,7 @@ public:
 	std::unique_ptr<AST> last;
 	ASTFor(std::unique_ptr<AST> _typedeff, std::unique_ptr<ASTIf> _proto, std::unique_ptr<AST> _last) : typedeff(std::move(_typedeff)), proto(std::move(_proto)), last(std::move(_last)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 class ASTWhile : public AST {
 public:
@@ -548,6 +613,7 @@ public:
 	std::vector<std::unique_ptr<AST>> body;
 	ASTWhile(std::unique_ptr<AST> _proto, std::vector<std::unique_ptr<AST>> _body) : proto(std::move(_proto)), body(std::move(_body)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 
 class ASTTop : public AST {
@@ -555,18 +621,21 @@ public:
 	std::vector<std::unique_ptr<AST>> globals;
 	ASTTop(std::vector<std::unique_ptr<AST>> _globals) : globals(std::move(_globals)) {};
 	Value* codegen();
+	Type* getType() override;
 };
 class ASTGoto : public AST {
 public:
 	std::string label;
 	ASTGoto(std::string _label) : label(_label) {};
 	Value* codegen();
+	Type* getType() override;
 };
 class ASTLabel : public AST {
 public:
 	std::string label;
 	ASTLabel(std::string _label) : label(_label) {};
 	Value* codegen();
+	Type* getType() override;
 };
 
 class ASTSubst : public AST {
@@ -578,6 +647,7 @@ public:
 	ASTSubst(std::unique_ptr<AST> _id, std::vector<std::unique_ptr<AST>> _body) :id(std::move(_id)), body(std::move(_body)) {};
 	ASTSubst(std::unique_ptr<AST> _id) : id(std::move(_id)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 
 class ASTBool : public AST {
@@ -585,6 +655,7 @@ public:
 	bool value;
 	ASTBool(bool _value) : value(_value) {};
 	Value* codegen();
+	Type* getType() override;
 };
 
 // [1][2] etc...
@@ -594,6 +665,7 @@ public:
 	std::unique_ptr<AST> rhs;
 	ASTArrayIndexes(std::unique_ptr <AST> _lhs, std::unique_ptr<AST> _rhs) : lhs(std::move(_lhs)), rhs(std::move(_rhs)) {};
 	Value* codegen() override;
+	Type* getType() override;
 };
 /*
 class ASTImport : public AST {

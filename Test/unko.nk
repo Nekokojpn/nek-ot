@@ -1,0 +1,8 @@
+import "io";
+
+fn main(){
+	for(i := 0; i < 100; i = i+1;){
+		writefln("Hello unko");
+	}
+	ret;
+}

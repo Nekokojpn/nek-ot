@@ -5,6 +5,6 @@ fn main() -> i32{
 	};
 	st := org;
 	st.i = 10;
-	st.index = 1;
+	st.index = 1.0;
 	ret 0;
 }

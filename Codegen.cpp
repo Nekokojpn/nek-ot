@@ -8,25 +8,25 @@ std::unique_ptr<legacy::FunctionPassManager> fpm;
 std::unique_ptr<PassManagerBuilder> pmbuilder;
 std::unique_ptr<PassBuilder> pbuilder;
 
-static std::map<std::string, FunctionCallee> functions_global;
-static std::map<std::string, StructType*> userdefined_stcts;
-static std::map<std::string, Stct_t> userdefined_stcts_elements;
-static std::map<std::string, AllocaInst*> namedvalues_global;
-static std::map<std::string, AllocaInst*> namedvalues_local;
-static std::map<std::string, bool> namedvalues_local_isinitialized;
-static std::map<std::string, Value*> namedvalues_str;
-static Value* underscore;
-static std::map<std::string, BasicBlock*> jmp_labels;
-static std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
+std::map<std::string, FunctionCallee> functions_global;
+std::map<std::string, StructType*> userdefined_stcts;
+std::map<std::string, Stct_t> userdefined_stcts_elements;
+std::map<std::string, AllocaInst*> namedvalues_global;
+std::map<std::string, AllocaInst*> namedvalues_local;
+std::map<std::string, bool> namedvalues_local_isinitialized;
+std::map<std::string, Value*> namedvalues_str;
+Value* underscore;
+std::map<std::string, BasicBlock*> jmp_labels;
+std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
 
 bool isSubst = false;
 
-static std::pair<bool, std::vector<Value*>> if_rets;
-static std::vector<BasicBlock*> if_rets_bb;
+std::pair<bool, std::vector<Value*>> if_rets;
+std::vector<BasicBlock*> if_rets_bb;
 
 //ASTArrayIndexes------>
 std::vector<Value*> idx_list;
-auto isArrTy = false;
+bool isArrTy = false;
 //<------
 
 //AST Identifier
@@ -43,7 +43,7 @@ std::vector<BasicBlock*> brk_bbs;
 
 bool retcodegen = false;
 bool gotocodegen = false;
-auto isStringCodegen = false;
+bool isStringCodegen = false;
 
 
 Module* getModule() {
@@ -54,33 +54,6 @@ void Test::CreateFunc() {
 	
 }
 
-
-void Sys::IO::OutPuti8Ptr::CreateFunc() {
-	//puts --ïWèÄèoóÕ
-	std::vector<Type*> putsArgs;
-	putsArgs.push_back(builder.getInt8Ty()->getPointerTo());
-	ArrayRef<Type*>  argsRef(putsArgs);
-	FunctionType* putsType =
-		FunctionType::get(builder.getInt32Ty(), argsRef, false);
-	FunctionCallee putsFunc = module->getOrInsertFunction("puts", putsType);
-	functions_global["puts"] = putsFunc;
-}
-void Sys::Cast::CastInt32toInt8ptr::CreateFunc() {
-	//cast --i32 to i8*
-	std::vector<Type*> putsArgs;
-	putsArgs.push_back(builder.getInt32Ty());
-	ArrayRef<Type*>  argsRef(putsArgs);
-	Function* mainFunc =
-		Function::Create(FunctionType::get(builder.getInt8Ty()->getPointerTo(), argsRef, false),
-			Function::ExternalLinkage, "casti32toi8ptr", module.get());
-	builder.SetInsertPoint(BasicBlock::Create(context, "", mainFunc));
-	for (auto& arg : mainFunc->args()) {
-		builder.CreateRet(builder.CreateIntToPtr(builder.CreateTruncOrBitCast(&arg, builder.getInt8Ty()), builder.getInt8Ty()->getPointerTo()));
-		break;
-	}
-	//fpm->run(*mainFunc);
-	functions_global["casti32toi8ptr"] = mainFunc;
-}
 
 void Sys::IO::Printf::CreateFunc() {
 	Function* func;
@@ -183,31 +156,6 @@ void declareFunction(ArrayRef<Type*> args, Type* ret, std::string fn_name, bool 
 }
 
 void Sys::Exit::CreateFunc() {
-	/*
-	llvm::Function* func; 
-	{
-		std::vector<llvm::Type*> args;
-		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
-		func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "exit", module.get());
-		func->setCallingConv(llvm::CallingConv::X86_StdCall);
-	}
-	functions_global["exit"] = func;
-
-	llvm::Function* func;
-	{
-		std::vector<llvm::Type*> args;
-		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
-		func = llvm::Function::Create(
-			func_type, llvm::Function::ExternalLinkage, "error", module.get());
-		//func->setCallingConv(llvm::CallingConv::X86_StdCall);
-		auto bb = BasicBlock::Create(context, "", func);
-		builder.SetInsertPoint(bb);
-		builder.CreateCall(functions_global["exit"], )
-	}
-	functions_global["error"] = func;
-	*/
-	//TODO:: IMPL error
 	return;
 }
 
@@ -258,9 +206,6 @@ std::tuple<bool, int> Codegen::getValueInt(Value* c) {
 		if (auto ci = dyn_cast<ConstantInt>(cs)) {
 			return std::make_tuple<bool, int>(true, ci->getValue().getZExtValue());
 		}
-	}
-	else if (auto* ce = dyn_cast<ConstantExpr>(cs)) {
-		//TOOD: ConstExpr to Const value
 	}
 	//TODO: support other type. e.g. FP,.
 	return std::make_tuple<bool, int>(false, 0);
@@ -349,49 +294,7 @@ Type* Codegen::getTypebyType(Type_t& t) {
 	}
 }
 
-Value* ASTIdentifierBase::codegen() {
-	//For a stct control E.g, identifier.item = 10;
-	if (current_inst && current_inst->getAllocatedType()->isStructTy()) {
-		auto stct = userdefined_stcts_elements[current_inst->getAllocatedType()->getStructName()];
-		//TODO: Type check
-		if (stct.elems.find(this->name) != stct.elems.end()) {
-			auto gep = builder.CreateStructGEP(current_inst, stct.elems[this->name].idx);
-			return gep;
-		}
-		else {
-			error_codegen(static_cast<std::string>(current_inst->getAllocatedType()->getStructName()) + " is not stct or undefined var.", this->loc);
-			return nullptr;
-		}
 
-	}
-	//For a var control E.g, identifier = 10;
-	else {
-		auto value = namedvalues_local[this->name];
-		if (!value) {
-			auto global = namedvalues_global[this->name];
-			if (!global) {
-				auto str = namedvalues_str[this->name];
-				if (!str) {
-					if (underscore)
-						return underscore;
-					error("Unsolved value name", "Unsolved value name --> " + this->name, this->loc);
-				}
-				return str;
-			}
-			current_inst = global;
-			return global;
-		}
-		if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
-			current_inst = value;
-			if (isSubst)namedvalues_local_isinitialized[this->name] = true;
-			return value;
-		}
-		else {
-			add_err_msg("Variables must be initialized before use.");
-			error_codegen("Variable '" + this->name + "' is not initialized!", this->loc);
-		}
-	}
-}
 
 Value* ASTIdentifierArrayElementBase::codegen() {
 	auto value = namedvalues_local[this->name];
@@ -454,6 +357,23 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	return gep;
 }
 
+Type* ASTIdentifierArrayElementBase::getType() {
+	auto value = namedvalues_local[this->name];
+	if (!value) {
+		auto global = namedvalues_global[this->name];
+		if (!global) {
+			auto str = namedvalues_str[this->name];
+			if (!str) {
+				return nullptr;
+			}
+			return str->getType();
+		}
+		current_inst = global;
+		return global->getAllocatedType();
+	}
+	return value->getAllocatedType();
+}
+
 Value* ASTArrayIndexes::codegen() {
 	//Disired identifier already set to current_inst
 	std::vector<Value*> ind;
@@ -465,6 +385,12 @@ Value* ASTArrayIndexes::codegen() {
 	ind.push_back(l);
 	idx_list = ind;
 	return nullptr;
+}
+
+Type* ASTArrayIndexes::getType() {
+	//get llvm type from index at 0 
+	//!NEEDED! call the function before codegen 
+	return idx_list[0]->getType();
 }
 
 Value* ASTIdentifier::codegen() {
@@ -502,8 +428,14 @@ Value* ASTIdentifier::codegen() {
 	return nullptr;
 }
 
-Value* ASTValue::codegen() {
+Type* ASTIdentifier::getType() {
+	if (!rhs)
+		return lhs->getType();
+	else// Struct type
+		return rhs->getType();
+}
 
+Value* ASTValue::codegen() {
 	if (this->isLongLong == true)
 		return builder.getInt64(value);
 	if(this->isDouble == true)
@@ -511,12 +443,28 @@ Value* ASTValue::codegen() {
 	return builder.getInt32(value);
 }
 
+Type* ASTValue::getType() {
+	if (this->isLongLong == true)
+		return builder.getInt64Ty();
+	if (this->isDouble == true)
+		return builder.getDoubleTy();
+	return builder.getInt32Ty();
+}
+
 Value* ASTBool::codegen() {
 	return builder.getInt1(this->value);
 }
 
+Type* ASTBool::getType() {
+	return builder.getInt1Ty();
+}
+
 Value* ASTStrLiteral::codegen() {
 	return builder.CreateGlobalStringPtr(value);
+}
+
+Type* ASTStrLiteral::getType() {
+	return nullptr;
 }
 
 Value* ASTString::codegen() { //óvèCê≥
@@ -525,6 +473,9 @@ Value* ASTString::codegen() { //óvèCê≥
 	auto ptr = builder.CreateGlobalStringPtr(str, name);
 	namedvalues_str[name] = ptr;
 	return ptr;
+}
+Type* ASTString::getType() {
+	return nullptr;
 }
 
 Value* ASTBinOp::codegen() {
@@ -551,6 +502,7 @@ Value* ASTBinOp::codegen() {
 			l = builder.CreateSExt(l, builder.getIntNTy(64));
 		}
 	}
+	this->curTy = l->getType();
 	switch (op) {
 	case Op::Plus:
 		if (!l->getType()->isFloatingPointTy() &&
@@ -654,6 +606,10 @@ Value* ASTBinOp::codegen() {
 	}
 }
 
+Type* ASTBinOp::getType() {
+	return this->curTy;
+}
+
 Value* ASTType::codegen() {
 	auto type = Codegen::getTypebyType(this->ty);
 	if (this->ty.ty != AType::Nop) {
@@ -712,10 +668,16 @@ fr:
 		}
 	}
 	else {
-		auto v = this->expr->expr->codegen();
-		type = v->getType();
+		//auto v = this->expr->expr->codegen();
+		type = this->expr->expr->getType();
+		if (!type)
+			type = this->expr->expr->codegen()->getType();
 		goto fr;
 	}
+}
+
+Type* ASTType::getType() {
+	return this->expr->getType();
 }
 
 Value* ASTProto::codegen() {
@@ -764,6 +726,10 @@ Value* ASTProto::codegen() {
 
 	return mainFunc;
 }
+
+Type* ASTProto::getType() {
+	return nullptr;
+}
 Value* ASTFunc::codegen() {
 	//TODO nested func  change->BasicBloc
 	auto pr = proto->codegen(); //Proto
@@ -794,6 +760,11 @@ Value* ASTFunc::codegen() {
 	namedvalues_local_isinitialized.clear();
 	return pr;
 }
+
+Type* ASTFunc::getType() {
+	return nullptr;
+}
+
 Value* ASTCall::codegen() {
 	std::vector<Value*> types;
 	current_inst = nullptr;
@@ -862,6 +833,11 @@ Value* ASTCall::codegen() {
 	}
 }
 
+//TODO
+Type* ASTCall::getType() {
+	return nullptr;
+}
+
 Value* ASTElse::codegen() {
 	Value* finalret;
 	for (int i = 0; i < body.size(); i++) {
@@ -871,6 +847,10 @@ Value* ASTElse::codegen() {
 	if (if_rets.first) {
 		if_rets.second.push_back(finalret);
 	}
+	return nullptr;
+}
+
+Type* ASTElse::getType() {
 	return nullptr;
 }
 
@@ -974,6 +954,11 @@ Value* ASTIf::codegen() {
 		return nullptr; 
 	}
 }
+
+Type* ASTIf::getType() {
+	return nullptr;
+}
+
 Value* ASTFor::codegen() {
 	typedeff->codegen();
 	auto bb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
@@ -996,6 +981,10 @@ Value* ASTFor::codegen() {
 	builder.SetInsertPoint(bb);
 	builder.CreateCondBr(this->proto->proto->codegen(), bb2, cond);
 	builder.SetInsertPoint(cond);
+	return nullptr;
+}
+
+Type* ASTFor::getType() {
 	return nullptr;
 }
 
@@ -1027,7 +1016,16 @@ Value* ASTWhile::codegen() {
 	brk_bbs.pop_back();
 	return astboolop;
 }
+
+Type* ASTWhile::getType() {
+	return nullptr;
+}
+
 Value* ASTAction::codegen() {
+	return nullptr;
+}
+
+Type* ASTAction::getType() {
 	return nullptr;
 }
 
@@ -1074,6 +1072,12 @@ Value* ASTSubst::codegen() {
 		}
 	}
 }
+
+//TODO
+Type* ASTSubst::getType() {
+	return nullptr;
+}
+
 // This function prepares to generate a return IR. 
 Value* ASTRet::codegen() {
 	if (!lambdavalue) {
@@ -1094,6 +1098,11 @@ Value* ASTRet::codegen() {
 	}
 	return nullptr;
 }
+
+Type* ASTRet::getType() {
+	return nullptr;
+}
+
 Value* ASTStruct::codegen() {
 	std::vector<Type*> elem_v(this->elements->elements.elem_names.size());
 	Stct_t userdefd;
@@ -1111,6 +1120,11 @@ Value* ASTStruct::codegen() {
 	userdefined_stcts_elements[this->elements->elements.stct_name] = userdefd;
 	return nullptr;
 }
+
+Type* ASTStruct::getType() {
+	return nullptr;
+}
+
 Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
 	//TODO : Does not supported multidimentional array.
 	Value* gep;
@@ -1145,6 +1159,11 @@ Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_siz
 Value* ASTArrElements::codegen() {
 	return nullptr;
 }
+
+Type* ASTArrElements::getType() {
+	return nullptr;
+}
+
 ArrayRef<Type*> ASTStctElements::make_aref(){
 	return nullptr;
 }
@@ -1152,10 +1171,19 @@ Value* ASTStctElements::codegen() {
 	return nullptr;
 }
 
+Type* ASTStctElements::getType() {
+	return nullptr;
+}
+
 Value* ASTBrk::codegen() {
 	builder.CreateBr(brk_bbs[brk_bbs.size()-1]);
 	return nullptr;
 }
+
+Type* ASTBrk::getType() {
+	return nullptr;
+}
+
 Value* ASTLabel::codegen() {
 	auto bb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 	builder.CreateBr(bb);
@@ -1168,8 +1196,17 @@ Value* ASTLabel::codegen() {
 	builder.SetInsertPoint(bb);
 	return nullptr;
 }
+
+Type* ASTLabel::getType() {
+	return nullptr;
+}
+
 Value* ASTGoto::codegen() {
 	gotocodegen = true;
 	jmp_bbs[this->label].push_back(builder.GetInsertBlock());
+	return nullptr;
+}
+
+Type* ASTGoto::getType() {
 	return nullptr;
 }

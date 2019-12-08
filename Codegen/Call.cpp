@@ -70,5 +70,12 @@ Value* ASTCall::codegen() {
 
 //TODO
 Type* ASTCall::getType() {
+	if (functions_global.find(this->name) != functions_global.end()) {
+		return functions_global[this->name].getCallee()->getType();
+	}
+	else {
+		std::string s = "There is no function name --> " + this->name;
+		error_codegen(s, this->loc);
+	}
 	return nullptr;
 }

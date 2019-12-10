@@ -32,9 +32,10 @@ Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_siz
 	return nullptr;
 }
 Value* ASTArrElements::codegen() {
+	
 	return nullptr;
 }
 
 Type* ASTArrElements::getType() {
-	return nullptr;
+	return ArrayType::get(this->elements[0]->getType(), this->elements.size());
 }

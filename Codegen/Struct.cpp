@@ -6,7 +6,7 @@ Value* ASTStruct::codegen() {
 	for (int i = 0; i < this->elements->elements.elem_names.size(); i++) {
 		auto cur = this->elements->elements.elems[this->elements->elements.elem_names[i]];
 		elem_v[i] = Codegen::getTypebyType(cur.elem_ty);
-		
+			
 	}
 	userdefd = this->elements->elements;
 	ArrayRef<Type*> elements(elem_v);

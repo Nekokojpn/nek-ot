@@ -3,7 +3,13 @@ fn main() -> i32{
 		i : i32,
 		index : f64
 	};
+	stct r{
+		k : i32,
+		j : org
+	};
 	st := org;
+	r1 := r;
+	r1.j.i = 0;
 	st.i = 10;
 	st.index = 1.0;
 	ret 0;

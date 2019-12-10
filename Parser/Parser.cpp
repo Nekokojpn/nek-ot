@@ -26,7 +26,9 @@ bool Parser::find_userdefined_stct(std::string stct_name) {
 }
 Type_t Parser::getTypeFromCurtok() {
 	auto ty = getATypeByCurtok();
+	std::string name = curtok.val;
 	auto isArr = false;
+	curtokIs(TK::tok_lb) ? isArr = true : isArr = false;
 	auto kind = TypeKind::Value;
 	std::vector<unsigned long long> arrsize_;
 	if (ty == AType::Nop)goto proc;
@@ -58,6 +60,7 @@ Type_t Parser::getTypeFromCurtok() {
 	}
 proc:
 	Type_t arg;
+	arg.name = name;
 	arg.isArr = isArr;
 	arg.ty = ty;
 	arg.kind = kind;
@@ -260,6 +263,7 @@ std::unique_ptr<ASTFunc> Parser::def_func() {
 		ret = getTypeFromCurtok();
 	}
 	else {
+		ret.name = curtok.val;
 		ret.isArr = false;
 		ret.kind = TypeKind::Value;
 		ret.ty = AType::Void;
@@ -418,6 +422,7 @@ std::unique_ptr<ASTRet> Parser::def_ret() {
 		rty.isArr = false;
 		rty.kind = TypeKind::Value;
 		rty.ty = AType::Void;
+		rty.name = curtok.val;
 	}
 	std::unique_ptr<ASTRet> ast;
 	if(!curtokIs(TK::tok_semi)) {

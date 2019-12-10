@@ -21,14 +21,14 @@ Value* ASTCall::codegen() {
 			continue;
 		}
 		
-		else if (current_inst && current_inst->getAllocatedType()->isArrayTy() && !ty_load->getType()->isArrayTy()) {
+		else if (current_inst && current_inst->getType()->isArrayTy() && !ty_load->getType()->isArrayTy()) {
 			if (ty->getType()->isPointerTy())
 				ty = builder.CreateLoad(ty);
 			types.push_back(ty);
 		}
-		else if (current_inst && current_inst->getAllocatedType()->isArrayTy()) {
+		else if (current_inst && current_inst->getType()->isArrayTy()) {
 			
-			auto array_ty = current_inst->getAllocatedType()->getArrayElementType();
+			auto array_ty = current_inst->getType()->getArrayElementType();
 			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
 			while (array_ty->isArrayTy()) {
 				gep = builder.CreateConstGEP2_64(gep, 0, 0);

@@ -218,6 +218,7 @@ typedef struct {
 	bool isArr;
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
+	std::string name;
 }Type_t;
 
 typedef struct {
@@ -379,7 +380,7 @@ extern bool isArrTy;
 //<------
 
 //AST Identifier
-extern AllocaInst* current_inst;
+extern Value* current_inst;
 extern bool isPtr;
 
 
@@ -620,21 +621,21 @@ class ASTTop : public AST {
 public:
 	std::vector<std::unique_ptr<AST>> globals;
 	ASTTop(std::vector<std::unique_ptr<AST>> _globals) : globals(std::move(_globals)) {};
-	Value* codegen();
+	Value* codegen() override;
 	Type* getType() override;
 };
 class ASTGoto : public AST {
 public:
 	std::string label;
 	ASTGoto(std::string _label) : label(_label) {};
-	Value* codegen();
+	Value* codegen() override;
 	Type* getType() override;
 };
 class ASTLabel : public AST {
 public:
 	std::string label;
 	ASTLabel(std::string _label) : label(_label) {};
-	Value* codegen();
+	Value* codegen() override;
 	Type* getType() override;
 };
 

@@ -1,0 +1,11 @@
+import "io";
+
+fn a() -> i32{
+	ret 0;
+}
+
+fn main(){
+	t := {1,2,3};
+	writefln("%d", t[0]);
+	ret;
+}

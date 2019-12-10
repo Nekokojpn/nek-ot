@@ -21,7 +21,7 @@ int curtok = 0;
 void compile() {
 	std::error_code ec;
 	raw_fd_ostream os("out.bc", ec, sys::fs::OpenFlags::F_None);
-	WriteBitcodeToFile(*getModule(), os);
+	WriteBitcodeToFile(*module, os);
 }
 
 int main(int argc, char** argv) {
@@ -96,6 +96,8 @@ int main(int argc, char** argv) {
 
 	init_parse();
 
+	module->setSourceFileName(argv[1]);
+
 	Test::CreateFunc();
 	Sys::Exit::CreateFunc();
 
@@ -115,6 +117,8 @@ int main(int argc, char** argv) {
 	std::cout << std::endl;
 
 	compile();
+
+
 	std::string optArg = "";
 	for (int i = 0; i < args.size(); i++) {
 		optArg += " " + args[i];

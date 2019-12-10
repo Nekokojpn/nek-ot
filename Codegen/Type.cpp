@@ -59,10 +59,18 @@ fr:
 	}
 	else {
 		//auto v = this->expr->expr->codegen();
-		type = this->expr->expr->getType();
-		if (!type)
-			type = this->expr->expr->codegen()->getType();
-		goto fr;
+		if (this->expr && this->expr->expr) {
+			type = this->expr->expr->getType();
+			if (!type)
+				type = this->expr->expr->codegen()->getType();
+			goto fr;
+		}
+		else if (this->elements) {
+			type = this->elements->getType();
+			goto fr;
+		}
+		else
+			goto fr;
 	}
 }
 

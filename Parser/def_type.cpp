@@ -2,7 +2,6 @@
 
 std::unique_ptr<ASTType> Parser::def_type(std::unique_ptr<AST> ast_id) {
 	bool isonlydef = curtok.ty == TK::tok_colon ? true : false;
-	bool istypeinf = false;
 	getNextToken();
 	std::string stct_name = curtok.val;
 	auto ty = getTypeFromCurtok();

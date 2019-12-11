@@ -22,6 +22,11 @@ Value* ASTIdentifierBase::codegen() {
 		}
 
 	}
+	else if (current_inst_load && current_inst_load->getType()->isArrayTy()) {
+		if (this->name == "len") {
+			return builder.getInt32(current_inst_load->getType()->getArrayNumElements());
+		}
+	}
 	//For a var control E.g, identifier = 10;
 	else {
 		auto value = namedvalues_local[this->name];

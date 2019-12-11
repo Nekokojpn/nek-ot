@@ -412,7 +412,6 @@ extern Value* current_inst;
 extern bool isPtr;
 
 
-extern Value* lambdavalue;
 
 extern AllocaInst* retvalue;
 extern std::vector<BasicBlock*> retbbs;

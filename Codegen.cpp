@@ -34,8 +34,6 @@ Value* current_inst;
 bool isPtr = false;
 
 
-Value* lambdavalue;
-
 AllocaInst* retvalue;
 std::vector<BasicBlock*> retbbs;
 

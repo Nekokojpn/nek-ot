@@ -28,3 +28,7 @@ Value* ASTFor::codegen() {
 Type* ASTFor::getType() {
 	return nullptr;
 }
+
+TypeAST ASTFor::getASTType() {
+	return TypeAST::For;
+}

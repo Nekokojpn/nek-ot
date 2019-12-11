@@ -77,3 +77,7 @@ fr:
 Type* ASTType::getType() {
 	return this->expr->getType();
 }
+
+TypeAST ASTType::getASTType() {
+	return TypeAST::Type;
+}

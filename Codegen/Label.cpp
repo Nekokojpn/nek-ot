@@ -16,3 +16,7 @@ Value* ASTLabel::codegen() {
 Type* ASTLabel::getType() {
 	return nullptr;
 }
+
+TypeAST ASTLabel::getASTType() {
+	return TypeAST::Label;
+}

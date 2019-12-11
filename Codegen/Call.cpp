@@ -79,3 +79,7 @@ Type* ASTCall::getType() {
 	}
 	return nullptr;
 }
+
+TypeAST ASTCall::getASTType() {
+	return TypeAST::Call;
+}

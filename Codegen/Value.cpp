@@ -15,3 +15,7 @@ Type* ASTValue::getType() {
 		return builder.getDoubleTy();
 	return builder.getInt32Ty();
 }
+
+TypeAST ASTValue::getASTType() {
+	return TypeAST::Value;
+}

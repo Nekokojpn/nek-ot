@@ -69,3 +69,7 @@ Type* ASTIdentifierBase::getType() {
 	}
 	return value->getAllocatedType();
 }
+
+TypeAST ASTIdentifierBase::getASTType() {
+	return TypeAST::IdentifierBase;
+}

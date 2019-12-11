@@ -131,3 +131,7 @@ Value* ASTBinOp::codegen() {
 Type* ASTBinOp::getType() {
 	return this->curTy;
 }
+
+TypeAST ASTBinOp::getASTType() {
+	return TypeAST::BinOp;
+}

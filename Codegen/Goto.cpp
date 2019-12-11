@@ -9,3 +9,7 @@ Value* ASTGoto::codegen() {
 Type* ASTGoto::getType() {
 	return nullptr;
 }
+
+TypeAST ASTGoto::getASTType() {
+	return TypeAST::Goto;
+}

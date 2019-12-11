@@ -104,3 +104,7 @@ Value* ASTIf::codegen() {
 Type* ASTIf::getType() {
 	return nullptr;
 }
+
+TypeAST ASTIf::getASTType() {
+	return TypeAST::If;
+}

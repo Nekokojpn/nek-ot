@@ -15,3 +15,7 @@ Value* ASTElse::codegen() {
 Type* ASTElse::getType() {
 	return nullptr;
 }
+
+TypeAST ASTElse::getASTType() {
+	return TypeAST::Else;
+}

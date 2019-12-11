@@ -7,3 +7,7 @@ Value* ASTStrLiteral::codegen() {
 Type* ASTStrLiteral::getType() {
 	return nullptr;
 }
+
+TypeAST ASTStrLiteral::getASTType() {
+	return TypeAST::StrLiteral;
+}

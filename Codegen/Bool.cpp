@@ -7,3 +7,7 @@ Value* ASTBool::codegen() {
 Type* ASTBool::getType() {
 	return builder.getInt1Ty();
 }
+
+TypeAST ASTBool::getASTType() {
+	return TypeAST::Bool;
+}

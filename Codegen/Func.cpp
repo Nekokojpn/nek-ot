@@ -34,3 +34,6 @@ Value* ASTFunc::codegen() {
 Type* ASTFunc::getType() {
 	return nullptr;
 }
+TypeAST ASTFunc::getASTType() {
+	return TypeAST::Func;
+}

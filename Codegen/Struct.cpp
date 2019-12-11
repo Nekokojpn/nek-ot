@@ -21,3 +21,7 @@ Value* ASTStruct::codegen() {
 Type* ASTStruct::getType() {
 	return nullptr;
 }
+
+TypeAST ASTStruct::getASTType() {
+	return TypeAST::Struct;
+}

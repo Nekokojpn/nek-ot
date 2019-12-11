@@ -24,3 +24,7 @@ Value* ASTRet::codegen() {
 Type* ASTRet::getType() {
 	return nullptr;
 }
+
+TypeAST ASTRet::getASTType() {
+	return TypeAST::Ret;
+}

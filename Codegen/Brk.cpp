@@ -8,3 +8,7 @@ Value* ASTBrk::codegen() {
 Type* ASTBrk::getType() {
 	return nullptr;
 }
+
+TypeAST ASTBrk::getASTType() {
+	return TypeAST::Brk;
+}

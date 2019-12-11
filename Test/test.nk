@@ -1,14 +1,17 @@
 import "io";
-fn ab()->i32{
 
-	ret 0;
+fn dis(arr : i32[3]){
+	for(i := 0; i < 3; i = i+1;){
+		writefln("%d", arr[i]);
+	}
+	if(arr[0] < arr[1]){
+		arr[0] = arr[1];
+	}
+	ret;
 }
-fn main() -> i32{
-	j := i32 10;
-	k := 11;
-	i := ab();
-	writefln("%d", i);
-	arr := i32[5]{1,2,3,4,5};
-	writefln("%d", arr[2]);
-	ret 0;
+
+fn main(){
+	arr := i32[3]{1,2,3};
+	dis(arr);
+	ret;
 }

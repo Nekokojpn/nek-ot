@@ -41,3 +41,7 @@ Type* ASTIdentifier::getType() {
 	else// Struct type
 		return rhs->getType();
 }
+
+TypeAST ASTIdentifier::getASTType() {
+	return TypeAST::Identifier;
+}

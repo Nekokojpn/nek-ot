@@ -32,3 +32,7 @@ Value* ASTWhile::codegen() {
 Type* ASTWhile::getType() {
 	return nullptr;
 }
+
+TypeAST ASTWhile::getASTType() {
+	return TypeAST::While;
+}

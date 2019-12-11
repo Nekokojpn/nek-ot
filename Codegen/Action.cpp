@@ -7,3 +7,7 @@ Value* ASTAction::codegen() {
 Type* ASTAction::getType() {
 	return nullptr;
 }
+
+TypeAST ASTAction::getASTType() {
+	return TypeAST::Action;
+}

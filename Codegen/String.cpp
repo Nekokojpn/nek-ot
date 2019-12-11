@@ -10,3 +10,7 @@ Value* ASTString::codegen() { //óvèCê≥
 Type* ASTString::getType() {
 	return nullptr;
 }
+
+TypeAST ASTString::getASTType() {
+	return TypeAST::String;
+}

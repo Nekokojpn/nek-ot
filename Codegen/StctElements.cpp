@@ -10,3 +10,7 @@ Value* ASTStctElements::codegen() {
 Type* ASTStctElements::getType() {
 	return nullptr;
 }
+
+TypeAST ASTStctElements::getASTType() {
+	return TypeAST::StctElements;
+}

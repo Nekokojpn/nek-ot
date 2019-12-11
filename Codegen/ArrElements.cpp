@@ -39,3 +39,7 @@ Value* ASTArrElements::codegen() {
 Type* ASTArrElements::getType() {
 	return ArrayType::get(this->elements[0]->getType(), this->elements.size());
 }
+
+TypeAST ASTArrElements::getASTType() {
+	return TypeAST::ArrElements;
+}

@@ -18,3 +18,7 @@ Type* ASTArrayIndexes::getType() {
 	//!NEEDED! call the function before codegen 
 	return idx_list[0]->getType();
 }
+
+TypeAST ASTArrayIndexes::getASTType() {
+	return TypeAST::ArrayIndexes;
+}

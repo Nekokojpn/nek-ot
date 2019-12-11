@@ -48,3 +48,7 @@ Value* ASTSubst::codegen() {
 Type* ASTSubst::getType() {
 	return nullptr;
 }
+
+TypeAST ASTSubst::getASTType() {
+	return TypeAST::Subst;
+}

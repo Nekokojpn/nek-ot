@@ -83,3 +83,7 @@ Type* ASTIdentifierArrayElementBase::getType() {
 	}
 	return value->getAllocatedType();
 }
+
+TypeAST ASTIdentifierArrayElementBase::getASTType() {
+	return TypeAST::IdentifierArrayElementBase;
+}

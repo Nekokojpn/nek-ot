@@ -50,3 +50,7 @@ Value* ASTProto::codegen() {
 Type* ASTProto::getType() {
 	return nullptr;
 }
+
+TypeAST ASTProto::getASTType() {
+	return TypeAST::Proto;
+}

@@ -30,7 +30,7 @@ bool isArrTy = false;
 //<------
 
 //AST Identifier
-AllocaInst* current_inst;
+Value* current_inst;
 bool isPtr = false;
 
 
@@ -288,7 +288,8 @@ Type* Codegen::getTypebyType(Type_t& t) {
 	}
 	else {
 		if (t.ty == AType::Struct) {
-			return nullptr;
+			if(userdefined_stcts.find(t.name) != userdefined_stcts.end())
+				return userdefined_stcts[t.name];
 		}
 		return nullptr;
 	}

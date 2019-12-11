@@ -7,10 +7,11 @@ fn main() -> i32{
 		k : i32,
 		j : org
 	};
-	st := org;
-	r1 := r;
-	r1.j.i = 0;
-	st.i = 10;
-	st.index = 1.0;
+	stct s{
+		l : r
+	};
+	s1 := s;
+	s1.l.j.i = 100;
+	writefln("%d", s1.l.j.i);
 	ret 0;
 }

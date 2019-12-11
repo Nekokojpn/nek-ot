@@ -22,8 +22,6 @@ Value* ASTCall::codegen() {
 		}
 		
 		else if (current_inst && current_inst->getType()->isArrayTy() && !ty_load->getType()->isArrayTy()) {
-			if (ty->getType()->isPointerTy())
-				ty = builder.CreateLoad(ty);
 			types.push_back(ty);
 		}
 		else if (current_inst && current_inst->getType()->isArrayTy()) {

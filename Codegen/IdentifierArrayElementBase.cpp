@@ -14,14 +14,10 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 			return str;
 		}
 		current_inst = global;
-		if (current_inst->getType()->isPointerTy())
-			current_inst = builder.CreateLoad(current_inst);
 		return global;
 	}
 	if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
 		current_inst = value;
-		if (current_inst->getType()->isPointerTy())
-			current_inst = builder.CreateLoad(current_inst);
 		if (isSubst)namedvalues_local_isinitialized[this->name] = true;
 	}
 	else {
@@ -77,8 +73,6 @@ Type* ASTIdentifierArrayElementBase::getType() {
 			return str->getType();
 		}
 		current_inst = global;
-		if (current_inst->getType()->isPointerTy())
-			current_inst = builder.CreateLoad(current_inst);
 		return global->getAllocatedType();
 	}
 	return value->getAllocatedType();

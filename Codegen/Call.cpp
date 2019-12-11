@@ -1,16 +1,20 @@
 #include "../nek-ot.hpp"
 
 Value* ASTCall::codegen() {
+
+
 	std::vector<Value*> types;
 	current_inst = nullptr;
 	isPtr = false; 
 	for (int i = 0; i < args_expr.size(); i++, current_inst = nullptr, isPtr = false) {
 		auto ty = args_expr[i]->codegen();
-		Value* ty_load;
-		if (ty->getType()->isPointerTy())
-			ty_load = builder.CreateLoad(ty);
-		else
-			ty_load = ty;
+		//auto curArg = module->getFunction(this->name)->getArg(i);
+		//if (!curArg)
+		//	error_codegen("Argument out of range.", this->loc);
+		Value* ty_load = ty->getType()->isPointerTy() ? builder.CreateLoad(ty) : ty;
+		//if (curArg->getType() != ty_load->getType())
+		//	error_codegen("The argument " + std::to_string(i) + " is not match specified the type.", this->loc);
+
 		if (!ty->getType()->isPointerTy()) {
 			types.push_back(ty);
 			continue;
@@ -24,9 +28,9 @@ Value* ASTCall::codegen() {
 		else if (current_inst && current_inst->getType()->isArrayTy() && !ty_load->getType()->isArrayTy()) {
 			types.push_back(ty);
 		}
-		else if (current_inst && current_inst->getType()->isArrayTy()) {
+		else if (ty_load->getType()->isArrayTy()) {
 			
-			auto array_ty = current_inst->getType()->getArrayElementType();
+			auto array_ty = ty_load->getType()->getArrayElementType();
 			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
 			while (array_ty->isArrayTy()) {
 				gep = builder.CreateConstGEP2_64(gep, 0, 0);
@@ -53,16 +57,13 @@ Value* ASTCall::codegen() {
 		Codegen::call_writef(argsReff);
 		return nullptr;
 	}
+	if (functions_global.find(this->name) == functions_global.end()) {
+		std::string s = "There is no function name --> " + this->name;
+		error_codegen(s, this->loc);
+	}
 	else {
-		if (functions_global.find(this->name) != functions_global.end()) {
-			auto inst = builder.CreateCall(functions_global[name], argsRef, "");
-			//inst->setCallingConv(CallingConv::X86_StdCall);
-			return inst;
-		}
-		else {
-			std::string s = "There is no function name --> " + this->name;
-			error_codegen(s, this->loc);
-		}
+		auto inst = builder.CreateCall(functions_global[this->name], argsRef, "");
+		return inst;
 	}
 }
 

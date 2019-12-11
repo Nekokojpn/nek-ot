@@ -5,6 +5,7 @@ Value* ASTArrayIndexes::codegen() {
 	std::vector<Value*> ind;
 	if (!isArrTy)
 		ind.push_back(builder.getInt32(0));
+	Codegen::init_on_inst();
 	auto l = this->lhs->codegen();
 	if (l->getType()->isPointerTy())
 		l = builder.CreateLoad(l);

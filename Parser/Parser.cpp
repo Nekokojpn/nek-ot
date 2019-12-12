@@ -430,15 +430,14 @@ ASTRet* Parser::def_ret() {
 	ASTRet* ast;
 	if(!curtokIs(TK::tok_semi)) {
 		auto loc = curtok.loc;
-		ast = new ASTRet(rty);
+		ast = new ASTRet(rty, expr());
 		ast->loc = loc;
-		ast->expr_p = expr();
 		if (curtok.ty != TK::tok_semi)
 			error_expected(";", curtok);
 		return ast;
 	}
 	auto loc = curtok.loc;
-	ast = new ASTRet(rty);
+	ast = new ASTRet(rty, nullptr);
 	ast->loc = loc;
 	getNextToken();
 	

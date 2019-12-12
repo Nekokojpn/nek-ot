@@ -574,7 +574,7 @@ class ASTRet : public AST {
 public:
 	Type_t ret_type;
 	AST* expr_p;
-	ASTRet(Type_t _ret_type) : ret_type(_ret_type) {};
+	ASTRet(Type_t _ret_type, AST* _expr_p) : ret_type(_ret_type), expr_p(_expr_p) {};
 	Value* codegen();
 	Type* getType() override;
 	TypeAST getASTType() override;

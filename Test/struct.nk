@@ -1,9 +1,9 @@
 fn main(){
 	stct mys{
-		i32 i,
-		i32 j
+		i : i32,
+		j : i32
 	};
-	i := mys();
+	i := mys;
 	i.i = 0;
 	ret;
 }

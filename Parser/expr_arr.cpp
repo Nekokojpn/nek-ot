@@ -1,8 +1,8 @@
 #include "../nek-ot.hpp"
 
-std::unique_ptr<ASTArrElements> Parser::expr_arr() {
+ASTArrElements* Parser::expr_arr() {
 	getNextToken();
-	std::vector<std::unique_ptr<AST>> elements;
+	std::vector<AST*> elements;
 	uint32_t cnt = 0;
 	while (true) {
 		auto loc = curtok.loc;
@@ -11,13 +11,13 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		if (curtok.ty == TK::tok_dtdt) {
 			getNextToken();
 		}
-		elements.push_back(std::move(ast));
+		elements.push_back(ast);
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
 		cnt++;
 	}
 	if (cnt == 0 && curtok.ty == TK::tok_pipe) {
-		auto restrait = std::move(elements[0]);
+		auto restrait = elements[0];
 		getNextToken();
 		if (curtok.ty != TK::tok_identifier)
 			error_unexpected(curtok);
@@ -25,13 +25,13 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		if (curtok.ty != TK::tok_rarrow)
 			error_expected("<-", curtok);
 		auto loc = curtok.loc;
-		auto ast_type = this->def_type(std::move(identifier));
+		auto ast_type = this->def_type(identifier);
 		if (curtok.ty != TK::tok_rb)
 			error("Expected", "Expected --> }", curtok);
 		getNextToken();
-		auto ast = std::move(std::make_unique<ASTArrElements>(std::move(restrait), std::move(ast_type)));
+		auto ast = new ASTArrElements(restrait, ast_type);
 		ast->loc = loc;
-		return std::move(ast);
+		return ast;
 	}
 	if (cnt != 0 && curtok.ty == TK::tok_pipe) {
 		add_err_msg("");
@@ -41,7 +41,7 @@ std::unique_ptr<ASTArrElements> Parser::expr_arr() {
 		error("Expected", "Expected --> }", curtok);
 	getNextToken();
 	auto loc = curtok.loc;
-	auto ast = std::move(std::make_unique<ASTArrElements>(std::move(elements)));
+	auto ast = new ASTArrElements(elements);
 	ast->loc = loc;
-	return std::move(ast);
+	return ast;
 }

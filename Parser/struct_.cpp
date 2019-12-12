@@ -1,7 +1,7 @@
 #include "../nek-ot.hpp"
 
 
-std::unique_ptr<AST> Parser::def_stct() {
+AST* Parser::def_stct() {
 	getNextToken();
 	if (curtok.ty != TK::tok_identifier) {
 		add_err_msg(curtok.val + " may be used as a reserved word.");
@@ -14,18 +14,18 @@ std::unique_ptr<AST> Parser::def_stct() {
 		error_unexpected(curtok);
 	}
 	auto loc = curtok.loc;
-	auto elements = std::move(expr_stct());
+	auto elements = expr_stct();
 
 	if (curtok.ty != TK::tok_semi)
 		error("Expected", "Expected --> ;", curtok);
 	getNextToken();
 	elements->elements.stct_name = name;
-	auto ast = std::make_unique<ASTStruct>(name, std::move(elements));
+	auto ast = new ASTStruct(name, elements);
 	ast->loc = loc;
-	return std::move(ast);
+	return ast;
 }
 
-std::unique_ptr<ASTStctElements> Parser::expr_stct() {
+ASTStctElements* Parser::expr_stct() {
 	getNextToken();
 	Stct_t st;
 	auto i = 0ULL;
@@ -55,7 +55,7 @@ std::unique_ptr<ASTStctElements> Parser::expr_stct() {
 		error("Expected", "Expected --> }", curtok);
 	getNextToken();
 	auto loc = curtok.loc;
-	auto ast = std::make_unique<ASTStctElements>(st);
+	auto ast = new ASTStctElements(st);
 	ast->loc = loc;
-	return std::move(ast);
+	return ast;
 }

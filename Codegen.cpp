@@ -261,6 +261,9 @@ Type* Codegen::getTypebyAType(AType& ty) {
 		return builder.getVoidTy();
 		break;
 	case AType::Struct:
+		return StructType::get(context);
+		break;
+	case AType::UserdefinedStruct:
 		return nullptr;
 		break;
 	case AType::Bool:
@@ -285,7 +288,7 @@ Type* Codegen::getTypebyType(Type_t& t) {
 		return ty;
 	}
 	else {
-		if (t.ty == AType::Struct) {
+		if (t.ty == AType::UserdefinedStruct) {
 			if(userdefined_stcts.find(t.name) != userdefined_stcts.end())
 				return userdefined_stcts[t.name];
 		}

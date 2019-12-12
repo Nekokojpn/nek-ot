@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
 		start_codegen = std::chrono::system_clock::now();
 	}
 
-	parser.codegen(std::move(parsed_ast));
+	parser.codegen(parsed_ast);
 	if (isDumpTime)
 		end_codegen = std::chrono::system_clock::now();
 	std::cout << std::endl;

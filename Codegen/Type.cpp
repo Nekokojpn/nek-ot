@@ -1,6 +1,14 @@
 #include "../nek-ot.hpp"
 
 Value* ASTType::codegen() {
+	ASTSubst* sub = nullptr;
+	ASTArrElements* elements = nullptr;
+	if (this->expr) {
+		if (this->expr->getASTType() == TypeAST::Subst)
+			sub = (ASTSubst*)this->expr;
+		else
+			elements = (ASTArrElements*)this->expr;
+	}
 	auto type = Codegen::getTypebyType(this->ty);
 	if (this->ty.ty != AType::Nop) {
 fr:
@@ -8,7 +16,7 @@ fr:
 			AllocaInst* allocainst;
 			//If local variable
 			if (!this->isGlobal) {
-				if (this->ty.ty != AType::Struct)
+				if (this->ty.ty != AType::UserdefinedStruct)
 					allocainst = builder.CreateAlloca(type);
 				else
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
@@ -16,7 +24,7 @@ fr:
 			}
 			//If global variable
 			else {
-				if (this->ty.ty != AType::Struct)
+				if (this->ty.ty != AType::UserdefinedStruct)
 					allocainst = builder.CreateAlloca(type);
 				else
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
@@ -50,8 +58,8 @@ fr:
 			else
 				underscore = allocainst;
 
-			if (this->elements) {
-				this->elements->subst(allocainst, this->ty.arrsize);
+			if (elements) {
+				elements->subst(allocainst, this->ty.arrsize);
 				namedvalues_local_isinitialized[this->name] = true;
 			}
 			return allocainst;
@@ -59,14 +67,14 @@ fr:
 	}
 	else {
 		//auto v = this->expr->expr->codegen();
-		if (this->expr && this->expr->expr) {
-			type = this->expr->expr->getType();
+		if (sub && sub->expr) {
+			type = sub->expr->getType();
 			if (!type)
-				type = this->expr->expr->codegen()->getType();
+				type = sub->expr->codegen()->getType();
 			goto fr;
 		}
-		else if (this->elements) {
-			type = this->elements->getType();
+		else if (elements) {
+			type = elements->getType();
 			goto fr;
 		}
 		else

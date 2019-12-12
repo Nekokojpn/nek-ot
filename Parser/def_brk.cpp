@@ -1,11 +1,11 @@
 #include "../nek-ot.hpp"
 
-std::unique_ptr<ASTBrk> Parser::def_brk() {
+ASTBrk* Parser::def_brk() {
 	auto loc = curtok.loc;
 	getNextToken();
 	if (curtok.ty != TK::tok_semi)
 		error_expected(";", curtok);
-	auto ast = std::make_unique<ASTBrk>();
+	auto ast = new ASTBrk();
 	ast->loc = loc;
-	return std::move(ast);
+	return ast;
 }

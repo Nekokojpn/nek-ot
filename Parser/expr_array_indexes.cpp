@@ -1,6 +1,6 @@
 #include "../nek-ot.hpp"
 
-std::unique_ptr<AST> Parser::expr_array_indexes() {
+AST* Parser::expr_array_indexes() {
 	getNextToken();
 	auto lhs = expr();
 	if (!curtokIs(TK::tok_rpb))
@@ -14,10 +14,10 @@ std::unique_ptr<AST> Parser::expr_array_indexes() {
 		if (!curtokIs(TK::tok_rpb))
 			error_unexpected(curtok);
 		getNextToken();
-		lhs = std::make_unique<ASTArrayIndexes>(std::move(lhs), std::move(rhs));
+		lhs = new ASTArrayIndexes(lhs, rhs);
 	}
 	if (isRhs)
-		return std::move(lhs);
+		return lhs;
 	else
-		return std::make_unique<ASTArrayIndexes>(std::move(lhs), nullptr);
+		return new ASTArrayIndexes(lhs, nullptr);
 }

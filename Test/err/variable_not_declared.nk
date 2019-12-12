@@ -1,4 +1,4 @@
 fn main(){
-	i := unkown$0;
+	i := unkown 0;
 	ret;
 }

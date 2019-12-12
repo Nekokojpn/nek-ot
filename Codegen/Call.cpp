@@ -57,6 +57,10 @@ Value* ASTCall::codegen() {
 		Codegen::call_writef(argsReff);
 		return nullptr;
 	}
+	if (name == "writef") {
+		Codegen::call_writef(argsRef);
+		return nullptr;
+	}
 	if (functions_global.find(this->name) == functions_global.end()) {
 		std::string s = "There is no function name --> " + this->name;
 		error_codegen(s, this->loc);

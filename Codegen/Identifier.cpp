@@ -14,17 +14,17 @@ Value* ASTIdentifier::codegen() {
 		}
 	}
 	else { //Is a stct.
-		auto value2 = this->rhs->codegen();
+		auto v = Codegen::getIdentifier(value, this->rhs, this->loc);
 		if (this->kind == TypeKind::Pointer) {
-			return value2;
+			return v;
 		}
 		else if (this->kind == TypeKind::Reference) {
-			return value2;
+			return v;
 		}
 		else {
-			return builder.CreateLoad(value2);
+			return builder.CreateLoad(v);
 		}
-		return value2;
+		return v;
 	}
 	return nullptr;
 }

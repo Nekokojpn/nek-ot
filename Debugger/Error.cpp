@@ -26,7 +26,7 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextWhite();
 	std::cerr << source_filename << ":" << line + 1 << ":" << column << std::endl;
 	Console::SetConsoleTextBlue();
-	printf("%5d|\n%5d|", line - 1, line);
+	printf("      \n%5d|", line);
 	Console::SetConsoleTextWhite();
 	std::vector<std::string> t;
 	if (line - 1 >= 0)
@@ -49,11 +49,11 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	Console::SetConsoleTextRed();
 	std::cerr << "       ^" << std::endl;
 	Console::SetConsoleTextBlue();
-	printf("%5d|", line + ll++);
+	printf("      ");
 	Console::SetConsoleTextRed();
 	std::cerr << message << std::endl;
 	Console::SetConsoleTextBlue();
-	printf("%5d|", line + ll);
+	printf("      ");
 	Console::SetConsoleTextRed();
 	std::cerr << errmsg << std::endl;
 	Console::SetConsoleTextGray();

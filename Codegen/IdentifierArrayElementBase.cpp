@@ -1,21 +1,10 @@
 #include "../nek-ot.hpp"
 
 Value* ASTIdentifierArrayElementBase::codegen() {
-	auto value = namedvalues_local[this->name];
-	if (!value) {
-		auto global = namedvalues_global[this->name];
-		if (!global) {
-			auto str = namedvalues_str[this->name];
-			if (!str) {
-				if (underscore)
-					return underscore;
-				error("Unsolved value name", "Unsolved value name --> " + this->name, this->loc);
-			}
-			return str;
-		}
-		current_inst = global;
-		return global;
-	}
+	auto value = Codegen::getLocalVal(name, this->loc);
+	if (!value)
+		return Codegen::getGlobalVal(name, this->loc);
+
 	if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
 		current_inst = value;
 		if (isSubst)namedvalues_local_isinitialized[this->name] = true;
@@ -27,15 +16,17 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	//Build a idx_list
 
 	Value* gep = nullptr;
+	bool isArrTy = false;
 	if (value->getAllocatedType()->isPointerTy())isArrTy = true;
 	else isArrTy = false;
-	this->indexes->codegen();
+
+	auto idx_list = Codegen::getIndices(this->indexes, isArrTy, this->loc);
+
 	//TODO multi dimen;
 	ArrayRef<Value*> v(idx_list);
 	if (isArrTy) {
 		gep = builder.CreateLoad(value);
 		return builder.CreateInBoundsGEP(gep, v);
-
 	}
 	int i = idx_list.size() - 1;
 	auto ci = Codegen::getValueInt(idx_list[i]);
@@ -62,20 +53,12 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 }
 
 Type* ASTIdentifierArrayElementBase::getType() {
-	auto value = namedvalues_local[this->name];
-	if (!value) {
-		auto global = namedvalues_global[this->name];
-		if (!global) {
-			auto str = namedvalues_str[this->name];
-			if (!str) {
-				return nullptr;
-			}
-			return str->getType();
-		}
-		current_inst = global;
-		return global->getAllocatedType();
-	}
-	return value->getAllocatedType();
+	auto value = Codegen::getLocalVal(name, this->loc);
+	if (value)
+		return value->getAllocatedType();
+	auto global = Codegen::getGlobalVal(name, this->loc);
+	if (global)
+		return global->getType();
 }
 
 TypeAST ASTIdentifierArrayElementBase::getASTType() {

@@ -364,25 +364,6 @@ enum class TypeAST {
 	While
 };
 
-
-class Codegen {
-	bool isNowGlobal = false;
-public:
-	//-----> LLVM functions
-	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
-	static void call_exit(int exitcode);
-	static void call_error(int exitcode);
-	static Type* getTypebyAType(AType& ty);
-	static Type* getTypebyType(Type_t& t);
-	static void gen_asm(std::string statement, std::string option);
-	static void init_on_inst();
-	static std::tuple<bool, int> getValueInt(Value* c);
-	//<-----
-	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
-	bool IsGlobal() { return isNowGlobal; }
-	static void declareFunction(std::string func_name, std::string ac_func_name);
-};
-
 extern std::unique_ptr<Module> module;
 extern LLVMContext context;
 extern IRBuilder<> builder;
@@ -402,11 +383,6 @@ extern bool isSubst;
 
 extern std::pair<bool, std::vector<Value*>> if_rets;
 extern std::vector<BasicBlock*> if_rets_bb;
-
-//ASTArrayIndexes------>
-extern std::vector<Value*> idx_list;
-extern bool isArrTy;
-//<------
 
 //AST Identifier
 extern Value* current_inst;
@@ -639,7 +615,7 @@ public:
 	std::vector<AST*> body;
 	ASTIf* ast_elif;
 	ASTElse* ast_else;
-	ASTIf(AST* _proto, std::vector<AST*> _body) : proto(_proto), body(_body) {};
+	ASTIf(AST* _proto, std::vector<AST*> _body) : proto(_proto), body(_body), ast_elif(nullptr), ast_else(nullptr) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;
@@ -729,6 +705,7 @@ class ASTImport : public AST {
 public:
 };
 */
+class Codegen;
 class Parser {
 	int index;
 	Token_t curtok;
@@ -789,4 +766,26 @@ public:
 	bool find_userdefined_stct(std::string);
 	std::vector<std::string> imports;
 	bool isExpectedSemi = true;
+};
+
+class Codegen {
+	bool isNowGlobal = false;
+public:
+	//-----> LLVM functions
+	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
+	static void call_exit(int exitcode);
+	static void call_error(int exitcode);
+	static Type* getTypebyAType(AType& ty);
+	static Type* getTypebyType(Type_t& t);
+	static void gen_asm(std::string statement, std::string option);
+	static void init_on_inst();
+	static std::tuple<bool, int> getValueInt(Value* c);
+	//<-----
+	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
+	bool IsGlobal() { return isNowGlobal; }
+	static void declareFunction(std::string func_name, std::string ac_func_name);
+	static Value* getIdentifier(Value* v, AST* ast, Location_t& t);
+	static std::vector<Value*> getIndices(AST* ast, bool isArrTy, Location_t& t);
+	static AllocaInst* getLocalVal(std::string name, Location_t& t);
+	static Value* getGlobalVal(std::string name, Location_t& t);
 };

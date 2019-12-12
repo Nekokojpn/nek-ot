@@ -24,11 +24,6 @@ bool isSubst = false;
 std::pair<bool, std::vector<Value*>> if_rets;
 std::vector<BasicBlock*> if_rets_bb;
 
-//ASTArrayIndexes------>
-std::vector<Value*> idx_list;
-bool isArrTy = false;
-//<------
-
 //AST Identifier
 Value* current_inst;
 bool isPtr = false;
@@ -294,4 +289,55 @@ Type* Codegen::getTypebyType(Type_t& t) {
 		}
 		return nullptr;
 	}
+}
+
+Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
+	auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
+	ASTIdentifierBase* aib = nullptr;
+	ASTIdentifierArrayElementBase* aiae = nullptr;
+	if (ast->getASTType() == TypeAST::IdentifierBase)
+		aib = (ASTIdentifierBase*)ast;
+	else
+		aiae = (ASTIdentifierArrayElementBase*)ast;
+	auto name = aib != nullptr ? aib->name : aiae->name;
+	if (v_load->getType()->isStructTy()) {
+		auto cur = userdefined_stcts_elements[v_load->getType()->getStructName()].elems;
+		if (cur.find(name) != cur.end())
+			return builder.CreateStructGEP(v, cur[name].idx);
+	}
+	else {
+		if (name == "len") {
+			if (v_load->getType()->isArrayTy())
+				return builder.getInt32(v_load->getType()->getArrayNumElements());
+			else
+				error_codegen(name + " is not array type.", t);
+		}
+	}
+
+}
+
+std::vector<Value*> Codegen::getIndices(AST* ast, bool isArrTy, Location_t& t) {
+	std::vector<Value*> ind;
+	auto indices = (ASTArrayIndexes*)ast;
+	if (!isArrTy)
+		ind.push_back(builder.getInt32(0));
+	auto l = indices->lhs->codegen();
+	if (l->getType()->isPointerTy())
+		l = builder.CreateLoad(l);
+	ind.push_back(l);
+	return ind;
+}
+
+AllocaInst* Codegen::getLocalVal(std::string name, Location_t& t) {
+	if (namedvalues_local.find(name) != namedvalues_local.end())
+		return namedvalues_local[name];
+	error_codegen("\"" + name + "\" is not declared!", t);
+	return nullptr;
+}
+Value* Codegen::getGlobalVal(std::string name, Location_t& t) {
+	if (namedvalues_global.find(name) != namedvalues_global.end())
+		return namedvalues_global[name];
+	if (underscore)
+		return underscore;
+	return nullptr;
 }

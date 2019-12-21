@@ -39,14 +39,6 @@ std::vector<AST*> Parser::expr_block(bool isOneExpr) { //  {expr block}
 			auto ast = def_action();
 			asts.push_back(ast);
 		}
-		else if (curtok.ty == TK::tok_stct) {
-			auto ast = def_stct();
-			asts.push_back(ast);
-		}
-		else if (curtok.ty == TK::tok_doll) {
-			auto ast = expr_block(false);
-			asts.push_back(ast[0]);
-		}
 		else if (curtok.ty == TK::tok_brk) {
 			auto ast = def_brk();
 			asts.push_back(ast);

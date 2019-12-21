@@ -1,5 +1,5 @@
 fn main(){
-	stct mys{
+	mys := stct{
 		i : i32,
 		j : i32
 	};

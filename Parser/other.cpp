@@ -6,7 +6,7 @@ bool Parser::curtokIs(TK tok) {
 
 bool Parser::nexttokIs(TK tok) {
 	if (index + 1 < tokens.size())
-		return tokens[++index].ty == tok;
+		return tokens[index+1].ty == tok;
 	else
 		return false;
 }

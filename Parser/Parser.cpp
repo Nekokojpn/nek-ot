@@ -16,14 +16,6 @@ void Parser::getNextToken() noexcept {
 	if(index+1 < tokens.size())
 		curtok = tokens[++index];
 }
-void Parser::add_userdefined_stct(Token_t& cur) {
-	stcts[cur.val] = cur;
-}
-bool Parser::find_userdefined_stct(std::string stct_name) {
-	for (auto itr = this->stcts.begin(); itr != stcts.end(); itr++)
-		if (itr->first == stct_name)return true;
-	return false;
-}
 Type_t Parser::getTypeFromCurtok() {
 	auto ty = getATypeByCurtok();
 	std::string name = curtok.val;
@@ -103,9 +95,10 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_stct) {
 		return AType::Struct;
 	}
+	else if(curtok.ty == TK::tok_identifier) {
+		return AType::UserdefinedType;
+	}
 	else {
-		if (find_userdefined_stct(curtok.val))
-			return AType::UserdefinedStruct;
 		return AType::Nop;
 	}
 }

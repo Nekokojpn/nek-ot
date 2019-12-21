@@ -163,7 +163,7 @@ label1:
 	//Array or stct or tuple
 	else if (curtok.ty == TK::tok_lb) {
 		auto loc = curtok.loc;
-		auto elems = expr_arr();
+		auto elems = expr_lb();
 		elems->loc = loc;
 		return elems;
 	}

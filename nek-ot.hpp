@@ -322,7 +322,7 @@ enum class AType { //AllType
 	F64,
 	Char,
 	String,
-	UserdefinedStruct,
+	UserdefinedType,
 	Struct,
 	Void,
 	Array,
@@ -711,7 +711,6 @@ class Parser {
 	Token_t curtok;
 	std::string curval; //for type;
 	std::unique_ptr<Codegen> cdgen;
-	std::map<std::string, Token_t> stcts;
 	std::vector<Token_t> tokens;
 
 	bool curtokIs(TK);
@@ -736,13 +735,13 @@ class Parser {
 	ASTSubst* subst_expr(AST*);
 	AST* expr_var();
 	AST* expr_array_indexes(); //return an ASTArrayIndex;
+	AST* expr_lb();
 
 	ASTType* def_type(AST*);
 	ASTString* def_string();
 	ASTFunc* def_func();
 	ASTAction* def_action();
 	ASTRet* def_ret();
-	AST* def_stct();
 	ASTBrk* def_brk();
 	ASTLabel* def_label(std::string&);
 
@@ -762,8 +761,6 @@ public:
 	void dump();
 	AType getATypeByCurtok();
 	Type_t getTypeFromCurtok();
-	void add_userdefined_stct(Token_t&);
-	bool find_userdefined_stct(std::string);
 	std::vector<std::string> imports;
 	bool isExpectedSemi = true;
 };

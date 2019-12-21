@@ -1,13 +1,13 @@
 fn main() -> i32{
-	stct org{
+	org := stct{
 		i : i32,
 		index : f64
 	};
-	stct r{
+	r := stct{
 		k : i32,
 		j : org
 	};
-	stct s{
+	s := stct{
 		l : r
 	};
 	s1 := s;

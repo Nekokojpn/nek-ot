@@ -21,7 +21,7 @@ ASTArrElements* Parser::expr_arr() {
 		getNextToken();
 		if (curtok.ty != TK::tok_identifier)
 			error_unexpected(curtok);
-		auto identifier = expr_identifiers(); //TODO FIx
+		auto identifier = expr_identifiers();
 		if (curtok.ty != TK::tok_rarrow)
 			error_expected("<-", curtok);
 		auto loc = curtok.loc;

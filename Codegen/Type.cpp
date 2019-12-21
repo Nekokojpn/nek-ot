@@ -16,7 +16,7 @@ fr:
 			AllocaInst* allocainst;
 			//If local variable
 			if (!this->isGlobal) {
-				if (this->ty.ty != AType::UserdefinedStruct)
+				if (this->ty.ty != AType::UserdefinedType)
 					allocainst = builder.CreateAlloca(type);
 				else
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
@@ -24,7 +24,7 @@ fr:
 			}
 			//If global variable
 			else {
-				if (this->ty.ty != AType::UserdefinedStruct)
+				if (this->ty.ty != AType::UserdefinedType)
 					allocainst = builder.CreateAlloca(type);
 				else
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);

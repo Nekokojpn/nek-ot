@@ -488,7 +488,6 @@ public:
 	bool isGlobal;
 	AST* expr;
 	ASTType(Type_t _ty, AST* _id, AST* _expr, std::string _stct_name, bool _isGlobal) : ty(_ty), id(_id), expr(_expr), stct_name(_stct_name), isGlobal(_isGlobal) {};
-	//ASTType(Type_t _ty, AST* _id, <ASTArrElements> _elements, std::string _stct_name, bool _isGlobal) : ty(_ty), id(_id)), elements(_elements)), stct_name(_stct_name), isGlobal(_isGlobal) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;
@@ -785,5 +784,6 @@ public:
 	static std::vector<Value*> getIndices(AST* ast, bool isArrTy, Location_t& t);
 	static AllocaInst* getLocalVal(std::string name, Location_t& t);
 	static Value* getGlobalVal(std::string name, Location_t& t);
-	static std::vector<Type*> getStctElements(AST* ast, Location_t& t);
+	static Value* getDefinedValue(std::string name, Location_t& t);
+	static std::vector<Type*> getStctElements(std::string origin_stctname, AST* ast, Location_t& t);
 };

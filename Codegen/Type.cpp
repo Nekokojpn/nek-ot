@@ -18,16 +18,21 @@ fr:
 			if (!this->isGlobal) {
 				//if definition stct
 				if (type->isStructTy() && sub) {
-					ArrayRef<Type*> arref(Codegen::getStctElements(sub->expr, sub->expr->loc));
-					type = StructType::create(context, ((ASTIdentifierBase*)this->id)->name);
-					((StructType*)type)->setBody(arref);
-					userdefined_stcts[((ASTIdentifierBase*)this->id)->name] = (StructType*)type;
+					auto vec = Codegen::getStctElements(this->name, sub->expr, sub->expr->loc);
+					ArrayRef<Type*> arref(vec);
+					auto stctty = StructType::create(context, arref);
+					stctty->setName(this->name);
+					userdefined_stcts[this->name] = stctty;
+					allocainst = builder.CreateAlloca(stctty);
+					namedvalues_local[this->name] = allocainst;
+					return allocainst;
 				}
 				if (this->ty.ty != AType::UserdefinedType)
 					allocainst = builder.CreateAlloca(type);
 				else
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
 				namedvalues_local[this->name] = allocainst;
+				
 			}
 			//If global variable
 			else {

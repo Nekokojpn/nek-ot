@@ -307,6 +307,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		auto cur = userdefined_stcts_elements[v_load->getType()->getStructName()].elems;
 		if (cur.find(name) != cur.end())
 			return builder.CreateStructGEP(v, cur[name].idx);
+
 	}
 	else {
 		if (name == "len") {
@@ -343,4 +344,9 @@ Value* Codegen::getGlobalVal(std::string name, Location_t& t) {
 	if (underscore)
 		return underscore;
 	return nullptr;
+}
+
+Value* Codegen::getDefinedValue(std::string name, Location_t& t) {
+	auto val = Codegen::getLocalVal(name, t);
+	return val ? val : getGlobalVal(name, t);
 }

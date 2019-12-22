@@ -32,7 +32,6 @@ fr:
 				else
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
 				namedvalues_local[this->name] = allocainst;
-				
 			}
 			//If global variable
 			else {

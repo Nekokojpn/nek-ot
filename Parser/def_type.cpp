@@ -32,7 +32,4 @@ ASTType* Parser::def_type(AST* ast_id) {
 	if(this->isExpectedSemi)getNextToken();
 	this->isExpectedSemi = true;
 	return ast;
-	loc = curtok.loc;
-	error_unexpected(curtok);
-	return nullptr;
 }

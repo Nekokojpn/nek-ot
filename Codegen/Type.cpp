@@ -16,6 +16,13 @@ fr:
 			AllocaInst* allocainst;
 			//If local variable
 			if (!this->isGlobal) {
+				//if definition stct
+				if (type->isStructTy() && sub) {
+					ArrayRef<Type*> arref(Codegen::getStctElements(sub->expr, sub->expr->loc));
+					type = StructType::create(context, ((ASTIdentifierBase*)this->id)->name);
+					((StructType*)type)->setBody(arref);
+					userdefined_stcts[((ASTIdentifierBase*)this->id)->name] = (StructType*)type;
+				}
 				if (this->ty.ty != AType::UserdefinedType)
 					allocainst = builder.CreateAlloca(type);
 				else
@@ -30,9 +37,10 @@ fr:
 					allocainst = builder.CreateAlloca(userdefined_stcts[this->stct_name]);
 				namedvalues_local[this->name] = allocainst;
 			}
-			if (this->expr) {
+			if (this->expr && !type->isStructTy()) {
 				namedvalues_local_isinitialized[this->name] = true;
 				auto value = this->expr->codegen();
+				
 				if (auto* C = dyn_cast<Constant>(value))
 					if (auto CI = dyn_cast<ConstantInt>(C))
 						std::cout << CI->getValue().getZExtValue();

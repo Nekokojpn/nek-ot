@@ -785,4 +785,5 @@ public:
 	static std::vector<Value*> getIndices(AST* ast, bool isArrTy, Location_t& t);
 	static AllocaInst* getLocalVal(std::string name, Location_t& t);
 	static Value* getGlobalVal(std::string name, Location_t& t);
+	static std::vector<Type*> getStctElements(AST* ast, Location_t& t);
 };

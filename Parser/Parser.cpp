@@ -18,6 +18,8 @@ void Parser::getNextToken() noexcept {
 }
 Type_t Parser::getTypeFromCurtok() {
 	auto ty = getATypeByCurtok();
+	if (ty == AType::Nop && isUserdefinedType(curtok.val))
+		ty = AType::UserdefinedType;
 	std::string name = curtok.val;
 	auto isArr = false;
 	curtokIs(TK::tok_lb) ? isArr = true : isArr = false;
@@ -94,9 +96,6 @@ AType Parser::getATypeByCurtok() {
 	}
 	else if (curtok.ty == TK::tok_stct) {
 		return AType::Struct;
-	}
-	else if(curtok.ty == TK::tok_identifier) {
-		return AType::UserdefinedType;
 	}
 	else {
 		return AType::Nop;

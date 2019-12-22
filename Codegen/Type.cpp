@@ -70,8 +70,9 @@ fr:
 			else
 				underscore = allocainst;
 
-			if (elements) {
-				elements->subst(allocainst, this->ty.arrsize);
+			
+			if (sub) {
+				((ASTArrElements*)sub->expr)->subst(allocainst, this->ty.arrsize);
 				namedvalues_local_isinitialized[this->name] = true;
 			}
 			return allocainst;

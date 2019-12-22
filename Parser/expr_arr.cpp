@@ -1,7 +1,6 @@
 #include "../nek-ot.hpp"
 
 ASTArrElements* Parser::expr_arr() {
-	getNextToken();
 	std::vector<AST*> elements;
 	uint32_t cnt = 0;
 	while (true) {

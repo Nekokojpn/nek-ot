@@ -715,6 +715,7 @@ class Parser {
 	bool curtokIs(TK);
 	bool nexttokIs(TK);
 	std::vector<AST*> afs;
+	std::vector<std::string> userdefinedtype_v;
 
 	AST* expr();
 	AST* expr_add();
@@ -762,6 +763,8 @@ public:
 	Type_t getTypeFromCurtok();
 	std::vector<std::string> imports;
 	bool isExpectedSemi = true;
+	void addUserdefinedType(std::string name);
+	bool isUserdefinedType(std::string name);
 };
 
 class Codegen {

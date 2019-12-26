@@ -87,6 +87,7 @@ enum class TK {
 	tok_action,
 	tok_var,
 	tok_stct, //struct
+	tok_list,
 
 	tok_num_int,
 	tok_num_double,
@@ -736,6 +737,7 @@ class Parser {
 	AST* expr_var();
 	AST* expr_array_indexes(); //return an ASTArrayIndex;
 	AST* expr_lb();
+	AST* expr_lpb();
 
 	ASTType* def_type(AST*);
 	ASTString* def_string();

@@ -1,7 +1,8 @@
 import "io";
 
 fn main(){
-	arr := i32[5]{1,2,3,4,5};
-	arr[0] = 0;
+	sum := input();
+	a := 123%(sum-55);
+	writefln("%d", a);
 	ret;
 }

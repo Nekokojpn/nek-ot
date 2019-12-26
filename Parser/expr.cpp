@@ -167,6 +167,13 @@ label1:
 		elems->loc = loc;
 		return elems;
 	}
+	//List
+	else if (curtok.ty == TK::tok_lpb) {
+		auto loc = curtok.loc;
+		auto elems = expr_lpb();
+		elems->loc = loc;
+		return elems;
+	}
 	else if (curtok.ty == TK::tok_dq) {
 		auto loc = curtok.loc;
 		auto ast = new ASTString("", expr_str());

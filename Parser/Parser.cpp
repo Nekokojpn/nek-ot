@@ -97,6 +97,9 @@ AType Parser::getATypeByCurtok() {
 	else if (curtok.ty == TK::tok_stct) {
 		return AType::Struct;
 	}
+	else if (curtok.ty == TK::tok_list) {
+		return AType::List;
+	}
 	else {
 		return AType::Nop;
 	}

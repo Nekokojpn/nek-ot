@@ -1,0 +1,17 @@
+fn main() -> i32{
+	org := stct{
+		i : i32,
+		index : f64
+	};
+	r := stct{
+		k : i32,
+		j : org
+	};
+	s := stct{
+		l : r
+	};
+	s1 := s;
+	s1.l.j.i = 100;
+	writefln("%d", s1.l.j.i);
+	ret 0;
+}

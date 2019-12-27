@@ -22,26 +22,33 @@ Type_t Parser::getTypeFromCurtok() {
 		ty = AType::UserdefinedType;
 	std::string name = curtok.val;
 	auto isArr = false;
+	auto isList = false;
 	curtokIs(TK::tok_lb) ? isArr = true : isArr = false;
 	auto kind = TypeKind::Value;
 	std::vector<unsigned long long> arrsize_;
 	if (ty == AType::Nop)goto proc;
 	getNextToken();
-	while (curtok.ty == TK::tok_lpb) {
-		isArr = true;
-		getNextToken();
-		if (curtok.ty == TK::tok_num_int) {
-			if (std::atoll(curtok.val.c_str()) > 0)
-				arrsize_.push_back(std::atoll(curtok.val.c_str()));
-			else {
-				add_err_msg("Array size must be higher than 0.");
+	if (curtokIs(TK::tok_lpb)) {
+		while (curtok.ty == TK::tok_lpb) {
+			isArr = true;
+			getNextToken();
+			if (curtok.ty == TK::tok_num_int) {
+				if (std::atoll(curtok.val.c_str()) > 0)
+					arrsize_.push_back(std::atoll(curtok.val.c_str()));
+				else {
+					add_err_msg("Array size must be higher than 0.");
+					error_unexpected(curtok);
+				}
+				getNextToken();
+			}
+			if (curtok.ty != TK::tok_rpb) {
 				error_unexpected(curtok);
 			}
 			getNextToken();
 		}
-		if (curtok.ty != TK::tok_rpb) {
-			error_unexpected(curtok);
-		}
+	}
+	else if (curtokIs(TK::tok_list)) {
+		isList = true;
 		getNextToken();
 	}
 	if (curtok.ty == TK::tok_star) {
@@ -56,6 +63,7 @@ proc:
 	Type_t arg;
 	arg.name = name;
 	arg.isArr = isArr;
+	arg.isList = isList;
 	arg.ty = ty;
 	arg.kind = kind;
 	arg.arrsize = arrsize_;

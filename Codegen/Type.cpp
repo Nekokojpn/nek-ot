@@ -10,13 +10,18 @@ Value* ASTType::codegen() {
 			elements = (ASTArrElements*)this->expr;
 	}
 	auto type = Codegen::getTypebyType(this->ty);
+	//else control -> type inference
 	if (this->ty.ty != AType::Nop) {
 fr:
 		if (!type || !type->isArrayTy()) {
 			AllocaInst* allocainst;
 			//If local variable
 			if (!this->isGlobal) {
-				//if definition stct
+				//definition list
+				if (type->isStructTy() && this->ty.isList) {
+					return Codegen::substList(this->name, type, sub->expr, this->loc);
+				}
+				//definition stct
 				if (type->isStructTy() && sub) {
 					auto vec = Codegen::getStctElements(this->name, sub->expr, sub->expr->loc);
 					ArrayRef<Type*> arref(vec);

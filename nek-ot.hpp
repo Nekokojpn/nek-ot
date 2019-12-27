@@ -217,6 +217,7 @@ typedef struct {
 typedef struct {
 	AType ty;
 	bool isArr;
+	bool isList;
 	std::vector<unsigned long long> arrsize;
 	TypeKind kind;
 	std::string name;
@@ -362,7 +363,8 @@ enum class TypeAST {
 	Subst,
 	Type,
 	Value,
-	While
+	While,
+	ListElements
 };
 
 extern std::unique_ptr<Module> module;
@@ -379,6 +381,7 @@ extern std::map<std::string, Value*> namedvalues_str;
 extern Value* underscore;
 extern std::map<std::string, BasicBlock*> jmp_labels;
 extern std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
+extern std::map<Type*, StructType*> list_struct;
 
 extern bool isSubst;
 
@@ -700,6 +703,14 @@ public:
 	Type* getType() override;
 	TypeAST getASTType() override;
 };
+class ASTListElements : public AST {
+public:
+	std::vector<AST*> elems;
+	ASTListElements(std::vector<AST*> _elems) : elems(_elems) {};
+	Value* codegen() override;
+	Type* getType() override;
+	TypeAST getASTType() override;
+};
 /*
 class ASTImport : public AST {
 public:
@@ -791,4 +802,5 @@ public:
 	static Value* getGlobalVal(std::string name, Location_t& t);
 	static Value* getDefinedValue(std::string name, Location_t& t);
 	static std::vector<Type*> getStctElements(std::string origin_stctname, AST* ast, Location_t& t);
+	static Value* substList(std::string name, Type* stct, AST* ast, Location_t& t);
 };

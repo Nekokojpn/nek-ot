@@ -142,6 +142,7 @@ TK gettoken() {
 		else if (cs == "true") { addToloc(cs.length()); return TK::tok_true; }
 		else if (cs == "false") { addToloc(cs.length()); return TK::tok_false; }
 		else if (cs == "bool") { addToloc(cs.length()); return TK::tok_bool; }
+		else if (cs == "list") { addToloc(cs.length()); return TK::tok_list; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

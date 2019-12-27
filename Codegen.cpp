@@ -15,6 +15,7 @@ std::map<std::string, AllocaInst*> namedvalues_global;
 std::map<std::string, AllocaInst*> namedvalues_local;
 std::map<std::string, bool> namedvalues_local_isinitialized;
 std::map<std::string, Value*> namedvalues_str;
+std::map<Type*, StructType*> list_struct;
 Value* underscore;
 std::map<std::string, BasicBlock*> jmp_labels;
 std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
@@ -278,6 +279,21 @@ Type* Codegen::getTypebyType(Type_t& t) {
 		if (t.isArr && t.arrsize.size() == 0) {
 			ty = ty->getPointerTo();
 		}
+		if (t.isList) {
+			if (list_struct.find(ty) != list_struct.end())
+				return list_struct[ty];
+			else {
+				std::vector<Type*> tys;
+				auto st = StructType::create(context, "1sys.list");
+				tys.push_back(st->getPointerTo());	//Prev
+				tys.push_back(ty);					//elem
+				tys.push_back(st->getPointerTo());	//Forw
+				ArrayRef<Type*> tyss(tys);
+				st->setBody(tyss);
+				list_struct[ty] = st;
+				return st;
+			}
+		}
 		if (t.kind == TypeKind::Pointer)
 			ty = ty->getPointerTo();
 		return ty;
@@ -349,4 +365,21 @@ Value* Codegen::getGlobalVal(std::string name, Location_t& t) {
 Value* Codegen::getDefinedValue(std::string name, Location_t& t) {
 	auto val = Codegen::getLocalVal(name, t);
 	return val ? val : getGlobalVal(name, t);
+}
+Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t) {
+	if (ast->getASTType() != TypeAST::ListElements)
+		error_codegen("Invalid list elements.", t);
+	auto elems = (ASTListElements*)ast;
+	Value* prev = nullptr;
+	auto val = builder.CreateAlloca(stct);
+	auto top = val;
+	for (int i = 0; i < elems->elems.size(); i++) {
+		if(prev)
+			builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
+		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
+		prev = val;
+		val = builder.CreateAlloca(stct);
+		builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
+	}
+	return top;
 }

@@ -1,3 +1,4 @@
 fn main(){
-	li := i32 {}
+	li := i32 list[1,2,3,4,5];
+	ret;
 }

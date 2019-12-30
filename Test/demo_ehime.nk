@@ -7,7 +7,7 @@ fn mandelbrot(c_x : f64, c_y : f64, n : i32) -> i32 {
 	x_n_1 := 0.0;
 	y_n_1 := 0.0;
 
-	for(i := 0; i < n; i = i + 1;){
+	for(i := 0; i < n; i = i + 1){
 		x_n_1 = x_n * x_n - y_n * y_n + c_x;
 		y_n_1 = 2 * x_n * y_n + c_y;
 
@@ -30,7 +30,7 @@ fn mandel(){
 	dy := 0.02;
 	x := 0.0;
 	x_length := f64 (x_max - x_min) / dx;
-	for(y := f64 y_max; y > y_min; y = y - dy;){
+	for(y := f64 y_max; y > y_min; y = y - dy){
 		x = x_min;
 		while(x < x_max){
 			if(mandelbrot(x, y, 300) == 0){

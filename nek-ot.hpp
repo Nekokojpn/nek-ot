@@ -138,6 +138,8 @@ enum class TK {
 	tok_mimi, //--
 	tok_ampamp, // &&
 	tok_pipepipe, // ||
+	tok_pleq, //+=
+	tok_mieq, //-=
 
 	tok_identifier,
 

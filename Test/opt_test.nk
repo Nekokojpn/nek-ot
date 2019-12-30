@@ -8,7 +8,7 @@ fn mumble(x : i32) -> i32{
 fn main(){
 	//Loop Unrolling
 	sum := 0;
-	for(i := 1; i <= 10; i = i + 1;){
+	for(i := 1; i <= 10; i++){
 		sum = sum + i;
 	}
 	writefln("%d", sum);

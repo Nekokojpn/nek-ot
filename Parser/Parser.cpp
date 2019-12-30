@@ -209,6 +209,16 @@ AST* Parser::expr_identifier() {
 		auto ast = def_type(identifier);
 		return ast;
 	}
+	else if (curtok.ty == TK::tok_pleq) {
+		getNextToken();
+		auto ast = new ASTSubst(identifier, new ASTBinOp(identifier, Op::Plus, expr()));
+		return ast;
+	}
+	else if (curtok.ty == TK::tok_mieq) {
+		getNextToken();
+		auto ast = new ASTSubst(identifier, new ASTBinOp(identifier, Op::Minus, expr()));
+		return ast;
+	}
 	else if (curtok.ty == TK::tok_lp ||
 				curtok.ty == TK::tok_doll) {
 		auto ast = func_call(curval, curtok.ty == TK::tok_doll ? true : false);

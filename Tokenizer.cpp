@@ -207,6 +207,9 @@ TK gettoken() {
 			else if (cc == '-') {
 				return TK::tok_mimi;
 			}
+			else if (cc == '=') {
+				return TK::tok_mieq;
+			}
 			/*
 			else if (isdigit(cc)) {
 				bool point = false;
@@ -234,6 +237,9 @@ TK gettoken() {
 			get_char();
 			if (cc == '+') {
 				return TK::tok_plpl;
+			}
+			else if (cc == '=') {
+				return TK::tok_pleq;
 			}
 			undo_char();
 			return TK::tok_plus;

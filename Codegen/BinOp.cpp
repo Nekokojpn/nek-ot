@@ -56,6 +56,18 @@ Value* ASTBinOp::codegen() {
 				return builder.CreateSDiv(l, r);
 			else if (!ci) {
 				//TODO: Runtime
+				BasicBlock* tr = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+				BasicBlock* fa = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+				builder.CreateCondBr(builder.CreateICmpNE(r, builder.getInt32(0)), tr, fa);
+				
+				builder.SetInsertPoint(fa);
+				std::vector<Value*> v;
+				v.push_back(builder.CreateGlobalStringPtr("Runtime Error: Cannot be divided by 0.\n"));
+				Codegen::call_writef(v);
+				builder.CreateBr(tr);
+				builder.SetInsertPoint(tr);
+				
+
 				return builder.CreateSDiv(l, r);
 			}
 			else {

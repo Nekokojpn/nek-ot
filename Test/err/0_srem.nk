@@ -1,7 +1,8 @@
 import "io";
 
 fn main(){
-	x := 0;
-	writefln("%lf", 10 / 0-x);
+	writef("input->");
+	x := i32 input();
+	writefln("Result %d / %d = %d", 10, x, 10 / x);
 	ret;
 }

@@ -51,15 +51,12 @@ Value* ASTBinOp::codegen() {
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
 			) {
-			auto tup = Codegen::getValueInt(r);
-			if (std::get<0>(tup) && std::get<1>(tup) != 0)
+			auto ci = Codegen::getValueInt(r);
+			if (ci && !ci->isZero())
 				return builder.CreateSDiv(l, r);
-			else if (!std::get<0>(tup)) {
-				/*
-				std::vector<Value*> v;
-				v.push_back(builder.CreateGlobalStringPtr("Runtime Error: Cannot be divided by 0."));
-				Codegen::call_writef(v);
-				*/
+			else if (!ci) {
+				//TODO: Runtime
+				return builder.CreateSDiv(l, r);
 			}
 			else {
 				error_codegen("Cannot be divided by 0.", this->loc);

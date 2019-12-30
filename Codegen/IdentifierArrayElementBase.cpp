@@ -30,9 +30,8 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	}
 	int i = idx_list.size() - 1;
 	auto ci = Codegen::getValueInt(idx_list[i]);
-	if (std::get<0>(ci)) {
-		if (std::get<1>(ci) >= value->getAllocatedType()->getArrayNumElements())
-			error_codegen("The specified index is out of range.", this->loc);
+	if (ci && ci->getZExtValue() >= value->getAllocatedType()->getArrayNumElements()) {
+		error_codegen("The specified index is out of range.", this->loc);
 	}
 	else {
 		//‚±‚±
@@ -47,7 +46,6 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 		builder.CreateCondBr(builder.CreateICmpSGE(idx_list[0], value), bb_t, bb_f);
 		*/
 	}
-
 	gep = builder.CreateInBoundsGEP(value, v);
 	return gep;
 }

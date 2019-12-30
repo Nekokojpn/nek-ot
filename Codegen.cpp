@@ -194,15 +194,15 @@ void Codegen::gen_asm(std::string statement, std::string option) {
 }
 
 
-std::tuple<bool, int> Codegen::getValueInt(Value* c) {
-	if (auto* cs = dyn_cast<Constant>(c)) {
+ConstantInt* Codegen::getValueInt(Value* c) {
+	if (Constant* cs = dyn_cast<Constant>(c)) {
 		//Const.
-		if (auto ci = dyn_cast<ConstantInt>(cs)) {
-			return std::make_tuple<bool, int>(true, ci->getValue().getZExtValue());
+		if (ConstantInt* ci = dyn_cast<ConstantInt>(cs)) {
+			return ci;
 		}
 	}
 	//TODO: support other type. e.g. FP,.
-	return std::make_tuple<bool, int>(false, 0);
+	return nullptr;
 }
 
 void Codegen::call_exit(int exitcode) {

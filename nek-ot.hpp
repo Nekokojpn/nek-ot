@@ -793,7 +793,7 @@ public:
 	static Type* getTypebyType(Type_t& t);
 	static void gen_asm(std::string statement, std::string option);
 	static void init_on_inst();
-	static std::tuple<bool, int> getValueInt(Value* c);
+	static ConstantInt* getValueInt(Value* c);
 	//<-----
 	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
 	bool IsGlobal() { return isNowGlobal; }

@@ -1,8 +1,8 @@
 import "io";
 
 fn main(){
-	sum := input();
-	a := 123%(sum-55);
-	writefln("%d", a);
+	sum := 1 + 2;
+	sum = sum + 2;
+	writefln("%d", sum);
 	ret;
 }

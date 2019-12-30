@@ -1,0 +1,11 @@
+import "io";
+fn main(){
+	x := 0;
+	writefln("%d", x++);
+	writefln("%d", x);
+	x--;
+	writefln("%d", x);
+	x++ ++ ++ ++ ++;
+	writefln("%d", x);
+	ret;
+}

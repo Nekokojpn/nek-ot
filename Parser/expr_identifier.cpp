@@ -8,13 +8,18 @@ AST* Parser::expr_identifiers() {
 		auto rhs = expr_var();
 		lhs = new ASTIdentifier(lhs, rhs, TypeKind::Pointer);
 	}
-	if (curtokIs(TK::tok_plpl)) {
+	auto delta = 0;
+	while (true) {
+		if (curtokIs(TK::tok_plpl))
+			delta++;
+		else if (curtokIs(TK::tok_mimi))
+			delta--;
+		else
+			break;
 		getNextToken();
-		lhs = new ASTSubst(lhs, new ASTBinOp(lhs, Op::Plus, new ASTValue(1)));
 	}
-	else if (curtokIs(TK::tok_mimi)) {
-		getNextToken();
-		lhs = new ASTSubst(lhs, new ASTBinOp(lhs, Op::Minus, new ASTValue(1)));
+	if (delta != 0) {
+		lhs = new ASTSubst(lhs, new ASTBinOp(lhs, Op::Plus, new ASTValue(delta)));
 	}
 	return lhs;
 }

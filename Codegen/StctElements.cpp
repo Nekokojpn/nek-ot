@@ -26,7 +26,5 @@ std::vector<Type*> Codegen::getStctElements(std::string origin_stctname, AST* as
 	}
 
 	userdefined_stcts_elements[origin_stctname] = stctelem->elements;
-	//builder.CreateAlloca(StructType::create(context, elem_v));
-	//module->dump();
 	return elem_v;
 }

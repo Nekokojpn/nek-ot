@@ -206,13 +206,11 @@ label1:
 			return funccall;
 		}
 		//unused
-		else if (curtok.ty == TK::tok_plpl) {
+		else if (identifier->getASTType() == TypeAST::Subst) {
 
-			afs.push_back(new ASTSubst(identifier, new ASTBinOp(identifier, Op::Plus, new ASTValue(1))));
+			afs.push_back(identifier);
+			return ((ASTSubst*)identifier)->id;
 			//;
-		}
-		else if (curtok.ty == TK::tok_mimi) {
-			afs.push_back(new ASTSubst(identifier, new ASTBinOp(identifier, Op::Minus, new ASTValue(1))));
 		}
 		return identifier;
 	}

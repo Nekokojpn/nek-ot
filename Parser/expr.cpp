@@ -205,12 +205,14 @@ label1:
 			auto funccall = func_call(name, curtok.ty == TK::tok_doll ? true : false);
 			return funccall;
 		}
+		//unused
 		else if (curtok.ty == TK::tok_plpl) {
-			afs.push_back(new ASTBinOp(identifier, Op::Plus, new ASTValue(1)));
+
+			afs.push_back(new ASTSubst(identifier, new ASTBinOp(identifier, Op::Plus, new ASTValue(1))));
 			//;
 		}
 		else if (curtok.ty == TK::tok_mimi) {
-			afs.push_back(new ASTBinOp(identifier, Op::Minus, new ASTValue(1)));
+			afs.push_back(new ASTSubst(identifier, new ASTBinOp(identifier, Op::Minus, new ASTValue(1))));
 		}
 		return identifier;
 	}

@@ -7,9 +7,11 @@ ASTSubst* Parser::subst_expr(AST* ast_id) {
 		auto loc = curtok.loc;
 		auto ast = new ASTSubst(ast_id, expr());
 		ast->loc = loc;
-		if (curtok.ty != TK::tok_semi)
-			error_unexpected(curtok);
-		getNextToken();
+
+		if (this->isExpectedSemi && curtok.ty != TK::tok_semi)
+			error_expected(";", curtok);
+		if (this->isExpectedSemi)getNextToken();
+		this->isExpectedSemi = true;
 		return ast;
 	}
 	//<--------------------Subst

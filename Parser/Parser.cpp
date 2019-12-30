@@ -215,7 +215,8 @@ AST* Parser::expr_identifier() {
 		return ast;
 	}
 	else { //Expr
-		return identifier;
+		curtok = tokens[----index];
+		return expr();
 	}
 }
 
@@ -271,6 +272,7 @@ ASTFunc* Parser::def_func() {
 	else {
 		ret.name = curtok.val;
 		ret.isArr = false;
+		ret.isList = false;
 		ret.kind = TypeKind::Value;
 		ret.ty = AType::Void;
 	}
@@ -361,6 +363,7 @@ ASTFor* Parser::for_statement() {
 	if (!curtokIs(TK::tok_semi))
 		error_unexpected(curtok);
 	getNextToken();
+	isExpectedSemi = false;
 	auto last = expr_identifier();
 	if (!curtokIs(TK::tok_rp))
 		error_unexpected(curtok);
@@ -426,6 +429,7 @@ ASTRet* Parser::def_ret() {
 		rty = getTypeFromCurtok();
 	else {
 		rty.isArr = false;
+		rty.isList = false;
 		rty.kind = TypeKind::Value;
 		rty.ty = AType::Void;
 		rty.name = curtok.val;

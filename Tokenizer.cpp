@@ -158,6 +158,8 @@ TK gettoken() {
 				if (!isLong)isLong = true;
 				else isLongLong = true;
 			}
+			if (cc == '_')
+				continue;
 			cs += cc;
 			get_char();
 		}

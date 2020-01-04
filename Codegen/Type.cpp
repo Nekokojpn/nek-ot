@@ -84,7 +84,6 @@ fr:
 		}
 	}
 	else {
-		//auto v = this->expr->expr->codegen();
 		if (sub && sub->expr) {
 			type = sub->expr->getType();
 			if (!type)

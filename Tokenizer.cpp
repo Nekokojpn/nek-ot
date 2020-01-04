@@ -151,7 +151,7 @@ TK gettoken() {
 		bool point = false;
 		bool isLong = false;
 		bool isLongLong = false;
-		while (isdigit(cc) || (cc == '.' && !point) || cc == 'L') {
+		while (isdigit(cc) || (cc == '.' && !point) || cc == 'L' || cc == '_') {
 			if (cc == '.')
 				point = true;
 			if (cc == 'L') {

@@ -1,8 +1,7 @@
 import "io";
 
 fn main(){
-	sum := 1 + 2;
-	sum = sum + 2;
-	writefln("%d", sum);
+	sum := i64 18446744073709551616;
+	writefln("%d", sum); 
 	ret;
 }

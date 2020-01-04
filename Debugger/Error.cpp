@@ -13,7 +13,7 @@ void error(std::string title, std::string message, uint32_t line, uint32_t colum
 	if (source.size() <= line) {
 		std::cerr << std::endl;
 		Console::SetConsoleTextRed();
-		std::cerr << "error: " << title << std::endl;
+		std::cerr << "Compile error: " << title << std::endl << message << std::endl;
 		exit(1);
 	}
 

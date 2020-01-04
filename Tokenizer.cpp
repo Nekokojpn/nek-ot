@@ -163,6 +163,7 @@ TK gettoken() {
 			cs += cc;
 			get_char();
 		}
+		
 		undo_char();
 		addToliteral();
 		addToloc(cs.length());

@@ -134,10 +134,14 @@ AST* Parser::expr_primary() {
 label1:
 	if (curtok.ty == TK::tok_num_int) {
 		auto loc = curtok.loc;
-		auto value = new ASTValue(std::atoi(curtok.val.c_str()));
-		value->loc = loc;
+		ASTValue* ast = nullptr;
+		if (std::atoll(curtok.val.c_str()) > 2147483647LL || std::atoll(curtok.val.c_str()) < -2147483648LL)
+			ast = new ASTValue(std::atoll(curtok.val.c_str()), true);
+		else
+			ast = new ASTValue(std::atoi(curtok.val.c_str()));
+		ast->loc = loc;
 		getNextToken(); //eat num
-		return value;
+		return ast;
 	}
 	else if (curtok.ty == TK::tok_num_double) {
 		auto loc = curtok.loc;

@@ -383,3 +383,24 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 	}
 	return top;
 }
+
+void Codegen::createWritefln(std::string message) {
+	std::vector<Value*> v;
+	v.push_back(builder.CreateGlobalStringPtr(message));
+	v.push_back(builder.CreateGlobalStringPtr("\n"));
+	ArrayRef<Value*> vv(v);
+	Codegen::call_writef(vv);
+	return;
+}
+
+void Codegen::createErrWritefln(std::string message, Location_t& t) {
+	std::vector<Value*> v;
+	v.push_back(builder.CreateGlobalStringPtr(message + "\n	at " + source_filename + " : " + std::to_string(t.location_begin_line + 1) + " : " + std::to_string(t.location_begin_column)));
+	ArrayRef<Value*> vv(v);
+	Codegen::call_writef(vv);
+	return;
+}
+
+BasicBlock* Codegen::createBB() {
+	return BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+}

@@ -29,8 +29,23 @@ Value* ASTBinOp::codegen() {
 	case Op::Plus:
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
-			)
+			) {
+			/*
+			auto inst = builder.CreateAdd(l, r);
+			Value* slt = nullptr;
+			if (inst->getType() == builder.getInt32Ty())
+				slt = builder.getInt32(I32_MAX);
+			else if (inst->getType() == builder.getInt64Ty())
+				slt = builder.getInt64(I64_MAX);
+			auto bb_err = Codegen::createBB();
+			auto bb_cont = Codegen::createBB();
+			builder.CreateCondBr(builder.CreateICmpSLT(slt, inst), bb_err, bb_cont);
+			builder.SetInsertPoint(bb_err);
+			Codegen::createWritefln("Runtime Error: Overflow exception.");
+			builder.CreateBr(bb);
+			*/
 			return builder.CreateAdd(l, r);
+		}
 		else
 			return builder.CreateFAdd(l, r);
 	case Op::Minus:
@@ -55,15 +70,12 @@ Value* ASTBinOp::codegen() {
 			if (ci && !ci->isZero())
 				return builder.CreateSDiv(l, r);
 			else if (!ci) {
-				//TODO: Runtime
 				BasicBlock* tr = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 				BasicBlock* fa = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 				builder.CreateCondBr(builder.CreateICmpNE(r, builder.getInt32(0)), tr, fa);
 				
 				builder.SetInsertPoint(fa);
-				std::vector<Value*> v;
-				v.push_back(builder.CreateGlobalStringPtr("Runtime Error: Cannot be divided by 0.\n"));
-				Codegen::call_writef(v);
+				Codegen::createErrWritefln("Runtime Error: Cannot be divided by 0.", this->loc);
 				builder.CreateBr(tr);
 				builder.SetInsertPoint(tr);
 				

@@ -148,6 +148,11 @@ enum class TK {
 
 };
 
+#define I32_MAX 2147483647
+#define I32_MIN -2147483648
+#define I64_MAX 9223372036854775807
+#define I64_MIN -9223372036854775808
+
 
 
 class Test {
@@ -404,6 +409,8 @@ extern std::vector<BasicBlock*> brk_bbs;
 extern bool retcodegen;
 extern bool gotocodegen;
 extern bool isStringCodegen;
+
+extern std::string source_filename;
 
 
 class ASTSubst;
@@ -805,4 +812,7 @@ public:
 	static Value* getDefinedValue(std::string name, Location_t& t);
 	static std::vector<Type*> getStctElements(std::string origin_stctname, AST* ast, Location_t& t);
 	static Value* substList(std::string name, Type* stct, AST* ast, Location_t& t);
+	static void createWritefln(std::string message);
+	static void Codegen::createErrWritefln(std::string message, Location_t& t);
+	static BasicBlock* createBB();
 };

@@ -11,7 +11,11 @@ Value* ASTCall::codegen() {
 		//auto curArg = module->getFunction(this->name)->getArg(i);
 		//if (!curArg)
 		//	error_codegen("Argument out of range.", this->loc);
-		Value* ty_load = ty->getType()->isPointerTy() ? builder.CreateLoad(ty) : ty;
+		Type* ty_load = nullptr;
+		if (ty->getType()->isPointerTy())
+			ty_load = ty->getType()->getPointerElementType();
+		else
+			ty_load = ty->getType();
 		//if (curArg->getType() != ty_load->getType())
 		//	error_codegen("The argument " + std::to_string(i) + " is not match specified the type.", this->loc);
 
@@ -25,12 +29,12 @@ Value* ASTCall::codegen() {
 			continue;
 		}
 		
-		else if (current_inst && current_inst->getType()->isArrayTy() && !ty_load->getType()->isArrayTy()) {
+		else if (current_inst && current_inst->getType()->isArrayTy() && !ty_load->isArrayTy()) {
 			types.push_back(ty);
 		}
-		else if (ty_load->getType()->isArrayTy()) {
+		else if (ty_load->isArrayTy()) {
 			
-			auto array_ty = ty_load->getType()->getArrayElementType();
+			auto array_ty = ty_load->getArrayElementType();
 			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
 			while (array_ty->isArrayTy()) {
 				gep = builder.CreateConstGEP2_64(gep, 0, 0);

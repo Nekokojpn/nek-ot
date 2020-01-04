@@ -1,8 +1,8 @@
 import "io";
 
 fn main(){
-	max := 9223372036854775807;
-	max += 1;
+	max := i64 9223372036854775807;
+	max += 100;
 	writefln("%d", max); 
 	ret;
 }

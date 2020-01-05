@@ -70,20 +70,12 @@ Value* ASTBinOp::codegen() {
 			if (ci && !ci->isZero())
 				return builder.CreateSDiv(l, r);
 			else if (!ci) {
-				BasicBlock* tr = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
-				BasicBlock* fa = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
-				builder.CreateCondBr(builder.CreateICmpNE(r, builder.getInt32(0)), tr, fa);
-				
-				builder.SetInsertPoint(fa);
-				Codegen::createErrWritefln("Runtime Error: Cannot be divided by 0.", this->loc);
-				builder.CreateBr(tr);
-				builder.SetInsertPoint(tr);
-				
-
+				Codegen::createRuntimeError("Divide-by-zero detected!", 
+					builder.CreateICmpNE(r, builder.getInt32(0)), this->loc);
 				return builder.CreateSDiv(l, r);
 			}
 			else {
-				error_codegen("Cannot be divided by 0.", this->loc);
+				error_codegen("Divide-by-zero detected!", this->loc);
 			}
 		}
 		else

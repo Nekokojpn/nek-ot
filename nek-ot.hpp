@@ -813,6 +813,8 @@ public:
 	static std::vector<Type*> getStctElements(std::string origin_stctname, AST* ast, Location_t& t);
 	static Value* substList(std::string name, Type* stct, AST* ast, Location_t& t);
 	static void createWritefln(std::string message);
-	static void Codegen::createErrWritefln(std::string message, Location_t& t);
+	static void createErrWritefln(std::string message, Location_t& t);
 	static BasicBlock* createBB();
+	static void call_exit(Value* exit_code);
+	static void createRuntimeError(std::string errmsg, Value* cond, Location_t& t);
 };

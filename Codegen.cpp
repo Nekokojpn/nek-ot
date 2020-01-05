@@ -150,6 +150,7 @@ void declareFunction(ArrayRef<Type*> args, Type* ret, std::string fn_name, bool 
 }
 
 void Sys::Exit::CreateFunc() {
+
 	return;
 }
 
@@ -182,6 +183,25 @@ void Codegen::call_writef(llvm::ArrayRef<llvm::Value*> args)
 	}
 
 	llvm::CallInst* inst = builder.CreateCall(func, args);
+	inst->setCallingConv(func->getCallingConv());
+}
+
+void Codegen::call_exit(Value* exit_code)
+{
+	llvm::Module* module = builder.GetInsertBlock()->getParent()->getParent();
+	llvm::Function* func = module->getFunction("exit");
+	if (func == nullptr) {
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt32Ty());
+		bool is_var_args = false;
+		func = llvm::Function::Create(
+			llvm::FunctionType::get(builder.getVoidTy(), args, is_var_args),
+			llvm::Function::ExternalLinkage, "exit", module);
+		func->setCallingConv(llvm::CallingConv::C);
+	}
+	std::vector<Value*> v;
+	v.push_back(exit_code);
+	llvm::CallInst* inst = builder.CreateCall(func, v);
 	inst->setCallingConv(func->getCallingConv());
 }
 
@@ -403,4 +423,17 @@ void Codegen::createErrWritefln(std::string message, Location_t& t) {
 
 BasicBlock* Codegen::createBB() {
 	return BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
+}
+
+//cond -> false control is error handling.
+void Codegen::createRuntimeError(std::string errmsg, Value* cond, Location_t& t) {
+	auto tr = Codegen::createBB();
+	auto fa = Codegen::createBB();
+	builder.CreateCondBr(cond, tr, fa);
+	builder.SetInsertPoint(fa);
+	Codegen::createErrWritefln("Runtime Error: " + errmsg, t);
+	Codegen::call_exit(builder.getInt32(1));
+	builder.CreateBr(tr);
+	builder.SetInsertPoint(tr);
+	return;
 }

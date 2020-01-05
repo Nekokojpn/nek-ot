@@ -1,9 +1,8 @@
 #include "../nek-ot.hpp"
 
 Value* ASTIdentifierArrayElementBase::codegen() {
-	auto value = Codegen::getLocalVal(name, this->loc);
-	if (!value)
-		return Codegen::getGlobalVal(name, this->loc);
+	auto value = Codegen::getDefinedValue(name, this->loc);
+	auto ty_load = value->getType()->isPointerTy() ? value->getType()->getPointerElementType() : value->getType();
 
 	if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
 		current_inst = value;
@@ -17,7 +16,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 
 	Value* gep = nullptr;
 	bool isArrTy = false;
-	if (value->getAllocatedType()->isPointerTy())isArrTy = true;
+	if (ty_load->isPointerTy())isArrTy = true;
 	else isArrTy = false;
 
 	auto idx_list = Codegen::getIndices(this->indexes, isArrTy, this->loc);
@@ -30,21 +29,14 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	}
 	int i = idx_list.size() - 1;
 	auto ci = Codegen::getValueInt(idx_list[i]);
-	if (ci && ci->getZExtValue() >= value->getAllocatedType()->getArrayNumElements()) {
-		error_codegen("The specified index is out of range.", this->loc);
+	if (ci && ci->getZExtValue() >= ty_load->getArrayNumElements()) {
+		error_codegen("Array index out of range!", this->loc);
 	}
 	else {
-		//‚±‚±
-		/*
-		BasicBlock* bb_t = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
-		BasicBlock* bb_f = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
-		std::vector<Value*> v;
-		v.push_back(builder.CreateGlobalStringPtr("Error: The specified index is out of range."));
-		ArrayRef<Value*> vv(v);
-		Codegen::call_writefln(v);
-		Codegen::call_error(1);
-		builder.CreateCondBr(builder.CreateICmpSGE(idx_list[0], value), bb_t, bb_f);
-		*/
+		auto len = builder.getInt32(ty_load->getArrayNumElements());
+		Codegen::doMatchType(idx_list[i], len);
+		Codegen::createRuntimeError("Array index out of range!",
+			builder.CreateICmpSLT(idx_list[i], len), this->loc);
 	}
 	gep = builder.CreateInBoundsGEP(value, v);
 	return gep;

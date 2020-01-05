@@ -9,21 +9,7 @@ Value* ASTBinOp::codegen() {
 		l = builder.CreateLoad(l);
 	if (!isPtr && r->getType()->isPointerTy())
 		r = builder.CreateLoad(r);
-	if (l->getType()->isFloatingPointTy())
-		if (!r->getType()->isFloatingPointTy())
-			r = builder.CreateSIToFP(r, builder.getDoubleTy());
-	if (r->getType()->isFloatingPointTy())
-		if (!l->getType()->isFloatingPointTy())
-			l = builder.CreateSIToFP(l, builder.getDoubleTy());
-	if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy() &&
-			l->getType() != r->getType()) {
-		if (l->getType() == builder.getIntNTy(64) && r->getType() != builder.getIntNTy(64)) {
-			r = builder.CreateSExt(r, builder.getIntNTy(64));
-		}
-		else if (l->getType() != builder.getIntNTy(64) && r->getType() == builder.getIntNTy(64)) {
-			l = builder.CreateSExt(l, builder.getIntNTy(64));
-		}
-	}
+	Codegen::doMatchType(l, r);
 	this->curTy = l->getType();
 	switch (op) {
 	case Op::Plus:
@@ -70,8 +56,10 @@ Value* ASTBinOp::codegen() {
 			if (ci && !ci->isZero())
 				return builder.CreateSDiv(l, r);
 			else if (!ci) {
+				auto zero = builder.getInt32(0);
+				Codegen::doMatchType(r, zero);
 				Codegen::createRuntimeError("Divide-by-zero detected!", 
-					builder.CreateICmpNE(r, builder.getInt32(0)), this->loc);
+					builder.CreateICmpNE(r, zero), this->loc);
 				return builder.CreateSDiv(l, r);
 			}
 			else {

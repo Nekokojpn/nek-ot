@@ -148,10 +148,10 @@ enum class TK {
 
 };
 
-#define I32_MAX 2147483647
-#define I32_MIN -2147483648
-#define I64_MAX 9223372036854775807
-#define I64_MIN -9223372036854775808
+#define I32_MAX 0x7FFFFFFF
+#define I32_MIN 0xFFFFFFFF
+#define I64_MAX 0x7FFFFFFFFFFFFFFF
+#define I64_MIN 0xFFFFFFFFFFFFFFFF
 
 
 
@@ -817,4 +817,5 @@ public:
 	static BasicBlock* createBB();
 	static void call_exit(Value* exit_code);
 	static void createRuntimeError(std::string errmsg, Value* cond, Location_t& t);
+	static void doMatchType(Value* l, Value* r);
 };

@@ -331,7 +331,7 @@ Type* Codegen::getTypebyType(Type_t& t) {
 }
 
 Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
-	auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
+	auto ty_load = v->getType()->isPointerTy() ? v->getType()->getPointerElementType() : v->getType();
 	ASTIdentifierBase* aib = nullptr;
 	ASTIdentifierArrayElementBase* aiae = nullptr;
 	if (ast->getASTType() == TypeAST::IdentifierBase)
@@ -339,18 +339,18 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	else
 		aiae = (ASTIdentifierArrayElementBase*)ast;
 	auto name = aib != nullptr ? aib->name : aiae->name;
-	if (v_load->getType()->isStructTy()) {
-		auto cur = userdefined_stcts_elements[v_load->getType()->getStructName()].elems;
+	if (ty_load->isStructTy()) {
+		auto cur = userdefined_stcts_elements[ty_load->getStructName()].elems;
 		if (cur.find(name) != cur.end())
 			return builder.CreateStructGEP(v, cur[name].idx);
 
 	}
 	else {
 		if (name == "len") {
-			if (v_load->getType()->isArrayTy())
-				return builder.getInt32(v_load->getType()->getArrayNumElements());
+			if (ty_load->isArrayTy())
+				return builder.getInt32(ty_load->getArrayNumElements());
 			else
-				error_codegen(name + " is not array type.", t);
+				error_codegen("Is not array type.", t);
 		}
 	}
 
@@ -435,5 +435,24 @@ void Codegen::createRuntimeError(std::string errmsg, Value* cond, Location_t& t)
 	Codegen::call_exit(builder.getInt32(1));
 	builder.CreateBr(tr);
 	builder.SetInsertPoint(tr);
+	return;
+}
+
+void Codegen::doMatchType(Value* l, Value* r) {
+	if (l->getType()->isFloatingPointTy())
+		if (!r->getType()->isFloatingPointTy())
+			r = builder.CreateSIToFP(r, builder.getDoubleTy());
+	if (r->getType()->isFloatingPointTy())
+		if (!l->getType()->isFloatingPointTy())
+			l = builder.CreateSIToFP(l, builder.getDoubleTy());
+	if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy() &&
+			l->getType() != r->getType()) {
+		if (l->getType() == builder.getIntNTy(64) && r->getType() != builder.getIntNTy(64)) {
+			r = builder.CreateSExt(r, builder.getIntNTy(64));
+		}
+		else if (l->getType() != builder.getIntNTy(64) && r->getType() == builder.getIntNTy(64)) {
+			l = builder.CreateSExt(l, builder.getIntNTy(64));
+		}
+	}
 	return;
 }

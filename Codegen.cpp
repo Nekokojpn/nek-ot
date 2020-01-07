@@ -392,6 +392,8 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 	auto elems = (ASTListElements*)ast;
 	Value* prev = nullptr;
 	auto val = builder.CreateAlloca(stct);
+	namedvalues_local[name] = val;
+
 	auto top = val;
 	for (int i = 0; i < elems->elems.size(); i++) {
 		if(prev)

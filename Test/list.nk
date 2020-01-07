@@ -1,4 +1,5 @@
 fn main(){
 	li := i32 list[1,2,3,4,5];
+	writefln("%d", li[4]);
 	ret;
 }

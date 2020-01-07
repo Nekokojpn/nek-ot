@@ -19,7 +19,10 @@ fr:
 			if (!this->isGlobal) {
 				//definition list
 				if (type->isStructTy() && this->ty.isList) {
-					return Codegen::substList(this->name, type, sub->expr, this->loc);
+					//Experimental. may cause problems
+					namedvalues_local_isinitialized[this->name] = true;
+					auto ret = Codegen::substList(this->name, type, sub->expr, this->loc);
+					return ret;
 				}
 				//definition stct
 				if (type->isStructTy() && sub) {

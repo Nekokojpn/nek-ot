@@ -45,52 +45,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	else {
 		auto v_load = value->getType()->isPointerTy() ? builder.CreateLoad(value) : value;
 		auto idx_list = Codegen::getIndices(this->indexes, true, this->loc);
-		//TODO: multi dimen
-		auto bb = Codegen::createBB();
-		auto tr = Codegen::createBB();
-		auto fa = Codegen::createBB();
-
-		/*
-			struct mys stct;
-			struct mys* pstct = &stct;
-			for(int i = 0; i < 10; i++){
-				pstct = pstct->next;
-			}
-			int suu = pstct->elm;
-		*/
-
-		//struct stct* pstct = &declaredstct;
-		auto v_copy = builder.CreateAlloca(v_load->getType()->getPointerTo());
-		builder.CreateStore(value, v_copy);
-
-		//for(int i = 0;
-		//    ^^^^^^^^^
-		auto aloc = builder.CreateAlloca(builder.getInt32Ty());
-		builder.CreateStore(builder.getInt32(0), aloc);
-		
-		builder.CreateBr(bb);
-		builder.SetInsertPoint(bb);
-
-		//for(int i = 0; i < idx[0];
-		//               ^^^^^^^^^^
-		auto cnt = builder.CreateLoad(aloc);
-		Codegen::doMatchType(cnt, idx_list[0]);
-		builder.CreateCondBr(builder.CreateICmpSLT(cnt, idx_list[0]), tr, fa);
-		builder.SetInsertPoint(tr);
-
-		//pstct = pstct->next;
-		Codegen::createRuntimeError("List index out of range!", builder.CreateICmpEQ(builder.getIntN(2, 0), builder.CreateLoad(builder.CreateStructGEP(builder.CreateLoad(v_copy), 3))), this->loc);
-		auto gep = builder.CreateStructGEP(builder.CreateLoad(v_copy), 2);
-		builder.CreateStore(builder.CreateLoad(gep), v_copy);
-
-		//for(int i = 0; i < idx[0]; i++
-		//                           ^^^
-		builder.CreateStore(builder.CreateAdd(cnt, builder.getInt32(1)), aloc);
-		
-		builder.CreateBr(bb);
-
-		builder.SetInsertPoint(fa);
-		return builder.CreateStructGEP(builder.CreateLoad(v_copy), 1);
+		return Codegen::getListfromIndex(v_load->getType(), value, idx_list, this->loc);
 	}
 }
 

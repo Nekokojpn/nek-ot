@@ -819,4 +819,5 @@ public:
 	static void createRuntimeError(std::string errmsg, Value* cond, Location_t& t);
 	static void doMatchType(Value* l, Value* r);
 	static std::vector<Value*> genArgValues(ASTCall* ac);
+	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Value*> idx_list, Location_t& t);
 };

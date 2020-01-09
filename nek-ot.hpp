@@ -818,4 +818,5 @@ public:
 	static void call_exit(Value* exit_code);
 	static void createRuntimeError(std::string errmsg, Value* cond, Location_t& t);
 	static void doMatchType(Value* l, Value* r);
+	static std::vector<Value*> genArgValues(ASTCall* ac);
 };

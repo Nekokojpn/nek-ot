@@ -332,7 +332,7 @@ Type* Codegen::getTypebyType(Type_t& t) {
 }
 
 Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
-	auto ty_load = v->getType()->isPointerTy() ? v->getType()->getPointerElementType() : v->getType();
+	auto ty_load = v->getType()->isPointerTy() ? cast<PointerType>(v->getType())->getElementType() : v->getType();
 	ASTIdentifierBase* aib = nullptr;
 	ASTIdentifierArrayElementBase* aiae = nullptr;
 	ASTCall* ac = nullptr;
@@ -352,17 +352,27 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		//List
 		else {
 			if (ac && name == "add") {
+				auto stct = Codegen::getListfromIndex(ty_load, v, t);
+				builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(stct, 3));
+
 				auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
 				auto types = Codegen::genArgValues(ac);
-				if (types.size() != 0)
+				if (types.size() != 1)
 					error_codegen("Syntax: <list>.add(<element>);", t);
 				ArrayRef<Value*> argsRef(types);
-
-				auto aloc = builder.CreateAlloca(ty_load);
+				auto aloc = builder.CreateAlloca(stct->getType()->getPointerElementType());
+				builder.CreateStore(aloc, builder.CreateStructGEP(stct, 2));
 				//TODO: typecheck
-				builder.CreateStore(types[0], builder.CreateStructGEP(v_load, 1));
-				builder.CreateStore(builder.getIntN(2, 2), builder.CreateStructGEP(v_load, 3));
+				builder.CreateStore(stct, builder.CreateStructGEP(aloc, 0));
+				builder.CreateStore(types[0], builder.CreateStructGEP(aloc, 1));
+				builder.CreateStore(builder.getIntN(2, 1), builder.CreateStructGEP(aloc, 3))->dump();
 				return nullptr; //Void
+			}
+			else if (ac && name == "end") {
+				if (Codegen::genArgValues(ac).size() != 0)
+					error_codegen("Syntax: <list>.end();", t);
+
+				return builder.CreateStructGEP(Codegen::getListfromIndex(ty_load, v, t), 1);
 			}
 		}
 	}
@@ -422,16 +432,16 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 	for (int i = 0; i < elems->elems.size(); i++) {
 		if (prev) {
 			builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
-			builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(val, 3));
+			builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(prev, 3));
 		}
 		else
-			builder.CreateStore(builder.getIntN(2, 1), builder.CreateStructGEP(val, 3));
+			builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(val, 3));
 		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
 		prev = val;
 		val = builder.CreateAlloca(stct);
 		builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
 	}
-	builder.CreateStore(builder.getIntN(2, 2), builder.CreateStructGEP(val, 3));
+	builder.CreateStore(builder.getIntN(2, 1), builder.CreateStructGEP(val, 3));
 	return top;
 }
 
@@ -585,4 +595,48 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Val
 
 	builder.SetInsertPoint(fa);
 	return builder.CreateStructGEP(builder.CreateLoad(v_copy), 1);
+}
+
+//get end elm
+Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t) {
+	//TODO: multi dimen
+	auto bb = Codegen::createBB();
+	auto tr = Codegen::createBB();
+	auto fa = Codegen::createBB();
+
+	/*
+			struct mys stct;
+			struct mys* pstct = &stct;
+			for(int i = 0; i < 10; i++){
+				pstct = pstct->next;
+			}
+			int suu = pstct->elm;
+	*/
+
+	//struct stct* pstct = &declaredstct;
+	auto v_copy = builder.CreateAlloca(stct_ty->getPointerTo());
+	builder.CreateStore(ptr_stct, v_copy);
+
+	//for(int i = 0;
+	//    ^^^^^^^^^
+	auto aloc = builder.CreateAlloca(builder.getInt32Ty());
+	builder.CreateStore(builder.getInt32(0), aloc);
+
+	builder.CreateBr(bb);
+	builder.SetInsertPoint(bb);
+
+	//for(int i = 0; i < idx[0];
+	//               ^^^^^^^^^^
+	builder.CreateCondBr(builder.CreateICmpNE(builder.getIntN(2, 2), builder.CreateLoad(builder.CreateStructGEP(ptr_stct, 3))), tr, fa);
+	builder.SetInsertPoint(tr);
+
+	//pstct = pstct->next;
+	auto gep = builder.CreateStructGEP(builder.CreateLoad(v_copy), 2);
+	builder.CreateStore(builder.CreateLoad(gep), v_copy);
+
+
+	builder.CreateBr(bb);
+
+	builder.SetInsertPoint(fa);
+	return builder.CreateLoad(v_copy);
 }

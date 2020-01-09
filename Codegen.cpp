@@ -339,11 +339,18 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	else
 		aiae = (ASTIdentifierArrayElementBase*)ast;
 	auto name = aib != nullptr ? aib->name : aiae->name;
+
+	//Control of struct type.
 	if (ty_load->isStructTy()) {
 		auto cur = userdefined_stcts_elements[ty_load->getStructName()].elems;
 		if (cur.find(name) != cur.end())
 			return builder.CreateStructGEP(v, cur[name].idx);
-
+		//If list
+		else {
+			if (name == "add") {
+				//CHECK PARSER
+			}
+		}
 	}
 	else {
 		if (name == "len") {

@@ -79,6 +79,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 		builder.SetInsertPoint(tr);
 
 		//pstct = pstct->next;
+		Codegen::createRuntimeError("List index out of range!", builder.CreateICmpEQ(builder.getIntN(2, 0), builder.CreateLoad(builder.CreateStructGEP(builder.CreateLoad(v_copy), 3))), this->loc);
 		auto gep = builder.CreateStructGEP(builder.CreateLoad(v_copy), 2);
 		builder.CreateStore(builder.CreateLoad(gep), v_copy);
 

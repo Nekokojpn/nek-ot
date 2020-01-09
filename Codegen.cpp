@@ -308,6 +308,7 @@ Type* Codegen::getTypebyType(Type_t& t) {
 				tys.push_back(st->getPointerTo());	//Prev
 				tys.push_back(ty);					//elem
 				tys.push_back(st->getPointerTo());	//Forw
+				tys.push_back(builder.getIntNTy(2));
 				ArrayRef<Type*> tyss(tys);
 				st->setBody(tyss);
 				list_struct[ty] = st;
@@ -360,7 +361,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				auto aloc = builder.CreateAlloca(ty_load);
 				//TODO: typecheck
 				builder.CreateStore(types[0], builder.CreateStructGEP(v_load, 1));
-				builder.CreateStore(builder.CreateAlloca(ty_load),builder.CreateStructGEP(v_load, 2));
+				builder.CreateStore(builder.getIntN(2, 2), builder.CreateStructGEP(v_load, 3));
 				return nullptr; //Void
 			}
 		}
@@ -419,17 +420,18 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 
 	auto top = val;
 	for (int i = 0; i < elems->elems.size(); i++) {
-		if (prev)
+		if (prev) {
 			builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
-		else {
-			builder.CreateStore(builder.CreateAlloca(stct), builder.CreateStructGEP(val, 0));
+			builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(val, 3));
 		}
+		else
+			builder.CreateStore(builder.getIntN(2, 1), builder.CreateStructGEP(val, 3));
 		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
 		prev = val;
 		val = builder.CreateAlloca(stct);
 		builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
 	}
-	builder.CreateStore(builder.CreateAlloca(stct), builder.CreateStructGEP(val, 2));
+	builder.CreateStore(builder.getIntN(2, 2), builder.CreateStructGEP(val, 3));
 	return top;
 }
 

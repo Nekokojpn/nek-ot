@@ -1,9 +1,6 @@
 #include "../nek-ot.hpp"
 
 Value* ASTCall::codegen() {
-
-
-	
 	current_inst = nullptr;
 	isPtr = false; 
 	auto types = Codegen::genArgValues(this);

@@ -1,7 +1,7 @@
 fn main(){
 	li := i32 list[1,2,3,4,5];
-	writefln("%d", li[4]);
-	li.add(6);
 	writefln("%d", li[5]);
+	//li.add(6);
+	//writefln("%d", li[5]);
 	ret;
 }

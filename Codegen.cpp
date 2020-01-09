@@ -360,7 +360,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				auto aloc = builder.CreateAlloca(ty_load);
 				//TODO: typecheck
 				builder.CreateStore(types[0], builder.CreateStructGEP(v_load, 1));
-				builder.CreateStore(builder.getInt32(0), builder.CreateLoad(builder.CreateStructGEP(v_load, 2)));
+				builder.CreateStore(builder.CreateAlloca(ty_load),builder.CreateStructGEP(v_load, 2));
 				return nullptr; //Void
 			}
 		}
@@ -419,13 +419,17 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 
 	auto top = val;
 	for (int i = 0; i < elems->elems.size(); i++) {
-		if(prev)
+		if (prev)
 			builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
+		else {
+			builder.CreateStore(builder.CreateAlloca(stct), builder.CreateStructGEP(val, 0));
+		}
 		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
 		prev = val;
 		val = builder.CreateAlloca(stct);
 		builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
 	}
+	builder.CreateStore(builder.CreateAlloca(stct), builder.CreateStructGEP(val, 2));
 	return top;
 }
 

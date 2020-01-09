@@ -334,24 +334,39 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	auto ty_load = v->getType()->isPointerTy() ? v->getType()->getPointerElementType() : v->getType();
 	ASTIdentifierBase* aib = nullptr;
 	ASTIdentifierArrayElementBase* aiae = nullptr;
+	ASTCall* ac = nullptr;
 	if (ast->getASTType() == TypeAST::IdentifierBase)
 		aib = (ASTIdentifierBase*)ast;
+	else if (ast->getASTType() == TypeAST::Call)
+		ac = (ASTCall*)ast;
 	else
 		aiae = (ASTIdentifierArrayElementBase*)ast;
-	auto name = aib != nullptr ? aib->name : aiae->name;
+	auto name = aib != nullptr ? aib->name : ac != nullptr ? ac->name : aiae->name;
 	if (ty_load->isStructTy()) {
-		auto cur = userdefined_stcts_elements[ty_load->getStructName()].elems;
-		if (cur.find(name) != cur.end())
-			return builder.CreateStructGEP(v, cur[name].idx);
+		if (userdefined_stcts_elements.find(ty_load->getStructName()) != userdefined_stcts_elements.end()) {
+			auto cur = userdefined_stcts_elements[ty_load->getStructName()].elems;
+			if (cur.find(name) != cur.end())
+				return builder.CreateStructGEP(v, cur[name].idx);
+		}
+		//List
+		else {
+			if (ac && name == "add") {
+				auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
+				auto elm = builder.CreateStructGEP(v_load, 1);
 
+			}
+		}
 	}
-	else {
-		if (name == "len") {
+	else if(ty_load->isArrayTy()) {
+		if (ac && name == "len") {
 			if (ty_load->isArrayTy())
 				return builder.getInt32(ty_load->getArrayNumElements());
 			else
 				error_codegen("Is not array type.", t);
 		}
+	}
+	else {
+
 	}
 
 }

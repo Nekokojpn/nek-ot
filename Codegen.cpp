@@ -365,7 +365,6 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				//TODO: typecheck
 				builder.CreateStore(stct, builder.CreateStructGEP(aloc, 0));
 				builder.CreateStore(types[0], builder.CreateStructGEP(aloc, 1));
-				builder.CreateStore(builder.getIntN(2, 1), builder.CreateStructGEP(aloc, 3))->dump();
 				return nullptr; //Void
 			}
 			else if (ac && name == "end") {

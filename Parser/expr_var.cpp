@@ -13,6 +13,11 @@ AST* Parser::expr_var() {
 		ast->loc = loc;
 		return ast;
 	}
+	//if function call
+	if (curtokIs(TK::tok_lp)) {
+		auto ast = func_call(name, false);
+		return ast;
+	}
 	//If var ty
 	else {
 		auto loc = curtok.loc;

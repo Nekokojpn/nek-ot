@@ -1,56 +1,9 @@
 #include "../nek-ot.hpp"
 
 Value* ASTCall::codegen() {
-
-
-	std::vector<Value*> types;
 	current_inst = nullptr;
 	isPtr = false; 
-	for (int i = 0; i < args_expr.size(); i++, current_inst = nullptr, isPtr = false) {
-		auto ty = args_expr[i]->codegen();
-		//auto curArg = module->getFunction(this->name)->getArg(i);
-		//if (!curArg)
-		//	error_codegen("Argument out of range.", this->loc);
-		Type* ty_load = nullptr;
-		if (ty->getType()->isPointerTy())
-			ty_load = ty->getType()->getPointerElementType();
-		else
-			ty_load = ty->getType();
-		//if (curArg->getType() != ty_load->getType())
-		//	error_codegen("The argument " + std::to_string(i) + " is not match specified the type.", this->loc);
-
-		if (!ty->getType()->isPointerTy()) {
-			types.push_back(ty);
-			continue;
-		}
-		else if (isStringCodegen) {
-			isStringCodegen = false;
-			types.push_back(ty);
-			continue;
-		}
-		
-		else if (current_inst && current_inst->getType()->isArrayTy() && !ty_load->isArrayTy()) {
-			types.push_back(ty);
-		}
-		else if (ty_load->isArrayTy()) {
-			
-			auto array_ty = ty_load->getArrayElementType();
-			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
-			while (array_ty->isArrayTy()) {
-				gep = builder.CreateConstGEP2_64(gep, 0, 0);
-				array_ty = array_ty->getArrayElementType();
-			}
-			types.push_back(gep);
-			continue;
-		}
-		else if (!isPtr) {
-			types.push_back(builder.CreateLoad(ty));
-			continue;
-		}
-		else
-			types.push_back(ty);
-			
-	}
+	auto types = Codegen::genArgValues(this);
 	ArrayRef<Value*> argsRef(types);
 	//The system calls
 	if (name == "writefln") {

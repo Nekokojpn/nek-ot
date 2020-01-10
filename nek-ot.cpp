@@ -29,9 +29,12 @@ int main(int argc, char** argv) {
 	bool isDumpllvm = false;
 	bool isDumpTime = false;
 	bool isDumpollvm = false;
+	bool isOpt = true;
 	for (int i = 2; i < argc; i++) {
-		if (strcmp(argv[i], "-O0") == 0)
+		if (strcmp(argv[i], "-O0") == 0) {
+			isOpt = false;
 			args.push_back("-O0");
+		}
 		else if (strcmp(argv[i], "-O1") == 0)
 			args.push_back("-O1");
 		else if (strcmp(argv[i], "-O2") == 0)
@@ -125,12 +128,16 @@ int main(int argc, char** argv) {
 	}
 	if (isDumpTime)
 		start_opt = std::chrono::system_clock::now();
-	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\out.bc");
+	if(isOpt)
+		system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\opt.exe -Os -o D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\out.bc");
 	if (isDumpTime){
 		end_opt = std::chrono::system_clock::now();
 		start_llc = std::chrono::system_clock::now();
 	}
-	system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc");
+	if(isOpt)
+		system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.bc");
+	else
+		system("D:\\LLVM\\llvm-project\\build\\Debug\\bin\\llc.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\out.bc");
 	if (isDumpTime)
 		end_llc = std::chrono::system_clock::now();
 
@@ -146,7 +153,12 @@ int main(int argc, char** argv) {
 
 	if (isDumpTime)
 		start_clang = std::chrono::system_clock::now();
-	std::string cmline = "clang -l C:\\nek-ot\\User32.lib D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.s" + s;
+	std::string cmline = "";
+	if(isOpt)
+		cmline = "clang -l C:\\nek-ot\\User32.lib D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\opt.s" + s;
+	else
+		cmline = "clang -l C:\\nek-ot\\User32.lib D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\out.s" + s;
+
 	if (isDumpTime)
 		end_clang = std::chrono::system_clock::now();
 

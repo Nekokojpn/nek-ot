@@ -26,8 +26,10 @@ void Parser::def_import() {
 		Sys::IO::File::CreateFunc();
 	}
 	else {
-		std::string s = "There is no lib name --> " + str;
-		error(s, curtok);
+		if (load_source(str) == 1) {
+			std::string s = "There is no file name --> " + str;
+			error(s, curtok);
+		}
 	}
 	return;
 }

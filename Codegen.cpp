@@ -237,7 +237,7 @@ void Codegen::init_on_inst() {
 }
 
 
-void Parser::dump() {
+void dump() {
 	module->dump();
 	return;
 }
@@ -455,7 +455,7 @@ void Codegen::createWritefln(std::string message) {
 
 void Codegen::createErrWritefln(std::string message, Location_t& t) {
 	std::vector<Value*> v;
-	v.push_back(builder.CreateGlobalStringPtr(message + "\n	at " + source_filename + " : " + std::to_string(t.location_begin_line + 1) + " : " + std::to_string(t.location_begin_column)));
+	v.push_back(builder.CreateGlobalStringPtr(message + "\n	at " + cur_filename.top() + " : " + std::to_string(t.location_begin_line + 1) + " : " + std::to_string(t.location_begin_column)));
 	ArrayRef<Value*> vv(v);
 	Codegen::call_writef(vv);
 	return;

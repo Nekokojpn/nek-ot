@@ -1,6 +1,5 @@
 #include "../nek-ot.hpp"
 
-Codegen cdgen;
 
 //Read forward if the next token is expected.
 bool Parser::consume(TK tk) noexcept {

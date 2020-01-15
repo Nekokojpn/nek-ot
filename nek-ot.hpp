@@ -164,10 +164,6 @@ class Sys {
 public:
 	class IO {
 	public:
-		class OutPuti8Ptr {
-		public:
-			static void CreateFunc();
-		};
 		class Printf {
 		public:
 			static void CreateFunc();
@@ -179,13 +175,6 @@ public:
 		class File {
 			public:
 				static void CreateFunc();
-		};
-	};
-	class Cast {
-	public:
-		class CastInt32toInt8ptr {
-		public:
-			static void CreateFunc();
 		};
 	};
 	class List {
@@ -241,22 +230,9 @@ typedef struct {
 	std::map<std::string, StctElm_t> elems;
 	std::vector<std::string> elem_names;
 } Stct_t;
-
-typedef struct {
-	AllocaInst ainst;
-	bool isArr;
-	std::vector<unsigned long long> arrsize;
-	TypeKind kind;
-}Alloca_t;
-
-typedef union {
-	short s;
-	int i;
-	long l;
-	float f;
-	double d;
-} Val_u;
 //<-----
+
+class Parser;
 
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, Location_t& loc);
@@ -275,6 +251,9 @@ void warning_expected(std::string lit, Token_t& curtok);
 void add_err_msg(std::string _errmsg);
 void add_warning_msg(std::string _warningmsg);
 
+void writeToFile();
+Parser* compile(std::string filename, bool isDumpllvm, bool isDumpollvm);
+void dump();
 
 void init_parse();
 AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);
@@ -290,13 +269,8 @@ public:
 	static void SetConsoleTextBlue();
 };
 
-void get_char();
-void undo_char();
-void addToliteral();
-bool compare_cs(const char* str);
-TK gettoken();
 
-int load_source(std::string source_path);
+void load_source();
 
 enum class Op{
 	Plus,
@@ -378,6 +352,15 @@ extern std::unique_ptr<Module> module;
 extern LLVMContext context;
 extern IRBuilder<> builder;
 
+extern bool isDumpllvm;
+extern bool isDumpTime;
+extern bool isDumpollvm;
+extern bool isOpt;
+extern std::map<std::string, std::vector<std::string>> sources;
+extern std::stack<std::string> cur_filename;
+
+extern std::vector<std::string> imports;
+
 extern std::map<std::string, FunctionCallee> functions_global;
 extern std::map<std::string, StructType*> userdefined_stcts;
 extern std::map<std::string, Stct_t> userdefined_stcts_elements;
@@ -409,9 +392,6 @@ extern std::vector<BasicBlock*> brk_bbs;
 extern bool retcodegen;
 extern bool gotocodegen;
 extern bool isStringCodegen;
-
-extern std::string source_filename;
-
 
 class ASTSubst;
 class ASTFunc;
@@ -725,6 +705,28 @@ class ASTImport : public AST {
 public:
 };
 */
+
+class Tokenizer {
+public:
+	char cc;
+	std::string cs;
+	bool isdq_started = false;
+	std::vector<TK> tokens;
+	std::vector<Token_t> tytokens;
+	std::vector<std::string> literals;
+	std::vector<Location_t> locs;
+	uint32_t line = 0;
+	uint32_t column = 0;
+	void tokenize();
+	void get_char();
+	void undo_char();
+	void skip_line();
+	void addToliteral();
+	bool compare_cs(const char* str);
+	void addToloc(int len);
+	TK gettoken();
+};
+
 class Codegen;
 class Parser {
 	int index;
@@ -783,7 +785,6 @@ public:
 	void dump();
 	AType getATypeByCurtok();
 	Type_t getTypeFromCurtok();
-	std::vector<std::string> imports;
 	bool isExpectedSemi = true;
 	void addUserdefinedType(std::string name);
 	bool isUserdefinedType(std::string name);

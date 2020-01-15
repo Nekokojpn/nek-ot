@@ -1,56 +1,64 @@
 #include "nek-ot.hpp"
 
-uint32_t line;
-uint32_t column;
-
-// Tokenizer globals----->
-std::vector<std::string> source;
-char cc;        // Current char.
-std::string cs; // Current string EX. identiflier,number.
-std::vector<TK> tokens;
-std::vector<std::string> literals;
-bool isdq_started = false;
-std::vector<Location_t> locs;
-//<-----
+void Tokenizer::tokenize() {
+	TK tok = gettoken();
+	while (tok != TK::tok_eof) {
+		if (tok != TK::tok_nope)
+			tokens.push_back(tok);
+		tok = gettoken();
+	}
+	int it = tokens.size();
+	tytokens.resize(it);
+	for (int i = 0; i < it; i++) {
+		Token_t t;
+		t.ty = tokens[i];
+		t.val = literals[i];
+		t.loc = locs[i];
+		tytokens[i] = t;
+	}
+	Token_t t;
+	t.ty = TK::tok_eof;
+	tytokens.push_back(t);
+}
 
 //Tokenizer Funcs----->
-void get_char() {
-	cc = source[line][column++];
+void Tokenizer::get_char() {
+	cc = sources[cur_filename.top()][line][column++];
 	if (cc == '\n' || cc == '\r\n' || cc == '\r' || cc == '\n\r') {
 		line++;
 		column = 0;
-		cc = source[line][column++];
+		cc = sources[cur_filename.top()][line][column++];
 	}
 	if (cc == '\0') {
-		if (source.size() - 1 == line);
+		if (sources[cur_filename.top()].size() - 1 == line);
 		else {
 			line++;
 			column = 0;
-			cc = source[line][column++];
+			cc = sources[cur_filename.top()][line][column++];
 		}
 	}
 }
-void undo_char() {
+void Tokenizer::undo_char() {
 	column--;
 	if (column < 0) {
 		line--;
-		column = source[line].size() - 1;
+		column = sources[cur_filename.top()][line].size() - 1;
 	}
 }
-void skip_line() {
+void Tokenizer::skip_line() {
 	while (true) {
-		cc = source[line][column++];
+		cc = sources[cur_filename.top()][line][column++];
 		if (cc == '\n'  || cc == '\0') {
 			line++;
 			column = 0;
-			cc = source[line][column++];
+			cc = sources[cur_filename.top()][line][column++];
 			break;
 		}
 	}
 }
-void addToliteral() { literals.push_back(cs); }
-bool compare_cs(const char* str) { return cs == str; }
-void addToloc(int len) {
+void Tokenizer::addToliteral() { literals.push_back(cs); }
+bool Tokenizer::compare_cs(const char* str) { return cs == str; }
+void Tokenizer::addToloc(int len) {
 	Location_t loc;
 	loc.location_begin_line = line;
 	loc.location_begin_column = column;
@@ -61,7 +69,7 @@ void addToloc(int len) {
 //<-----
 
 // tokenizer----->
-TK gettoken() {
+TK Tokenizer::gettoken() {
 	get_char();
 	cs = "";
 	//skip any spaces.

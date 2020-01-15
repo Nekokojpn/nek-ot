@@ -234,6 +234,8 @@ typedef struct {
 
 class Parser;
 
+void load_source();
+
 void error(std::string title, std::string message, Token_t& curtok);
 void error(std::string title, std::string message, Location_t& loc);
 void error(std::string title, std::string message, uint32_t line, uint32_t column);
@@ -260,6 +262,8 @@ AllocaInst* createEntryBlockAlloca(Function* function, const std::string& name);
 
 Module* getModule();
 
+void checkBeforeWriteToBC();
+
 class Console {
 public:
 	static void SetConsoleTextGray();
@@ -270,7 +274,7 @@ public:
 };
 
 
-void load_source();
+
 
 enum class Op{
 	Plus,
@@ -818,7 +822,7 @@ public:
 	static BasicBlock* createBB();
 	static void call_exit(Value* exit_code);
 	static void createRuntimeError(std::string errmsg, Value* cond, Location_t& t);
-	static void doMatchType(Value* l, Value* r);
+	static std::tuple<Value*, Value*> doMatchType(Value* l, Value* r);
 	static std::vector<Value*> genArgValues(ASTCall* ac);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Value*> idx_list, Location_t& t);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t);

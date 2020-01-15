@@ -1,0 +1,5 @@
+import "test/importfile.nk";
+fn main(){
+	importedfunc();
+	ret;
+}

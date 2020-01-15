@@ -89,7 +89,7 @@ fn bubblesort() {
 }
 
 fn display_select(){
-	writefln("***Choose menu***")
+	writefln("***Choose menu***");
 	writefln("1. MandelBrot set");
 	writefln("2. Bubble sort visualization");
 	writefln("1. MandelBrot set");

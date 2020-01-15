@@ -478,7 +478,7 @@ void Codegen::createRuntimeError(std::string errmsg, Value* cond, Location_t& t)
 	return;
 }
 
-void Codegen::doMatchType(Value* l, Value* r) {
+std::tuple<Value*, Value*> Codegen::doMatchType(Value* l, Value* r) {
 	if (l->getType()->isFloatingPointTy())
 		if (!r->getType()->isFloatingPointTy())
 			r = builder.CreateSIToFP(r, builder.getDoubleTy());
@@ -494,7 +494,7 @@ void Codegen::doMatchType(Value* l, Value* r) {
 			l = builder.CreateSExt(l, builder.getIntNTy(64));
 		}
 	}
-	return;
+	return std::make_tuple(l, r);
 }
 
 std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
@@ -576,8 +576,10 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Val
 
 	//for(int i = 0; i < idx[0];
 	//               ^^^^^^^^^^
-	auto cnt = builder.CreateLoad(aloc);
-	Codegen::doMatchType(cnt, idx_list[0]);
+	Value* cnt = builder.CreateLoad(aloc);
+	auto tup = Codegen::doMatchType(cnt, idx_list[0]);
+	cnt = std::get<0>(tup);
+	idx_list[0] = std::get<1>(tup);
 	builder.CreateCondBr(builder.CreateICmpSLT(cnt, idx_list[0]), tr, fa);
 	builder.SetInsertPoint(tr);
 

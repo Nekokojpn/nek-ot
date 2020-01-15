@@ -8,7 +8,7 @@
 void load_source() {
 	std::ifstream ifs(cur_filename.top());
 	if (ifs.fail()) {
-		error("no such directory or file name", "Failed to open source file.", 0, 0);
+		error("No such directory or file name", "", 0, 0);
 		return;
 	}
 	std::string buf;

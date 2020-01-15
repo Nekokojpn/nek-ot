@@ -45,6 +45,8 @@ int main(int argc, char** argv) {
 	Sys::Exit::CreateFunc();
 	compile(argv[1], isDumpllvm, isDumpollvm);
 
+	checkBeforeWriteToBC();
+
 	writeToFile();
 
 	std::string optArg = "";

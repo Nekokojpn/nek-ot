@@ -62,7 +62,7 @@ void error_onlymsg(std::string message) {
 
 	std::cerr << std::endl;
 	Console::SetConsoleTextRed();
-	std::cerr << "Error: Compile error" << std::endl;
+	std::cerr << "Compile error: " << std::endl;
 
 	
 	std::cerr << std::endl << message << std::endl;

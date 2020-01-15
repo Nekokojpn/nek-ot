@@ -1,7 +1,0 @@
-import "io";
-
-fn main(){
-	x := 0;
-	assert(x == 0);
-	ret;
-}

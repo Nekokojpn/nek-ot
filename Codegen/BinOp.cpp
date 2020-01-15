@@ -9,7 +9,9 @@ Value* ASTBinOp::codegen() {
 		l = builder.CreateLoad(l);
 	if (!isPtr && r->getType()->isPointerTy())
 		r = builder.CreateLoad(r);
-	Codegen::doMatchType(l, r);
+	auto tup = Codegen::doMatchType(l, r);
+	l = std::get<0>(tup);
+	r = std::get<1>(tup);
 	this->curTy = l->getType();
 	switch (op) {
 	case Op::Plus:
@@ -56,8 +58,10 @@ Value* ASTBinOp::codegen() {
 			if (ci && !ci->isZero())
 				return builder.CreateSDiv(l, r);
 			else if (!ci) {
-				auto zero = builder.getInt32(0);
-				Codegen::doMatchType(r, zero);
+				Value* zero = builder.getInt32(0);
+				auto tup = Codegen::doMatchType(r, zero);
+				r = std::get<0>(tup);
+				zero = std::get<1>(tup);
 				Codegen::createRuntimeError("Divide-by-zero detected!", 
 					builder.CreateICmpNE(r, zero), this->loc);
 				return builder.CreateSDiv(l, r);

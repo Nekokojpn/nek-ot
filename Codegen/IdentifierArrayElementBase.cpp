@@ -33,8 +33,10 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 			error_codegen("Array index out of range!", this->loc);
 		}
 		else {
-			auto len = builder.getInt32(ty_load->getArrayNumElements());
-			Codegen::doMatchType(idx_list[i], len);
+			Value* len = builder.getInt32(ty_load->getArrayNumElements());
+			auto tup = Codegen::doMatchType(idx_list[i], len);
+			idx_list[i] = std::get<0>(tup);
+			len = std::get<1>(tup);
 			Codegen::createRuntimeError("Array index out of range!",
 				builder.CreateICmpSLT(idx_list[i], len), this->loc);
 		}

@@ -1,5 +1,0 @@
-import "io";
-fn importedfunc(){
-	writefln("Hello from importfile.nk!");
-	ret;
-}

@@ -67,8 +67,8 @@ int main(int argc, char** argv) {
 	}
 
 	std::string s = "";
-	for (int i = 0; i < imports.size(); i++) {
-		s += " D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\stdlib\\" + imports[i] + ".s";
+	for (auto i : imports) {
+		s += " D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\stdlib\\" + i.first + ".s";
 	}
 
 	std::string cmline = "";

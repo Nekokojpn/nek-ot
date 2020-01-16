@@ -1,0 +1,6 @@
+import "io";
+
+fn importedfunc1(){
+	writefln("Hello from import2.nk!!");
+	ret;
+}

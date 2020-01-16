@@ -1,5 +1,8 @@
-import "test/importfile.nk";
+import "test/import/import1.nk";
+import "test/import/import2.nk";
+
 fn main(){
 	importedfunc();
+	importedfunc1();
 	ret;
 }

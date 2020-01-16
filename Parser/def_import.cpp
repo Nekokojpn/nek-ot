@@ -1,6 +1,6 @@
 #include "../nek-ot.hpp"
 
-std::vector<std::string> imports;
+std::map<std::string, bool> imports;
 
 void Parser::def_import() {
 	getNextToken();
@@ -14,17 +14,17 @@ void Parser::def_import() {
 	if (!curtokIs(TK::tok_semi))error_expected(";", curtok);
 	getNextToken();
 	if (str == "io") {
-		imports.push_back("io");
+		imports["io"] = true;
 		Sys::IO::Printf::CreateFunc();
 		
 		Sys::IO::Input::CreateFunc();
 	}
 	else if (str == "random") {
-		imports.push_back("random");
+		imports["random"] = true;
 		Sys::Random::CreateFunc();
 	}
 	else if (str == "file") {
-		imports.push_back("file");
+		imports["file"] = true;
 		Sys::IO::File::CreateFunc();
 	}
 	else {

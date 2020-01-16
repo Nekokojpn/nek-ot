@@ -1,6 +1,7 @@
 #include "nek-ot.hpp"
 
 std::stack<std::string> cur_filename;
+uint32_t cnt_file = 0;
 std::map<std::string, std::vector<std::string>> sources;
 
 void writeToFile() {
@@ -11,7 +12,7 @@ void writeToFile() {
 
 Parser* compile(std::string name, bool isDumpllvm, bool isDumpollvm) {
 	cur_filename.push(name);
-	std::cout << cur_filename.size() << ">" << name << std::endl;
+	std::cout << ++cnt_file << ">" << name << std::endl;
 	load_source();
 	Tokenizer tkn;
 	tkn.tokenize();

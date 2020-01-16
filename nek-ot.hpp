@@ -363,7 +363,7 @@ extern bool isOpt;
 extern std::map<std::string, std::vector<std::string>> sources;
 extern std::stack<std::string> cur_filename;
 
-extern std::vector<std::string> imports;
+extern std::map<std::string, bool> imports;
 
 extern std::map<std::string, FunctionCallee> functions_global;
 extern std::map<std::string, StructType*> userdefined_stcts;

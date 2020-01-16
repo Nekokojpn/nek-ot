@@ -18,21 +18,20 @@ Value* ASTBinOp::codegen() {
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()
 			) {
-			/*
-			auto inst = builder.CreateAdd(l, r);
-			Value* slt = nullptr;
-			if (inst->getType() == builder.getInt32Ty())
-				slt = builder.getInt32(I32_MAX);
-			else if (inst->getType() == builder.getInt64Ty())
-				slt = builder.getInt64(I64_MAX);
-			auto bb_err = Codegen::createBB();
-			auto bb_cont = Codegen::createBB();
-			builder.CreateCondBr(builder.CreateICmpSLT(slt, inst), bb_err, bb_cont);
-			builder.SetInsertPoint(bb_err);
-			Codegen::createWritefln("Runtime Error: Overflow exception.");
-			builder.CreateBr(bb);
-			*/
-			return builder.CreateAdd(l, r);
+			std::vector<Type*> tys;
+			tys.push_back(l->getType());
+			tys.push_back(r->getType());
+			auto inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
+			std::vector<Value*> v;
+			v.push_back(l);
+			v.push_back(r);
+			std::vector<unsigned int> ar0;
+			ar0.push_back(0);
+			std::vector<unsigned int> ar1;
+			ar1.push_back(1);
+			auto cinst = builder.CreateCall(inst, v);
+			Codegen::createRuntimeError("Signed add detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(cinst, ar1), builder.getInt1(0)), this->loc);
+			return builder.CreateExtractValue(cinst, ar0);
 		}
 		else
 			return builder.CreateFAdd(l, r);

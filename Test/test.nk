@@ -1,7 +1,7 @@
 import "io";
 
 fn main(){
-	i := i32 0;
-	j := 0;
+	i := 2147483647 + 1;
+	writefln("%d", i);
 	ret;
 }

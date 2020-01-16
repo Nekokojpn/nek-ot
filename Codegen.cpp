@@ -123,6 +123,7 @@ void Sys::IO::File::CreateFunc() {
 	return;
 }
 
+
 void Codegen::declareFunction(std::string func_name, std::string ac_func_name) {
 	llvm::Function* func;
 	{

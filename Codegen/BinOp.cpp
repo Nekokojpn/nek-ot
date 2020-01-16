@@ -13,42 +13,38 @@ Value* ASTBinOp::codegen() {
 	l = std::get<0>(tup);
 	r = std::get<1>(tup);
 	this->curTy = l->getType();
+	std::vector<Type*> tys;
+	tys.push_back(l->getType());
+	tys.push_back(r->getType());
+	std::vector<Value*> v;
+	v.push_back(l);
+	v.push_back(r);
+	std::vector<unsigned int> ar0;
+	ar0.push_back(0);
+	std::vector<unsigned int> ar1;
+	ar1.push_back(1);
 	switch (op) {
 	case Op::Plus:
-		if (!l->getType()->isFloatingPointTy() &&
-			!r->getType()->isFloatingPointTy()
-			) {
-			std::vector<Type*> tys;
-			tys.push_back(l->getType());
-			tys.push_back(r->getType());
-			auto inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
-			std::vector<Value*> v;
-			v.push_back(l);
-			v.push_back(r);
-			std::vector<unsigned int> ar0;
-			ar0.push_back(0);
-			std::vector<unsigned int> ar1;
-			ar1.push_back(1);
-			auto cinst = builder.CreateCall(inst, v);
-			Codegen::createRuntimeError("Signed add detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(cinst, ar1), builder.getInt1(0)), this->loc);
-			return builder.CreateExtractValue(cinst, ar0);
-		}
-		else
-			return builder.CreateFAdd(l, r);
+	{
+		auto add_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
+		auto addc_inst = builder.CreateCall(add_inst, v);
+		Codegen::createRuntimeError("Signed add detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
+		return builder.CreateExtractValue(addc_inst, ar0);
+	}
 	case Op::Minus:
-		if (!l->getType()->isFloatingPointTy() &&
-			!r->getType()->isFloatingPointTy()
-			)
-			return builder.CreateSub(l, r);
-		else
-			return builder.CreateFSub(l, r);
+	{
+		auto sub_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::ssub_with_overflow, tys);
+		auto subc_inst = builder.CreateCall(sub_inst, v);
+		Codegen::createRuntimeError("Signed sub detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(subc_inst, ar1), builder.getInt1(0)), this->loc);
+		return builder.CreateExtractValue(subc_inst, ar0);
+	}
 	case Op::Mul:
-		if (!l->getType()->isFloatingPointTy() &&
-			!r->getType()->isFloatingPointTy()
-			)
-			return builder.CreateMul(l, r);
-		else
-			return builder.CreateFMul(l, r);
+	{
+		auto mul_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::smul_with_overflow, tys);
+		auto mulc_inst = builder.CreateCall(mul_inst, v);
+		Codegen::createRuntimeError("Signed mul detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(mulc_inst, ar1), builder.getInt1(0)), this->loc);
+		return builder.CreateExtractValue(mulc_inst, ar0);
+	}
 	case Op::Div:
 		if (!l->getType()->isFloatingPointTy() &&
 			!r->getType()->isFloatingPointTy()

@@ -123,7 +123,9 @@ AST* Parser::expr_plmi() {
 		else {
 			break;
 		}
-		lhs = new ASTBinOp(lhs, op, new ASTValue(1));
+		auto rhs = new ASTValue(1);
+		rhs->loc = curtok.loc;
+		lhs = new ASTBinOp(lhs, op, rhs);
 		lhs->loc = curtok.loc;
 	}
 	return lhs;

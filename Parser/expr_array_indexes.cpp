@@ -14,10 +14,15 @@ AST* Parser::expr_array_indexes() {
 		if (!curtokIs(TK::tok_rpb))
 			error_unexpected(curtok);
 		getNextToken();
-		lhs = new ASTArrayIndexes(lhs, rhs);
+		auto ast_arr = new ASTArrayIndexes(lhs, rhs);
+		ast_arr->loc = curtok.loc;
+		lhs = ast_arr;
 	}
 	if (isRhs)
 		return lhs;
-	else
-		return new ASTArrayIndexes(lhs, nullptr);
+	else {
+		auto ast_arr = new ASTArrayIndexes(lhs, nullptr);
+		ast_arr->loc = curtok.loc;
+		return ast_arr;
+	}
 }

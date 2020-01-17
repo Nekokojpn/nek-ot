@@ -5,8 +5,10 @@ AST* Parser::expr_identifiers() {
 	auto lhs = expr_var();
 	while (curtokIs(TK::tok_dot)) {
 		getNextToken();
+		auto loc = curtok.loc;
 		auto rhs = expr_var();
 		lhs = new ASTIdentifier(lhs, rhs, TypeKind::Pointer);
+		lhs->loc = loc;
 	}
 	auto delta = 0;
 	while (true) {
@@ -19,7 +21,13 @@ AST* Parser::expr_identifiers() {
 		getNextToken();
 	}
 	if (delta != 0) {
-		lhs = new ASTSubst(lhs, new ASTBinOp(lhs, Op::Plus, new ASTValue(delta)));
+		auto loc = curtok.loc;
+		auto ast_value = new ASTValue(delta);
+		ast_value->loc = loc;
+		auto ast_bin = new ASTBinOp(lhs, Op::Plus, ast_value);
+		ast_bin->loc = loc;
+		lhs = new ASTSubst(lhs, ast_bin);
+		lhs->loc;
 	}
 	return lhs;
 }

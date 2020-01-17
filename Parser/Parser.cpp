@@ -210,12 +210,20 @@ AST* Parser::expr_identifier() {
 	}
 	else if (curtok.ty == TK::tok_pleq) {
 		getNextToken();
-		auto ast = new ASTSubst(identifier, new ASTBinOp(identifier, Op::Plus, expr()));
+		auto loc = curtok.loc;
+		auto ast_bin = new ASTBinOp(identifier, Op::Plus, expr());
+		ast_bin->loc = loc;
+		auto ast = new ASTSubst(identifier, ast_bin);
+		ast->loc = loc;
 		return ast;
 	}
 	else if (curtok.ty == TK::tok_mieq) {
 		getNextToken();
-		auto ast = new ASTSubst(identifier, new ASTBinOp(identifier, Op::Minus, expr()));
+		auto loc = curtok.loc;
+		auto ast_bin = new ASTBinOp(identifier, Op::Minus, expr());
+		ast_bin->loc = loc;
+		auto ast = new ASTSubst(identifier, ast_bin);
+		ast->loc = loc;
 		return ast;
 	}
 	else if (curtok.ty == TK::tok_lp ||
@@ -378,13 +386,19 @@ ASTFor* Parser::for_statement() {
 		error_unexpected(curtok);
 	getNextToken();
 	if (curtokIs(TK::tok_lb)) {
-		auto ast = new ASTFor(typedeff, new ASTIf(proto, expr_block(false)), last);
-		ast->loc = curtok.loc;
+		auto loc = curtok.loc;
+		auto ast_if = new ASTIf(proto, expr_block(false));
+		ast_if->loc = loc;
+		auto ast = new ASTFor(typedeff, ast_if, last);
+		ast->loc = loc;
 		return ast;
 	}
 	else {
-		auto ast = new ASTFor(typedeff, new ASTIf(proto, expr_block(true)), last);		
-		ast->loc = curtok.loc;
+		auto loc = curtok.loc;
+		auto ast_if = new ASTIf(proto, expr_block(true));
+		ast_if->loc = loc;
+		auto ast = new ASTFor(typedeff, ast_if, last);		
+		ast->loc = loc;
 		return ast;
 	}
 	return nullptr;

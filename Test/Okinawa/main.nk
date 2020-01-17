@@ -1,0 +1,11 @@
+import "io";
+import "file";
+import "sleep";
+import "test/Okinawa/imports/draw.nk";
+
+fn main() {
+	drawMsg("Ememy appeared!!", " ", " ");
+	sleep(2);
+	drawStat(15, 20);
+	ret;
+}

@@ -27,6 +27,10 @@ void Parser::def_import() {
 		imports["file"] = true;
 		Sys::IO::File::CreateFunc();
 	}
+	else if (str == "sleep") {
+		imports["sleep"] = true;
+		Sys::Sleep::CreateFunc();
+	}
 	else {
 		compile(str, isDumpllvm, isDumpollvm);
 		cur_filename.pop();

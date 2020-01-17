@@ -1,0 +1,44 @@
+import "io";
+
+fn drawStat(hp: i32, mp: i32) {
+	writefln("**********************************************************");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                         *                              *");
+	writefln("*                        ***                             *");
+	writefln("*                       *****                            *");
+	writefln("*                        ***                             *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("**********************************************************");
+	writefln("*  Player1  *                                            *");
+	writefln("*  HP:%3d   *                                            *", hp);
+	writefln("*  MP:%3d   *                                            *", mp);
+	writefln("**********************************************************");
+	ret;
+}
+fn drawMsg(msg1: string, msg2: string, msg3: string) {
+	writefln("**********************************************************");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                         *                              *");
+	writefln("*                        ***                             *");
+	writefln("*                       *****                            *");
+	writefln("*                        ***                             *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("*                                                        *");
+	writefln("**********************************************************");
+	writefln("*     %46s     *", msg1);
+	writefln("*     %46s     *", msg2);
+	writefln("*     %46s     *", msg3);
+	writefln("**********************************************************");
+	ret;
+}

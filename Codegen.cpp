@@ -123,6 +123,19 @@ void Sys::IO::File::CreateFunc() {
 	return;
 }
 
+void Sys::Sleep::CreateFunc() {
+	llvm::Function* func;
+	{
+		std::vector<llvm::Type*> args;
+		args.push_back(builder.getInt32Ty());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getVoidTy(), args, false);
+		func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "?sleep@@YAXH@Z", module.get());
+		func->setCallingConv(llvm::CallingConv::X86_StdCall);
+	}
+	functions_global["sleep"] = func;
+	return;
+}
 
 void Codegen::declareFunction(std::string func_name, std::string ac_func_name) {
 	llvm::Function* func;

@@ -1,0 +1,6 @@
+import "io";
+
+fn main(){
+	writefln("%d", -2147483648 - 1);
+	ret;
+}

@@ -1,8 +1,9 @@
 #include "../nek-ot.hpp"
 
 Value* ASTValue::codegen() {
-	if (this->isLongLong == true)
+	if (this->isLongLong == true) {
 		return builder.getInt64(value);
+	}
 	if (this->isDouble == true)
 		return ConstantFP::get(context, APFloat(value_d));
 	return builder.getInt32(value);

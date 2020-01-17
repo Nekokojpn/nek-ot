@@ -149,9 +149,9 @@ enum class TK {
 };
 
 #define I32_MAX 0x7FFFFFFF
-#define I32_MIN 0xFFFFFFFF
+#define I32_MIN -0x80000000
 #define I64_MAX 0x7FFFFFFFFFFFFFFF
-#define I64_MIN 0xFFFFFFFFFFFFFFFF
+#define I64_MIN -0x8000000000000000
 
 
 
@@ -190,6 +190,10 @@ public:
 		static void CreateFunc();
 	};
 	class Exit {
+	public:
+		static void CreateFunc();
+	};
+	class Sleep {
 	public:
 		static void CreateFunc();
 	};

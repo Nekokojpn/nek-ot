@@ -26,23 +26,59 @@ Value* ASTBinOp::codegen() {
 	switch (op) {
 	case Op::Plus:
 	{
+		/*auto lefthand = Codegen::getValueInt(l);
+		auto righthand = Codegen::getValueInt(r);
+		if (lefthand && righthand) {
+			if(l->getType() == builder.getInt32Ty())
+				if (lefthand->getZExtValue() + righthand->getZExtValue() > I32_MAX ||
+							lefthand->getZExtValue() + righthand->getZExtValue() < I32_MIN)
+					error_codegen("Overflow occured!", this->loc);
+			if(l->getType() == builder.getInt64Ty())
+				if (lefthand->getZExtValue() + righthand->getZExtValue() > I64_MAX ||
+						lefthand->getZExtValue() + righthand->getZExtValue() < I64_MIN)
+					error_codegen("Overflow occured!", this->loc);
+		}*/
 		auto add_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
 		auto addc_inst = builder.CreateCall(add_inst, v);
-		Codegen::createRuntimeError("Signed add detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
-		return builder.CreateExtractValue(addc_inst, ar0);
+		Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
+		return builder.CreateExtractValue(addc_inst, ar0);	
 	}
 	case Op::Minus:
 	{
+		/*auto lefthand = Codegen::getValueInt(l);
+		auto righthand = Codegen::getValueInt(r);
+		if (lefthand && righthand) {
+			if (l->getType() == builder.getInt32Ty())
+				if (lefthand->getZExtValue() - righthand->getZExtValue() > I32_MAX ||
+					lefthand->getZExtValue() - righthand->getZExtValue() < I32_MIN)
+					error_codegen("Overflow occured!", this->loc);
+			if (l->getType() == builder.getInt64Ty())
+				if (lefthand->getZExtValue() - righthand->getZExtValue() > I64_MAX ||
+					lefthand->getZExtValue() - righthand->getZExtValue() < I64_MIN)
+					error_codegen("Overflow occured!", this->loc);
+		}*/
 		auto sub_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::ssub_with_overflow, tys);
 		auto subc_inst = builder.CreateCall(sub_inst, v);
-		Codegen::createRuntimeError("Signed sub detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(subc_inst, ar1), builder.getInt1(0)), this->loc);
+		Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(subc_inst, ar1), builder.getInt1(0)), this->loc);
 		return builder.CreateExtractValue(subc_inst, ar0);
 	}
 	case Op::Mul:
 	{
+		/*auto lefthand = Codegen::getValueInt(l);
+		auto righthand = Codegen::getValueInt(r);
+		if (lefthand && righthand) {
+			if (l->getType() == builder.getInt32Ty())
+				if (lefthand->getZExtValue() * righthand->getZExtValue() > I32_MAX ||
+					lefthand->getZExtValue() * righthand->getZExtValue() < I32_MIN)
+					error_codegen("Overflow occured!", this->loc);
+			if (l->getType() == builder.getInt64Ty())
+				if (lefthand->getZExtValue() * righthand->getZExtValue() > I64_MAX ||
+					lefthand->getZExtValue() * righthand->getZExtValue() < I64_MIN)
+					error_codegen("Overflow occured!", this->loc);
+		}*/
 		auto mul_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::smul_with_overflow, tys);
 		auto mulc_inst = builder.CreateCall(mul_inst, v);
-		Codegen::createRuntimeError("Signed mul detected an overflow!", builder.CreateICmpEQ(builder.CreateExtractValue(mulc_inst, ar1), builder.getInt1(0)), this->loc);
+		Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(mulc_inst, ar1), builder.getInt1(0)), this->loc);
 		return builder.CreateExtractValue(mulc_inst, ar0);
 	}
 	case Op::Div:

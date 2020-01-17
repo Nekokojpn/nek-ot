@@ -10,6 +10,7 @@ Value* ASTType::codegen() {
 			elements = (ASTArrElements*)this->expr;
 	}
 	auto type = Codegen::getTypebyType(this->ty);
+	Value* inf_v = nullptr;
 	//else control -> type inference
 	if (this->ty.ty != AType::Nop) {
 fr:
@@ -53,9 +54,6 @@ fr:
 				namedvalues_local_isinitialized[this->name] = true;
 				auto value = this->expr->codegen();
 				
-				if (auto* C = dyn_cast<Constant>(value))
-					if (auto CI = dyn_cast<ConstantInt>(C))
-						std::cout << CI->getValue().getZExtValue();
 				if (!value)
 					return nullptr;
 				return value;
@@ -89,8 +87,10 @@ fr:
 	else {
 		if (sub && sub->expr) {
 			type = sub->expr->getType();
-			if (!type)
-				type = sub->expr->codegen()->getType();
+			if (!type) {
+				inf_v = sub->expr->codegen();
+				type = inf_v->getType();
+			}
 			goto fr;
 		}
 		else if (elements) {

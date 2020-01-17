@@ -2,7 +2,8 @@ import "io";
 
 fn main(){
 	x := 10;
-	for(i := 1; i < 2147483647; i++)x+=i;
+	for(i := 1; i < 2147483647; i++)
+		x+=i;
 	writefln("%d", x);
 	ret;
 }

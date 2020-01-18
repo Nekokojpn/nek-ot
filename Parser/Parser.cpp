@@ -332,7 +332,6 @@ ASTIf* Parser::bool_statement() {
 	getNextToken();
 	ASTIf* ast;
 	if (curtok.ty == TK::tok_lb) {
-		
 		ast = new ASTIf(boolast, expr_block(false));
 		ast->loc = loc;
 	}
@@ -489,7 +488,7 @@ std::vector<AST*> Parser::parse() {
 	//Top level parser
 	std::vector<AST*> asts;
 	while (curtok.ty != TK::tok_eof) {
-		this->cdgen->setIsGlobal(true);
+		this->isGlobal = true;
 		if (curtok.ty == TK::tok_fn)
 		{
 			auto ast = def_func();

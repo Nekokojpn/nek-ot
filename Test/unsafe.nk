@@ -1,0 +1,10 @@
+import "io";
+
+fn main(){
+	x := 0;
+	unsafe {
+		x = 2147000000 + 2147000000;
+	}
+	writefln("%d", x);
+	ret;
+}

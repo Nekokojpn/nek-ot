@@ -146,11 +146,12 @@ TK Tokenizer::gettoken() {
 		else if (cs == "body") { addToloc(cs.length()); return TK::tok_body; }
 		else if (cs == "xor") { addToloc(cs.length()); return TK::tok_xor; }
 		else if (cs == "brk") { addToloc(cs.length()); return TK::tok_brk; }
-		else if(cs == "goto") { addToloc(cs.length()); return TK::tok_goto; }
+		else if (cs == "goto") { addToloc(cs.length()); return TK::tok_goto; }
 		else if (cs == "true") { addToloc(cs.length()); return TK::tok_true; }
 		else if (cs == "false") { addToloc(cs.length()); return TK::tok_false; }
 		else if (cs == "bool") { addToloc(cs.length()); return TK::tok_bool; }
 		else if (cs == "list") { addToloc(cs.length()); return TK::tok_list; }
+		else if (cs == "unsafe") { addToloc(cs.length()); return TK::tok_unsafe; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

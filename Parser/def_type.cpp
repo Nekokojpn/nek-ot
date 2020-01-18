@@ -15,7 +15,7 @@ ASTType* Parser::def_type(AST* ast_id) {
 			ast_id,
 			expr_,
 			stct_name,
-			this->cdgen->IsGlobal()
+			this->isGlobal
 			);
 		ast->name = this->curval;
 		ast->loc = loc;
@@ -26,7 +26,7 @@ ASTType* Parser::def_type(AST* ast_id) {
 		ast_id,
 		new ASTSubst(ast_id, expr()),
 		stct_name,
-		this->cdgen->IsGlobal()
+		this->isGlobal
 	);
 	ast->name = this->curval;
 	ast->loc = loc;

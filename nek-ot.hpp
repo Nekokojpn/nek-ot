@@ -73,6 +73,7 @@ enum class TK {
 	tok_true,
 	tok_false,
 	tok_bool,
+	tok_unsafe,
 
 	tok_ret,
 	tok_void,
@@ -353,7 +354,8 @@ enum class TypeAST {
 	Type,
 	Value,
 	While,
-	ListElements
+	ListElements,
+	Unsafe
 };
 
 extern std::unique_ptr<Module> module;
@@ -400,6 +402,7 @@ extern std::vector<BasicBlock*> brk_bbs;
 extern bool retcodegen;
 extern bool gotocodegen;
 extern bool isStringCodegen;
+extern bool isUnsafe;
 
 class ASTSubst;
 class ASTFunc;
@@ -642,7 +645,14 @@ public:
 	Type* getType() override;
 	TypeAST getASTType() override;
 };
-
+class ASTUnsafe : public AST{
+public:
+	std::vector<AST*> body;
+	ASTUnsafe(std::vector<AST*> _body) : body(_body) {};
+	Value* codegen() override;
+	Type* getType() override;
+	TypeAST getASTType() override;
+};
 class ASTTop : public AST {
 public:
 	std::vector<AST*> globals;
@@ -743,6 +753,8 @@ class Parser {
 	std::unique_ptr<Codegen> cdgen;
 	std::vector<Token_t> tokens;
 
+	bool isGlobal = false;
+
 	bool curtokIs(TK);
 	bool nexttokIs(TK);
 	std::vector<AST*> afs;
@@ -761,7 +773,7 @@ class Parser {
 	ASTGoto* expr_goto();
 	AST* expr_anno();
 	AST* expr_star();
-	std::vector<AST*> expr_block(bool);
+	std::vector<AST*> expr_block(bool isOneExpr);
 	AST* expr_identifier();
 	ASTSubst* subst_expr(AST*);
 	AST* expr_var();
@@ -799,20 +811,16 @@ public:
 };
 
 class Codegen {
-	bool isNowGlobal = false;
 public:
 	//-----> LLVM functions
 	static void call_writef(llvm::ArrayRef<llvm::Value*> args);
 	static void call_exit(int exitcode);
-	static void call_error(int exitcode);
 	static Type* getTypebyAType(AType& ty);
 	static Type* getTypebyType(Type_t& t);
 	static void gen_asm(std::string statement, std::string option);
 	static void init_on_inst();
 	static ConstantInt* getValueInt(Value* c);
 	//<-----
-	void setIsGlobal(bool _isGlobal) { isNowGlobal = _isGlobal; }
-	bool IsGlobal() { return isNowGlobal; }
 	static void declareFunction(std::string func_name, std::string ac_func_name);
 	static Value* getIdentifier(Value* v, AST* ast, Location_t& t);
 	static std::vector<Value*> getIndices(AST* ast, bool isArrTy, Location_t& t);

@@ -10,7 +10,7 @@ std::vector<AST*> Parser::expr_block(bool isOneExpr) { //  {expr block}
 	std::vector<AST*> asts;
 	while (curtok.ty != TK::tok_rb && curtok.ty != TK::tok_eof)
 	{
-		this->cdgen->setIsGlobal(false);
+		this->isGlobal = false;
 		if (curtok.ty == TK::tok_string) {
 			auto ast = def_string();
 			asts.push_back(ast);
@@ -64,6 +64,13 @@ std::vector<AST*> Parser::expr_block(bool isOneExpr) { //  {expr block}
 			asts.push_back(ast);
 			if (!curtokIs(TK::tok_semi)) error_expected(";", curtok);
 			getNextToken();
+		}
+		else if (curtok.ty == TK::tok_unsafe) {
+			getNextToken();
+			auto loc = curtok.loc;
+			auto ast = new ASTUnsafe(expr_block(false));
+			ast->loc = loc;
+			asts.push_back(ast);
 		}
 		else getNextToken();
 		if (isOneExpr)

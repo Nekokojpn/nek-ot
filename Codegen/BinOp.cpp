@@ -38,10 +38,18 @@ Value* ASTBinOp::codegen() {
 						lefthand->getZExtValue() + righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
-		auto add_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
-		auto addc_inst = builder.CreateCall(add_inst, v);
-		Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
-		return builder.CreateExtractValue(addc_inst, ar0);	
+		if (!isUnsafe) {
+			auto add_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
+			auto addc_inst = builder.CreateCall(add_inst, v);
+			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
+			return builder.CreateExtractValue(addc_inst, ar0);
+		}
+		else {
+			if (l->getType()->isIntegerTy())
+				return builder.CreateAdd(l, r);
+			else
+				return builder.CreateFAdd(l, r);
+		}
 	}
 	case Op::Minus:
 	{
@@ -57,10 +65,18 @@ Value* ASTBinOp::codegen() {
 					lefthand->getZExtValue() - righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
-		auto sub_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::ssub_with_overflow, tys);
-		auto subc_inst = builder.CreateCall(sub_inst, v);
-		Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(subc_inst, ar1), builder.getInt1(0)), this->loc);
-		return builder.CreateExtractValue(subc_inst, ar0);
+		if (!isUnsafe) {
+			auto sub_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::ssub_with_overflow, tys);
+			auto subc_inst = builder.CreateCall(sub_inst, v);
+			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(subc_inst, ar1), builder.getInt1(0)), this->loc);
+			return builder.CreateExtractValue(subc_inst, ar0);
+		}
+		else {
+			if (l->getType()->isIntegerTy())
+				return builder.CreateSub(l, r);
+			else
+				return builder.CreateFSub(l, r);
+		}
 	}
 	case Op::Mul:
 	{
@@ -76,10 +92,18 @@ Value* ASTBinOp::codegen() {
 					lefthand->getZExtValue() * righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
-		auto mul_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::smul_with_overflow, tys);
-		auto mulc_inst = builder.CreateCall(mul_inst, v);
-		Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(mulc_inst, ar1), builder.getInt1(0)), this->loc);
-		return builder.CreateExtractValue(mulc_inst, ar0);
+		if (!isUnsafe) {
+			auto mul_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::smul_with_overflow, tys);
+			auto mulc_inst = builder.CreateCall(mul_inst, v);
+			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(mulc_inst, ar1), builder.getInt1(0)), this->loc);
+			return builder.CreateExtractValue(mulc_inst, ar0);
+		}
+		else {
+			if (l->getType()->isIntegerTy())
+				return builder.CreateMul(l, r);
+			else
+				return builder.CreateFMul(l, r);
+		}
 	}
 	case Op::Div:
 		if (!l->getType()->isFloatingPointTy() &&

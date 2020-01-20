@@ -1,0 +1,9 @@
+import "io";
+
+fn main(){
+	x := 0;
+	y := 0;
+	if((x, y) == 0)
+		writefln("OK! x == y.");
+	ret;
+}

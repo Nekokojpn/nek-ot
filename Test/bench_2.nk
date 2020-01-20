@@ -1,6 +1,7 @@
 import "io";
 
 fn main() -> i32{
+unsafe{
 	MAX := 447LL;
 	DN := 4LL;
 	x := i64;
@@ -54,4 +55,5 @@ fn main() -> i32{
 	}
 	writefln("%d", h);
 	ret 0;
+}
 }

@@ -485,7 +485,7 @@ void Codegen::createRuntimeError(std::string errmsg, Value* cond, Location_t& t)
 	auto fa = Codegen::createBB();
 	builder.CreateCondBr(cond, tr, fa);
 	builder.SetInsertPoint(fa);
-	Codegen::createErrWritefln("Runtime Error: " + errmsg, t);
+	Codegen::createErrWritefln("\nRuntime Error: " + errmsg, t);
 	Codegen::call_exit(builder.getInt32(1));
 	builder.CreateBr(tr);
 	builder.SetInsertPoint(tr);

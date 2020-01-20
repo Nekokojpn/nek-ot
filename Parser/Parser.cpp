@@ -226,15 +226,29 @@ AST* Parser::expr_identifier() {
 		ast->loc = loc;
 		return ast;
 	}
-	else if (curtok.ty == TK::tok_lp ||
-				curtok.ty == TK::tok_doll) {
-		auto ast = func_call(curval, curtok.ty == TK::tok_doll ? true : false);
-		return ast;
+	else {
+		if (identifier->getASTType() == TypeAST::Call) {
+			if (curtok.ty == TK::tok_where) {
+				getNextToken();
+				std::vector<AST*> body;
+				body.push_back(identifier);
+				auto bast = expr();
+				auto l = new ASTIf(bast, body);
+				l->loc = curtok.loc;
+				if (curtok.ty != TK::tok_semi)
+					error_expected(";", curtok);
+				getNextToken();
+				return l;
+			}
+		}
+		return identifier;
 	}
+	/*
 	else { //Expr
 		curtok = tokens[----index];
 		return expr();
 	}
+	*/
 }
 
 ASTFunc* Parser::def_func() {
@@ -436,7 +450,7 @@ ASTCall* Parser::func_call(std::string func_name, bool isdoll) {
 		if (curtok.ty != TK::tok_comma) break;
 		getNextToken();
 	}
-	if (!isdoll && curtok.ty != TK::tok_rp)
+	if (curtok.ty != TK::tok_rp)
 		error("Expected", "Expected --> )", curtok);
 	auto loc = curtok.loc;
 	auto ast = new ASTCall(func_name, argsIdentifier);

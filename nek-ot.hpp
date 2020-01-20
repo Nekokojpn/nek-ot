@@ -74,6 +74,7 @@ enum class TK {
 	tok_false,
 	tok_bool,
 	tok_unsafe,
+	tok_where,
 
 	tok_ret,
 	tok_void,

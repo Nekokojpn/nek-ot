@@ -1,0 +1,6 @@
+import "io";
+fn main(){
+	x := 0;
+	writefln("Hello") where x == 0;
+	ret;
+}

@@ -9,7 +9,7 @@ directory = int(input())
 curdir = str
 pattern1 = 'TotalMilliseconds : .*?(\d+.\d+)'
 sum = 0.0
-for i in range(10):
+for i in range(100):
  if(directory == 1):
   res = subprocess.run(["powershell", "Measure-Command{D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\a.exe}"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
  else:
@@ -17,5 +17,5 @@ for i in range(10):
  tim = re.findall(pattern1, res.stdout.decode("utf8"), re.S)[0]
  print(tim + "ms")
  sum += float(tim)
-print("Average : " + sum / 10 + "ms")
+print("Average : " + str(sum / 100) + "ms")
 exit(0)

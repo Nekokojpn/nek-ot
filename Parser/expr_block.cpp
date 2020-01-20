@@ -72,7 +72,31 @@ std::vector<AST*> Parser::expr_block(bool isOneExpr) { //  {expr block}
 			ast->loc = loc;
 			asts.push_back(ast);
 		}
-		else getNextToken();
+		else if (curtok.ty == TK::tok_semi) {
+			getNextToken();
+			continue;
+		}
+		/*
+		else {
+			auto ast = expr();
+			if (curtok.ty == TK::tok_where) {
+				getNextToken();
+				auto bast = expr();
+				std::vector<AST*> v;
+				v.push_back(ast);
+				if (curtok.ty != TK::tok_semi)
+					error_expected(";", curtok);
+				getNextToken();
+				auto l = new ASTIf(bast, v);
+				l->loc = curtok.loc;
+				asts.push_back(l);
+			}
+		}
+		*/
+		else {
+			getNextToken();
+			continue;
+		}
 		if (isOneExpr)
 			break;
 		//finally

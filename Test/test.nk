@@ -1,7 +1,9 @@
 import "io";
 
 fn main(){
-	i := 999999999 * 99990999;
-	writefln("%d", i);
+	if(1 == 1)
+		writefln("Hello");
+	else
+		writefln("World!");
 	ret;
 }

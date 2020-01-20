@@ -718,11 +718,6 @@ public:
 	Type* getType() override;
 	TypeAST getASTType() override;
 };
-/*
-class ASTImport : public AST {
-public:
-};
-*/
 
 class Tokenizer {
 public:

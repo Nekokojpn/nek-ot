@@ -90,5 +90,6 @@ std::vector<AST*> Parser::expr_block(bool isOneExpr) { //  {expr block}
 		error_expected("}", curtok);
 	}
 	if(!isOneExpr)getNextToken();
+	if (curtokIs(TK::tok_semi))getNextToken();
 	return asts;
 }

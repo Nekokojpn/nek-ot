@@ -2,7 +2,7 @@ import "io";
 
 fn main(){
 	x := 0; y := 0; z := 0;
-	if((x, y, z) == 0)
+	if(x, y, z)
 		writefln("OK!");
 	else
 		writefln("NG!.");

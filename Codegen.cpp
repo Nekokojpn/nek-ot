@@ -391,10 +391,18 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	}
 	else if(ty_load->isArrayTy()) {
 		if (ac && name == "len") {
-			if (ty_load->isArrayTy())
-				return builder.getInt32(ty_load->getArrayNumElements());
-			else
-				error_codegen("Is not array type.", t);
+			return builder.getInt32(ty_load->getArrayNumElements());
+		}
+		else  if (ac && name == "print") {
+			if (ac->args_expr.size() != 0) 
+				error_codegen("Syntax: <array>.print();", t);
+			/*
+			std::vector<AST*> body;
+			std::vector<AST*> arg;
+			arg.push_back("%d");
+			arg.push_back(builder.CreateInBoundsGEP)
+			body.push_back(new ASTCall("writef"))
+			*/
 		}
 	}
 	else {

@@ -61,12 +61,16 @@ fr:
 			return allocainst;
 		}
 		else {
-			//ArrayType* ty = ArrayType::get(type, this->ty.arrsize[this->ty.arrsize.size() - 1]);
 			auto ty = type;
-			long long cnt = 1;
-			while (cnt < this->ty.arrsize.size()) {
-				ty = ArrayType::get(ty, this->ty.arrsize[this->ty.arrsize.size() - cnt]);
-				cnt++;
+			if (this->ty.arrsize.size() != 0) {
+				long long cnt = 1;
+				while (cnt < this->ty.arrsize.size()) {
+					ty = ArrayType::get(ty, this->ty.arrsize[this->ty.arrsize.size() - cnt]);
+					cnt++;
+				}
+			}
+			else {
+				ty = ArrayType::get(ty, ((ASTArrElements*)sub->expr)->elements.size());
 			}
 			auto allocainst = builder.CreateAlloca(ty);
 

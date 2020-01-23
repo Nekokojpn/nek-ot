@@ -218,57 +218,6 @@ label1:
 			return ((ASTSubst*)identifier)->id;
 			//;
 		}
-		else if (curtok.ty == TK::tok_comma) {
-			getNextToken(); 
-			std::vector<AST*> ids;
-			ids.push_back(identifier);
-			ids.push_back(expr_identifiers());
-			while (curtok.ty == TK::tok_comma) {
-				getNextToken();
-				if (curtok.ty != TK::tok_identifier)
-					break;
-				ids.push_back(expr_identifiers());
-			}
-			Op op;
-			if (consume(TK::tok_lt)) {
-				op = Op::LThan;
-			}
-			else if (consume(TK::tok_lteq)) {
-				op = Op::LThanEqual;
-			}
-			else if (consume(TK::tok_rt)) {
-				op = Op::RThan;
-			}
-			else if (consume(TK::tok_rteq)) {
-				op = Op::RThanEqual;
-			}
-			else if (consume(TK::tok_eqeq)) {
-				op = Op::EqualEqual;
-			}
-			else if (consume(TK::tok_emeq)) {
-				op = Op::NotEqual;
-			}
-			else {
-				error_unexpected(curtok);
-			}
-			auto rhs = expr();
-			std::vector<AST*> stmt;
-			auto loc = curtok.loc;
-			auto ids_bin = new ASTBinOp(ids[0], op, rhs);
-			ids_bin->loc = loc;
-			stmt.push_back(ids_bin);
-			for (int i = 1; i < ids.size(); i++) {
-				auto idsi_bin = new ASTBinOp(ids[i], op, rhs);
-				idsi_bin->loc = ids[i]->loc;
-				stmt.push_back(idsi_bin);
-			}
-			auto l = stmt[0];
-			for (int i = 1; i < stmt.size(); i++) {
-				l = new ASTBinOp(l, Op::Ampamp, stmt[i]);
-				l->loc = stmt[i]->loc;
-			}
-			return l;
-		}
 		return identifier;
 	}
 	else if (curtok.ty == TK::tok_lp) {

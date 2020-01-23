@@ -334,7 +334,6 @@ ASTFunc* Parser::def_func() {
 }
 
 ASTIf* Parser::bool_statement() {
-	//IF----->
 	getNextToken();
 	if (curtok.ty != TK::tok_lp)
 		error("Expected", "Expected --> (", curtok);
@@ -353,18 +352,21 @@ ASTIf* Parser::bool_statement() {
 		ast = new ASTIf(boolast, expr_block(true));
 		ast->loc = loc;
 	}
-	//<-----IF
-	/*		IF‚µ‚©‚È‚¢		*/
-	if(curtok.ty != TK::tok_elif&&curtok.ty != TK::tok_else)
+	if(curtok.ty != TK::tok_else)
 		return ast;
-	//ELIF or ELSE----->
-	if (curtok.ty == TK::tok_elif) { //ELIF
-		ast->ast_elif = bool_statement();
-		getNextToken();
-		return ast;
-	}
 	else if(curtok.ty == TK::tok_else) { //ELSE
 		getNextToken();
+		if (curtok.ty == TK::tok_if) {
+			auto loc = curtok.loc;
+			auto els = bool_statement();
+			els->loc = loc;
+			std::vector<AST*> body;
+			body.push_back(els);
+			auto astels = new ASTElse(body);
+			astels->loc = loc;
+			ast->ast_else = astels;
+			return ast;
+		}
 		if (curtok.ty == TK::tok_lb) {
 			auto loc = curtok.loc;
 			ast->ast_else = new ASTElse(expr_block(false));

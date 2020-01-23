@@ -46,7 +46,10 @@ int main(int argc, char** argv) {
 	compile(argv[1], isDumpllvm, isDumpollvm);
 
 	checkBeforeWriteToBC();
-
+	if (isDumpllvm) {
+		std::cout << "-----LLVM IR-----" << std::endl;
+		dump();
+	}
 	writeToFile();
 
 	std::string optArg = "";
@@ -79,10 +82,7 @@ int main(int argc, char** argv) {
 
 	system(cmline.c_str());
 
-	if (isDumpllvm) {
-		std::cout << "-----LLVM IR-----" << std::endl;
-		dump();
-	}
+	
 	if (isDumpTime) {
 		std::cout << "-----time-----" << std::endl;
 		ectime = std::chrono::system_clock::now();

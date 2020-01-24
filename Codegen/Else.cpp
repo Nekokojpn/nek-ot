@@ -9,7 +9,7 @@ Value* ASTElse::codegen() {
 	if (if_rets.first) {
 		if_rets.second.push_back(finalret);
 	}
-	return nullptr;
+	return finalret;
 }
 
 Type* ASTElse::getType() {

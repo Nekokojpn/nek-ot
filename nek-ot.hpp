@@ -600,6 +600,7 @@ public:
 class ASTElse : public AST {
 public:
 	std::vector<AST*> body;
+	BasicBlock* cont;
 	ASTElse(std::vector<AST*> _body) : body(_body) {};
 	Value* codegen() override;
 	Type* getType() override;

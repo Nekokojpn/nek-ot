@@ -11,7 +11,7 @@ Value* ASTIf::codegen() {
 	auto curfunc = builder.GetInsertBlock()->getParent();
 
 	std::vector<BasicBlock*> blocks;
-	BasicBlock* if_block = BasicBlock::Create(context,"",curfunc);
+	auto if_block = Codegen::createBB();
 	auto curbb = builder.GetInsertBlock();
 	builder.SetInsertPoint(if_block);
 	auto tmp_retcodegen = retcodegen;
@@ -39,7 +39,7 @@ Value* ASTIf::codegen() {
 	//When exsists only if
 	if (ast_elif == nullptr && ast_else == nullptr) {
 
-		BasicBlock* cont = BasicBlock::Create(context, "", curfunc);
+		BasicBlock* cont = Codegen::createBB();
 		builder.CreateCondBr(astboolop, if_block, cont);
 		builder.SetInsertPoint(before);
 		this->contBB = cont;
@@ -57,36 +57,23 @@ Value* ASTIf::codegen() {
 		return cont;
 	}
 	else {
-		//When exists elif
-		if (ast_elif != nullptr) {
-			BasicBlock* elif_block = BasicBlock::Create(context, "", curfunc);
-			builder.CreateCondBr(astboolop, if_block, elif_block);
-
-			builder.SetInsertPoint(elif_block);
-			curbb = elif_block;
-
-			ast_elif->codegen();
-
-			if (!retcodegen && !gotocodegen)
-				blocks.push_back(elif_block);
-			retcodegen = tmp_retcodegen;
-			
-		}
 		//When exists else
 		if (ast_else != nullptr) {
-			BasicBlock* else_block = BasicBlock::Create(context, "", curfunc);
+			auto else_block = Codegen::createBB();
 			builder.CreateCondBr(astboolop, if_block, else_block);
 
 			builder.SetInsertPoint(else_block);
 			curbb = else_block;
 			if (if_rets.first)if_rets_bb.push_back(else_block);
 			ast_else->codegen();
+			if (ast_else->cont)
+				blocks.push_back(ast_else->cont);
 			if (!retcodegen && !gotocodegen)
 				blocks.push_back(else_block);
 			retcodegen = tmp_retcodegen;
 		}
 		if (blocks.size() != 0) {
-			auto cont = BasicBlock::Create(context, "", curfunc);
+			auto cont = Codegen::createBB();
 			builder.SetInsertPoint(before);
 			builder.CreateBr(cont);
 			for (int i = 0; i < blocks.size(); i++) {

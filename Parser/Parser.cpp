@@ -336,12 +336,12 @@ ASTFunc* Parser::def_func() {
 ASTIf* Parser::bool_statement() {
 	getNextToken();
 	if (curtok.ty != TK::tok_lp)
-		error("Expected", "Expected --> (", curtok);
+		error_expected("(", curtok);
 	auto loc = curtok.loc;
 	getNextToken();
 	auto boolast = expr();
 	if (curtok.ty != TK::tok_rp)
-		error("Expected", "Expected --> )", curtok);
+		error_expected(")", curtok);
 	getNextToken();
 	ASTIf* ast;
 	if (curtok.ty == TK::tok_lb) {
@@ -352,33 +352,62 @@ ASTIf* Parser::bool_statement() {
 		ast = new ASTIf(boolast, expr_block(true));
 		ast->loc = loc;
 	}
+	std::vector<ASTIf*> elsif;
+	ast->ast_elseif = elsif;
 	if(curtok.ty != TK::tok_else)
 		return ast;
 	else if(curtok.ty == TK::tok_else) { //ELSE
-		getNextToken();
-		if (curtok.ty == TK::tok_if) {
-			auto loc = curtok.loc;
-			auto els = bool_statement();
-			els->loc = loc;
-			std::vector<AST*> body;
-			body.push_back(els);
-			auto astels = new ASTElse(body);
-			astels->loc = loc;
-			ast->ast_else = astels;
-			return ast;
+		
+		if (nexttokIs(TK::tok_if)) {
+			getNextToken();
+			while (curtok.ty == TK::tok_if) {
+				getNextToken();
+				if (!curtokIs(TK::tok_lp))
+					error_expected("(", curtok);
+				getNextToken();
+				auto bast = expr();
+				if (curtok.ty != TK::tok_rp)
+					error_expected(")", curtok);
+				getNextToken();
+				ASTIf* ast_;
+				auto loc = curtok.loc;
+				if (curtok.ty == TK::tok_lb) {
+					ast_ = new ASTIf(bast, expr_block(false));
+					ast_->loc = loc;
+				}
+				else {
+					ast_ = new ASTIf(bast, expr_block(true));
+					ast_->loc = loc;
+				}
+				elsif.push_back(ast_);
+				ast->ast_elseif = elsif;
+
+				if (!curtokIs(TK::tok_else))break;
+				else {
+					if (nexttokIs(TK::tok_if)) {
+						getNextToken();
+					}
+					else break;
+				}
+			}
 		}
-		if (curtok.ty == TK::tok_lb) {
-			auto loc = curtok.loc;
-			ast->ast_else = new ASTElse(expr_block(false));
-			ast->loc = loc;
-			return ast;
+		if (curtokIs(TK::tok_else)) {
+			getNextToken();
+			if (curtok.ty == TK::tok_lb) {
+				auto loc = curtok.loc;
+				ast->ast_else = new ASTElse(expr_block(false));
+				ast->loc = loc;
+				return ast;
+			}
+			else {
+				auto loc = curtok.loc;
+				ast->ast_else = new ASTElse(expr_block(true));
+				ast->loc = loc;
+				return ast;
+			}
 		}
-		else {
-			auto loc = curtok.loc;
-			ast->ast_else = new ASTElse(expr_block(true));
-			ast->loc = loc;
-			return ast;
-		}
+		return ast;
+		
 	}
 	error("Unexpected", "Unexpected token--> " + curtok.val, curtok);
 	return nullptr;

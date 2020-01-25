@@ -600,27 +600,18 @@ public:
 class ASTElse : public AST {
 public:
 	std::vector<AST*> body;
-	BasicBlock* cont;
 	ASTElse(std::vector<AST*> _body) : body(_body) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;
 };
-/*
-class ASTIfExpr : public AST {
-public:
-	AST* cond, then, els;
-	ASTIfExpr(AST* _cond, AST* _then, AST* _els) : cond(_cond)), then(_then)), els(_els)) {};
-	Value* codegen() override;
-};
-*/
 class ASTIf : public AST {
 public:
 	AST* proto; //BoolOp
 	std::vector<AST*> body;
-	ASTIf* ast_elif;
+	std::vector<ASTIf*> ast_elseif;
 	ASTElse* ast_else;
-	ASTIf(AST* _proto, std::vector<AST*> _body) : proto(_proto), body(_body), ast_elif(nullptr), ast_else(nullptr) {};
+	ASTIf(AST* _proto, std::vector<AST*> _body) : proto(_proto), body(_body), ast_else(nullptr) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;

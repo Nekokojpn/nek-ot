@@ -3,7 +3,9 @@ fn main(){
 	y := 1;
 	if(x == y)
 		writefln("He");
-	else if(x < y)
+	else if(x > y)
 		writefln("llo");
+	else
+		writefln("!");
 	ret;
 }

@@ -302,34 +302,36 @@ label1:
 			error_expected(")", curtok);
 		getNextToken();
 		ASTIf* ast;
-		if (curtok.ty == TK::tok_lb) {
+		if (curtok.ty == TK::tok_lb)
+			error_unexpected(curtok);
+		{
 			auto loc = curtok.loc;
-			ast = new ASTIf(boolast, expr_block(false));
+			std::vector<AST*> body;
+			body.push_back(expr());
+			ast = new ASTIf(boolast, body);
 			ast->loc = loc;
-		}
-		else {
-			auto loc = curtok.loc;
-			ast = new ASTIf(boolast, expr_block(true));
-			ast->loc = loc;
+			if (!curtokIs(TK::tok_semi))
+				error_expected(";", curtok);
+			getNextToken();
 		}
 		if (!curtokIs(TK::tok_else)) {
 			add_err_msg("Syntax: <variable> = if(<bool expression>) <expression>; else <expression>;");
 			error_expected("else", curtok);
 		}
 		getNextToken();
+		{
+			auto loc = curtok.loc;
+			std::vector<AST*> body;
+			body.push_back(expr());
+			auto astelse = new ASTElse(body);
+			astelse->loc = loc;
+			if (!curtokIs(TK::tok_semi))
+				error_expected(";", curtok);
+			getNextToken();
+			ast->ast_else = astelse;
+		}
 		isExpectedSemi = false;
-		if (curtok.ty == TK::tok_lb) {
-			auto loc = curtok.loc;
-			ast->ast_else = new ASTElse(expr_block(false));
-			ast->loc = loc;
-			return ast;
-		}
-		else {
-			auto loc = curtok.loc;
-			ast->ast_else = new ASTElse(expr_block(true));
-			ast->loc = loc;
-			return ast;
-		}
+		return ast;
 	}
 	else if (curtokIs(TK::tok_true) || curtokIs(TK::tok_false)) {
 		if (curtokIs(TK::tok_true)) {

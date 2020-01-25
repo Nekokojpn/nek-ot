@@ -12,7 +12,6 @@ Value* ASTBinOp::codegen() {
 	auto tup = Codegen::doMatchType(l, r);
 	l = std::get<0>(tup);
 	r = std::get<1>(tup);
-	this->curTy = l->getType();
 	std::vector<Type*> tys;
 	tys.push_back(l->getType());
 	tys.push_back(r->getType());
@@ -203,7 +202,7 @@ Value* ASTBinOp::codegen() {
 }
 
 Type* ASTBinOp::getType() {
-	return this->curTy;
+	return this->lhs->getType();
 }
 
 TypeAST ASTBinOp::getASTType() {

@@ -471,8 +471,7 @@ public:
 	AST* lhs;
 	AST* rhs;
 	Op op;
-	ASTBinOp(AST* _lhs, Op _op, AST* _rhs) : lhs(_lhs), op(_op), rhs(_rhs), curTy(nullptr) {} ;
-	Type* curTy;
+	ASTBinOp(AST* _lhs, Op _op, AST* _rhs) : lhs(_lhs), op(_op), rhs(_rhs) {} ;
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;

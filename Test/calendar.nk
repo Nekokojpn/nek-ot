@@ -10,34 +10,35 @@ fn calendar(year: i32, month: i32) {
 		t1[1] = 29;
 	
 	mstr := string[12]{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-	writefln("    %3s     ", mstr[month]);
+	writefln("%13s%6d", mstr[month], year);
 	writefln("%4s%4s%4s%4s%4s%4s%4s", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
-	w := if(month <= 1) year - 1; else year;
+	w := i32;
+	if(month <= 1) w = year - 1; else w = year;
 	w0 := w / 4;
 	w1 := w / 100;
 	w2 := w / 400;
-	w3 := t0[month];
+	w3 := i32 t0[month];
 	w = (w + w0 - w1 + w2 + w3) % 7;
 
 	if(w > 0) {
-		for(i := 1; i < w; i++)
-			writef("     ");
+		for(i := 1; i <= w; i++)
+			writef("    ");
 	}
 
-	d1 := t1[month];
-	for(j := 1; j < d1; j++){
-		write("%d", j);
+	d1 := i32 t1[month];
+	for(j := 1; j <= d1; j++){
+		writef("%4d", j);
 		w = (w + 1) % 7;
 		if(w == 0)
-			writefln("");
+			writefln(" ");
 	}
 	if(w > 0)
-		writefln("");
+		writefln(" ");
 	month++;
 	ret;
 }
 
 fn main(){
-	calendar(2020, 1);
+	calendar(2020, 2);
 	ret;
 }

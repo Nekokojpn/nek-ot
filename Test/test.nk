@@ -1,12 +1,7 @@
 import "io";
 
 fn main(){
-	if(1 == 2){
-		writefln("1");
-	} else {
-		if(2 == 2) {
-			writefln("2");
-		}
-	}
+	w := if(0 < 1) 0; else 1;
+	writefln("%d", w);
 	ret;
 }

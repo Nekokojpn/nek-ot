@@ -54,10 +54,10 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 Type* ASTIdentifierArrayElementBase::getType() {
 	auto value = Codegen::getLocalVal(name, this->loc);
 	if (value)
-		return value->getAllocatedType();
+		return value->getAllocatedType()->getArrayElementType();
 	auto global = Codegen::getGlobalVal(name, this->loc);
 	if (global)
-		return global->getType();
+		return global->getType()->getArrayElementType();
 }
 
 TypeAST ASTIdentifierArrayElementBase::getASTType() {

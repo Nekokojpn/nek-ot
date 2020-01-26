@@ -7,14 +7,15 @@ void add_err_msg(std::string _errmsg) {
 }
 
 void error(std::string title, std::string message, uint32_t line, uint32_t column) {
-
+	if (isDumpllvm)
+		module->dump();
 	if (sources[cur_filename.top()].size() <= line) {
 		std::cerr << std::endl;
 		Console::SetConsoleTextRed();
 		std::cerr << "Compile error: " << title << std::endl << message << std::endl;
 		exit(1);
 	}
-
+	
 
 	std::cerr << std::endl;
 	Console::SetConsoleTextRed();

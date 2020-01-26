@@ -1,8 +1,0 @@
-import "io";
-
-fn main(){
-	a := 0;
-	x := i32 if(a == 0) 10; else 11;
-	writefln("%d", x);
-	ret;
-}

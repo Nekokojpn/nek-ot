@@ -162,8 +162,14 @@ TK Tokenizer::gettoken() {
 		bool isLong = false;
 		bool isLongLong = false;
 		while (isdigit(cc) || (cc == '.' && !point) || cc == 'L' || cc == '_') {
-			if (cc == '.')
+			if (cc == '.') {
+				get_char();
+				if (cc == '.') {
+					break;
+				}
+				undo_char();
 				point = true;
+			}
 			if (cc == 'L') {
 				if (!isLong)isLong = true;
 				else isLongLong = true;

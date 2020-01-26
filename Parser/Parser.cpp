@@ -419,6 +419,53 @@ ASTFor* Parser::for_statement() {
 	if (curtok.ty != TK::tok_lp)
 		error_unexpected(curtok);
 	getNextToken();
+	//for(i in 0..9)
+	if (nexttokIs(TK::tok_in)) {
+		auto _name = curtok.val;
+		auto ident = expr_identifiers();
+		if (!curtokIs(TK::tok_in))
+			error_expected("in", curtok);
+		getNextToken();
+		auto start = expr();
+		if (curtokIs(TK::tok_dtdt))
+			error_expected("..", curtok);
+		getNextToken();
+		auto end = expr();
+		if (curtokIs(TK::tok_rp)) {
+			getNextToken();
+			auto ty = getTypeFromCurtok();
+			auto subst = new ASTSubst(ident, start);
+			subst->loc = curtok.loc;
+			auto typedeff = new ASTType(ty, ident, subst, "", isGlobal);
+			typedeff->loc = curtok.loc;
+			typedeff->name = _name;
+			auto proto = new ASTBinOp(ident, Op::LThanEqual, end);
+			proto->loc = curtok.loc;
+			
+			auto val = new ASTValue(1);
+			val->loc = curtok.loc;
+			auto last_bin = new ASTBinOp(ident, Op::Plus, val);
+			last_bin->loc = curtok.loc;
+			auto last = new ASTSubst(ident, last_bin);
+			last->loc = curtok.loc;
+			if (curtokIs(TK::tok_lb)) {
+				auto loc = curtok.loc;
+				auto ast_if = new ASTIf(proto, expr_block(false));
+				ast_if->loc = loc;
+				auto ast = new ASTFor(typedeff, ast_if, last);
+				ast->loc = loc;
+				return ast;
+			}
+			else {
+				auto loc = curtok.loc;
+				auto ast_if = new ASTIf(proto, expr_block(true));
+				ast_if->loc = loc;
+				auto ast = new ASTFor(typedeff, ast_if, last);
+				ast->loc = loc;
+				return ast;
+			}
+		}
+	}
 	auto typedeff = expr_identifier();
 	auto proto = expr();
 	if (!curtokIs(TK::tok_semi))

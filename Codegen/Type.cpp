@@ -69,11 +69,7 @@ fr:
 					cnt++;
 				}
 			}
-			else {
-				ty = ArrayType::get(ty, ((ASTArrElements*)sub->expr)->elements.size());
-			}
 			auto allocainst = builder.CreateAlloca(ty);
-
 			if (name != "_") {
 				namedvalues_local[name] = allocainst;
 			}

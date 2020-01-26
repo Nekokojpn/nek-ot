@@ -1,7 +1,6 @@
 import "io";
 
 fn main(){
-	w := if(0 < 1) 0; else 1;
-	writefln("%d", w);
+	w := 2.4*12.2;
 	ret;
 }

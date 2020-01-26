@@ -37,8 +37,9 @@ Value* ASTBinOp::codegen() {
 						lefthand->getZExtValue() + righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
-		if (!isUnsafe) {
+		if (!isUnsafe && !l->getType()->isFloatingPointTy()) {
 			auto add_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
+
 			auto addc_inst = builder.CreateCall(add_inst, v);
 			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
 			return builder.CreateExtractValue(addc_inst, ar0);
@@ -64,7 +65,7 @@ Value* ASTBinOp::codegen() {
 					lefthand->getZExtValue() - righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
-		if (!isUnsafe) {
+		if (!isUnsafe && !l->getType()->isFloatingPointTy()) {
 			auto sub_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::ssub_with_overflow, tys);
 			auto subc_inst = builder.CreateCall(sub_inst, v);
 			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(subc_inst, ar1), builder.getInt1(0)), this->loc);
@@ -91,7 +92,7 @@ Value* ASTBinOp::codegen() {
 					lefthand->getZExtValue() * righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
-		if (!isUnsafe) {
+		if (!isUnsafe && !l->getType()->isFloatingPointTy()) {
 			auto mul_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::smul_with_overflow, tys);
 			auto mulc_inst = builder.CreateCall(mul_inst, v);
 			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(mulc_inst, ar1), builder.getInt1(0)), this->loc);
@@ -202,7 +203,32 @@ Value* ASTBinOp::codegen() {
 }
 
 Type* ASTBinOp::getType() {
-	return this->lhs->getType();
+	
+	auto lty = this->lhs->getType();
+	auto rty = this->rhs->getType();
+	if (lty == rty)
+		return lty;
+	else {
+		Type* ty = nullptr;
+		if (this->lhs->getType()->isFloatingPointTy())
+			if (!this->rhs->getType()->isFloatingPointTy())
+				ty = builder.getDoubleTy();
+		if (this->rhs->getType()->isFloatingPointTy())
+			if (!this->lhs->getType()->isFloatingPointTy())
+				ty = builder.getDoubleTy();
+		if (this->lhs->getType()->isIntegerTy() && this->rhs->getType()->isIntegerTy() &&
+			this->lhs->getType() != this->rhs->getType()) {
+			if (this->lhs->getType() == builder.getIntNTy(64) && this->rhs->getType() != builder.getIntNTy(64)) {
+				ty = builder.getInt64Ty();
+			}
+			else if (this->lhs->getType() != builder.getIntNTy(64) && this->rhs->getType() == builder.getIntNTy(64)) {
+				ty = builder.getInt64Ty();
+			}
+		}
+		if (!ty)
+			ty = this->lhs->getType();
+		return ty;
+	}
 }
 
 TypeAST ASTBinOp::getASTType() {

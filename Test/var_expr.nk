@@ -1,8 +1,10 @@
 import "io";
 fn main(){
+unsafe{
 	i := 0;
 	j := 1*4+5+3;
 	k := 4*2.4;
 	writefln("%d %d %d", i, j, k);
 	ret;
+	}
 }

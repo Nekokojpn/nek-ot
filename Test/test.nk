@@ -1,6 +1,15 @@
 import "io";
-
-fn main(){
-	w := 2.4*12.2;
-	ret;
+fn main() -> i32{
+	n := input(); q := input(); k := input();
+	a := i64 list;
+	for(i in 0..n-1)
+		a.add(k);
+	for(i in 0..q-1)
+		a[input()-1]++;
+	for(i in 0..n-1)
+		if(a[i]-q > 0)
+			writefln("Yes");
+		else
+			writefln("No");
+	ret 0;
 }

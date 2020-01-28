@@ -1,0 +1,25 @@
+import subprocess
+import os
+import sys
+import glob
+import re
+
+print("1. nek-ot\n2. gcc\n3. clang")
+directory = int(input())
+print("file(Relative path)->")
+path = str(input())
+curdir = str
+pattern1 = 'TotalMilliseconds : .*?(\d+.\d+)'
+sum = 0.0
+for i in range(100):
+ if(directory == 1):
+  res = subprocess.run(["powershell", "Measure-Command{D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\nek-ot.exe D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\Test\\" + path + " -O3}"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+ elif(directory == 2):
+  res = subprocess.run(["powershell", "Measure-Command{gcc D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\Test\\" + path +  " -O3}"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+ else:
+  res = subprocess.run(["powershell", "Measure-Command{clang D:\\LLVM\\llvm-project\\build\\examples\\Kaleidoscope\\nek-ot\\Test\\" + path +  " -O3}"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+ tim = re.findall(pattern1, res.stdout.decode("utf8"), re.S)[0]
+ print(tim + "ms")
+ sum += float(tim)
+print("Average : " + str(sum / 100) + "ms")
+exit(0)

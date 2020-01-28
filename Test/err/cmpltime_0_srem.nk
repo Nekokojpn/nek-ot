@@ -1,0 +1,6 @@
+import "io";
+
+fn main(){
+	writefln("Result %d / %d = %d", 10, 0, 10 / 0);
+	ret;
+}

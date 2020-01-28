@@ -7,6 +7,10 @@ AST* Parser::expr_identifiers() {
 		getNextToken();
 		auto loc = curtok.loc;
 		auto rhs = expr_var();
+		if (lhs->getASTType() == TypeAST::IdentifierBase) {
+			if (rhs->getASTType() == TypeAST::VarOp)
+				((ASTVarOp*)rhs)->name = ((ASTIdentifierBase*)lhs)->name;
+		}
 		lhs = new ASTIdentifier(lhs, rhs, TypeKind::Pointer);
 		lhs->loc = loc;
 	}

@@ -350,13 +350,17 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	ASTIdentifierBase* aib = nullptr;
 	ASTIdentifierArrayElementBase* aiae = nullptr;
 	ASTCall* ac = nullptr;
+	ASTVarOp* avo = nullptr;
 	if (ast->getASTType() == TypeAST::IdentifierBase)
 		aib = (ASTIdentifierBase*)ast;
 	else if (ast->getASTType() == TypeAST::Call)
 		ac = (ASTCall*)ast;
-	else
+	else if (ast->getASTType() == TypeAST::IdentifierArrayElementBase)
 		aiae = (ASTIdentifierArrayElementBase*)ast;
-	auto name = aib != nullptr ? aib->name : ac != nullptr ? ac->name : aiae->name;
+	else
+		avo = (ASTVarOp*)ast;
+	auto name = aib != nullptr ? aib->name : ac != nullptr ? ac->name : aiae != nullptr ? aiae->name : avo->name;
+	//Listty is declared a struct type which type match elements
 	if (ty_load->isStructTy()) {
 		if (userdefined_stcts_elements.find(ty_load->getStructName()) != userdefined_stcts_elements.end()) {
 			auto cur = userdefined_stcts_elements[ty_load->getStructName()].elems;
@@ -404,6 +408,11 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 			body.push_back(new ASTCall("writef"))
 			*/
 		}
+	}
+	else if(avo) {
+		auto bb = builder.GetInsertBlock();
+		auto ft = Function::Create(FunctionType::get(builder.getVoidTy(), false), GlobalValue::LinkageTypes::ExternalLinkage);
+		ft->setName(avo->name + ".operator");
 	}
 	else {
 

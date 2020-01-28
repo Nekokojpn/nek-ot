@@ -75,6 +75,7 @@ enum class TK {
 	tok_bool,
 	tok_unsafe,
 	tok_where,
+	tok_op,
 
 	tok_ret,
 	tok_void,
@@ -356,7 +357,8 @@ enum class TypeAST {
 	Value,
 	While,
 	ListElements,
-	Unsafe
+	Unsafe,
+	VarOp
 };
 
 extern std::unique_ptr<Module> module;
@@ -706,6 +708,16 @@ class ASTListElements : public AST {
 public:
 	std::vector<AST*> elems;
 	ASTListElements(std::vector<AST*> _elems) : elems(_elems) {};
+	Value* codegen() override;
+	Type* getType() override;
+	TypeAST getASTType() override;
+};
+class ASTVarOp : public AST {
+public:
+	std::string name;
+	std::vector<Op> ops;
+	std::vector<AST*> body;
+	ASTVarOp(std::vector<Op> _ops, std::vector<AST*> _body) :ops(_ops), body(_body) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;

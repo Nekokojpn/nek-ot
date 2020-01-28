@@ -195,6 +195,7 @@ AST* Parser::expr_identifier() {
 	this->curval = curtok.val;
 	auto identifier = expr_identifiers();
 	if (curtok.ty == TK::tok_semi) {
+		getNextToken();
 		return identifier;
 	}
 	else if (curtok.ty == TK::tok_equal || 

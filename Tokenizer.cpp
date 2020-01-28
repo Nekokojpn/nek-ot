@@ -152,6 +152,7 @@ TK Tokenizer::gettoken() {
 		else if (cs == "bool") { addToloc(cs.length()); return TK::tok_bool; }
 		else if (cs == "list") { addToloc(cs.length()); return TK::tok_list; }
 		else if (cs == "unsafe") { addToloc(cs.length()); return TK::tok_unsafe; }
+		else if (cs == "op") { addToloc(cs.length()); return TK::tok_op; }
 		else if(cs == "where") { addToloc(cs.length()); return TK::tok_where; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}

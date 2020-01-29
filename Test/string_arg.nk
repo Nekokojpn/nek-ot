@@ -1,0 +1,10 @@
+import "io";
+
+fn StrFunc(str: string) {
+	writefln("%s", str);
+	ret;
+}
+fn main(){
+	StrFunc();
+	ret;
+}

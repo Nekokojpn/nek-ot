@@ -413,6 +413,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		auto bb = builder.GetInsertBlock();
 		auto ft = Function::Create(FunctionType::get(builder.getVoidTy(), false), GlobalValue::LinkageTypes::ExternalLinkage);
 		ft->setName(avo->name + ".operator");
+		module->dump();
 	}
 	else {
 

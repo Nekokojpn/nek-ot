@@ -6,5 +6,10 @@ fn main(){
 		writefln("OK!");
 	else
 		writefln("NG!.");
+	x = 1; y = 1; z = 1;
+	if((x, y, z) == 1)
+		writefln("OK1!");
+	else
+		writefln("NG1!");
 	ret;
 }

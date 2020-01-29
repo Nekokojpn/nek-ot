@@ -1,0 +1,12 @@
+import "io";
+fn main(){
+	x := 0;
+	x.op(+) := {
+		if(x == 10)
+			writefln("Detected!");
+	}
+	for(i in 1..100) {
+		x += i;
+	}
+	ret;
+}

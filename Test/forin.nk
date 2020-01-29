@@ -1,8 +1,10 @@
 import "io";
 fn main(){
+unsafe{
 	sum := 0;
 	for(i in 1..10)
 		sum += i;
 	writefln("%d", sum);
 	ret;
+	}
 }

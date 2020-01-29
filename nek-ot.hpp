@@ -360,6 +360,7 @@ enum class TypeAST {
 	Unsafe,
 	VarOp
 };
+class ASTVarOp;
 
 extern std::unique_ptr<Module> module;
 extern LLVMContext context;
@@ -379,6 +380,7 @@ extern std::map<std::string, StructType*> userdefined_stcts;
 extern std::map<std::string, Stct_t> userdefined_stcts_elements;
 extern std::map<std::string, AllocaInst*> namedvalues_global;
 extern std::map<std::string, AllocaInst*> namedvalues_local;
+extern std::map<std::pair<std::string, Op>, ASTVarOp*> varops;
 extern std::map<std::string, bool> namedvalues_local_isinitialized;
 extern std::map<std::string, Value*> namedvalues_str;
 extern Value* underscore;
@@ -837,4 +839,5 @@ public:
 	static std::vector<Value*> genArgValues(ASTCall* ac);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Value*> idx_list, Location_t& t);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t);
+	static std::string* getNameFromAST(AST* ast, Location_t& t);
 };

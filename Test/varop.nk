@@ -3,7 +3,8 @@ fn main(){
 	x := 0;
 	x.op(+) := {
 		if(x == 10)
-			writefln("Detected!");
+			writefln("x = 10!");
+		ret;
 	}
 	for(i in 1..100) {
 		x += i;

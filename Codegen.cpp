@@ -13,6 +13,7 @@ std::map<std::string, StructType*> userdefined_stcts;
 std::map<std::string, Stct_t> userdefined_stcts_elements;
 std::map<std::string, AllocaInst*> namedvalues_global;
 std::map<std::string, AllocaInst*> namedvalues_local;
+std::map<std::pair<std::string, Op>, ASTVarOp*> varops;
 std::map<std::string, bool> namedvalues_local_isinitialized;
 std::map<std::string, Value*> namedvalues_str;
 std::map<Type*, StructType*> list_struct;
@@ -410,10 +411,10 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		}
 	}
 	else if(avo) {
-		auto bb = builder.GetInsertBlock();
-		auto ft = Function::Create(FunctionType::get(builder.getVoidTy(), false), GlobalValue::LinkageTypes::ExternalLinkage);
-		ft->setName(avo->name + ".operator");
-		module->dump();
+		for (auto a : avo->ops) {
+			varops[std::make_pair(avo->name, a)] = avo;
+		}
+		return nullptr;
 	}
 	else {
 
@@ -672,4 +673,13 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t) 
 
 	builder.SetInsertPoint(fa);
 	return builder.CreateLoad(v_copy);
+}
+
+std::string* Codegen::getNameFromAST(AST* ast, Location_t& t) {
+	if (ast->getASTType() == TypeAST::IdentifierBase)
+		return &((ASTIdentifierBase*)ast)->name;
+	else if (ast->getASTType() == TypeAST::IdentifierArrayElementBase)
+		return &((ASTIdentifierArrayElementBase*)ast)->name;
+	else
+		return nullptr;
 }

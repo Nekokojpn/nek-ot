@@ -1,7 +1,7 @@
 #include "../nek-ot.hpp"
 
 AST* Parser::expr_var() {
-	if (!curtokIs(TK::tok_identifier) || !curtokIs(TK::tok_op))
+	if (!curtokIs(TK::tok_identifier) && !curtokIs(TK::tok_op))
 		error_unexpected(curtok);
 	auto name = curtok.val;
 	getNextToken();
@@ -36,8 +36,8 @@ AST* Parser::expr_var() {
 			if (!curtokIs(TK::tok_rp))
 				error_expected(")", curtok);
 			getNextToken();
-			if(!curtokIs(TK::tok_pleq))
-				error_expected("+=", curtok);
+			if(!curtokIs(TK::tok_cleq))
+				error_expected(":=", curtok);
 			getNextToken();
 			AST* ast;
 			if(curtokIs(TK::tok_lb))

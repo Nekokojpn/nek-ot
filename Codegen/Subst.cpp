@@ -2,7 +2,8 @@
 
 Value* ASTSubst::codegen() {
 	if (this->id) {
-		if_rets.first = true;
+		if(this->expr->getASTType() == TypeAST::If)
+			if_rets.first = true;
 		if (this->expr) {
 			auto val = expr->codegen();
 			if_rets.first = false;

@@ -37,19 +37,35 @@ Value* ASTBinOp::codegen() {
 						lefthand->getZExtValue() + righthand->getZExtValue() < I64_MIN)
 					error_codegen("Overflow occured!", this->loc);
 		}*/
+		Value* ret = nullptr;
 		if (!isUnsafe && !l->getType()->isFloatingPointTy()) {
 			auto add_inst = Intrinsic::getDeclaration(module.get(), Intrinsic::sadd_with_overflow, tys);
 
 			auto addc_inst = builder.CreateCall(add_inst, v);
 			Codegen::createRuntimeError("Overflow occured!", builder.CreateICmpEQ(builder.CreateExtractValue(addc_inst, ar1), builder.getInt1(0)), this->loc);
-			return builder.CreateExtractValue(addc_inst, ar0);
+			ret = builder.CreateExtractValue(addc_inst, ar0);
 		}
 		else {
 			if (l->getType()->isIntegerTy())
-				return builder.CreateAdd(l, r);
+				ret = builder.CreateAdd(l, r);
 			else
-				return builder.CreateFAdd(l, r);
+				ret = builder.CreateFAdd(l, r);
 		}
+		auto ll = Codegen::getNameFromAST(lhs, this->loc);
+		if (ll) {
+			auto var = varops[std::make_pair(*ll, Op::Plus)];
+			if (var) {
+				var->codegen();
+				return ret;
+			}
+		}
+		auto rr = Codegen::getNameFromAST(rhs, this->loc);
+		if(rr) {
+			auto var = varops[std::make_pair(*rr, Op::Plus)];
+			if (var)
+				var->codegen();
+		}
+		return ret;
 	}
 	case Op::Minus:
 	{

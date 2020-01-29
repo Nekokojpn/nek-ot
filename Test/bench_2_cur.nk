@@ -7,40 +7,30 @@ fn main() -> i32{
 	zx := i64;	zy := i64;	cx := i64;	cy := i64;
 	xx := i64;	yy := i64;
 	n := i32;	sn := i32;	h := 0;
-	y = 0LL;
-	while(y < 384){
-		x = 0LL;
-		while(x < 512){
+	for(y = 0LL; y < 384; y++){
+		for(x = 0LL; x < 512; x++){
 			sn = 0;
-			sx = 0LL;
-			while(sx < DN){
+			for(sx = 0LL; sx < DN; sx++){
 				cx = (x * 4 + sx) * 56 + 4673536LL;
-				sy = 0LL;
-				while(sy < DN){
+				for(sy = 0LL; sy < DN; sy++){
 					cy = (y * 4 + sy) * 56 + 124928LL;
 					zx = 0LL;
 					zy = 0LL;
-					n = 0;
-					while(n < MAX){
+					for(n = 0; n < MAX; n++){
 						xx = (zx * zx) >> 24;
 						yy = (zy * zy) >> 24;
 						if(xx + yy > 67108864)goto jmp;
 						zy = (zx * zy) >> 23;
 						zx = xx - yy + cx;
 						zy = zy - cy;
-						n = n + 1;
 					}
 					@jmp:
 					sn = sn + n;
-					sy = sy + 1LL;
 				}
-				sx = sx + 1LL;
 			}
 			n = sn >> 4;
 			h = h + n;
-			x = x + 1LL;
 		}
-		y = y + 1LL;
 	}
 	writefln("%d", h);
 	ret 0;

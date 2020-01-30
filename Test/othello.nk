@@ -1,7 +1,5 @@
 import "io";
 
-put := 0;
-
 fn main(){
 	writefln("%d", put);
 	ret;

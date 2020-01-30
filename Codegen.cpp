@@ -13,7 +13,6 @@ std::map<std::string, StructType*> userdefined_stcts;
 std::map<std::string, Stct_t> userdefined_stcts_elements;
 std::map<std::string, AllocaInst*> namedvalues_global;
 std::map<std::string, AllocaInst*> namedvalues_local;
-std::map<std::pair<std::string, Op>, ASTVarOp*> varops;
 std::map<std::string, bool> namedvalues_local_isinitialized;
 std::map<std::string, Value*> namedvalues_str;
 std::map<Type*, StructType*> list_struct;
@@ -352,6 +351,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	ASTIdentifierArrayElementBase* aiae = nullptr;
 	ASTCall* ac = nullptr;
 	ASTVarOp* avo = nullptr;
+
 	if (ast->getASTType() == TypeAST::IdentifierBase)
 		aib = (ASTIdentifierBase*)ast;
 	else if (ast->getASTType() == TypeAST::Call)
@@ -360,6 +360,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		aiae = (ASTIdentifierArrayElementBase*)ast;
 	else
 		avo = (ASTVarOp*)ast;
+
 	auto name = aib != nullptr ? aib->name : ac != nullptr ? ac->name : aiae != nullptr ? aiae->name : avo->name;
 	//Listty is declared a struct type which type match elements
 	if (ty_load->isStructTy()) {
@@ -411,10 +412,10 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		}
 	}
 	else if(avo) {
-		for (auto a : avo->ops) {
-			varops[std::make_pair(avo->name, a)] = avo;
-		}
-		return nullptr;
+		auto bb = builder.GetInsertBlock();
+		auto ft = Function::Create(FunctionType::get(builder.getVoidTy(), false), GlobalValue::LinkageTypes::ExternalLinkage);
+		ft->setName(avo->name + ".operator");
+		module->dump();
 	}
 	else {
 
@@ -673,13 +674,4 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t) 
 
 	builder.SetInsertPoint(fa);
 	return builder.CreateLoad(v_copy);
-}
-
-std::string* Codegen::getNameFromAST(AST* ast, Location_t& t) {
-	if (ast->getASTType() == TypeAST::IdentifierBase)
-		return &((ASTIdentifierBase*)ast)->name;
-	else if (ast->getASTType() == TypeAST::IdentifierArrayElementBase)
-		return &((ASTIdentifierArrayElementBase*)ast)->name;
-	else
-		return nullptr;
 }

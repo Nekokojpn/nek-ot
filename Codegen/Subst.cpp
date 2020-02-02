@@ -15,7 +15,7 @@ Value* ASTSubst::codegen() {
 			Value* ptr_ = ptr;
 			if (if_rets.second.size() == 0 && !isStringCodegen) {
 				if (ptr_->getType()->getPointerElementType() == val->getType())
-					return builder.CreateStore(val, ptr_);
+					return Codegen::createStore(val, ptr_);
 				else
 					error_codegen("Does not match the type of the declared variable", this->loc);
 			}
@@ -34,12 +34,12 @@ Value* ASTSubst::codegen() {
 					else
 						error_codegen("if expressions must return the same type", this->loc);
 				}
-				return builder.CreateStore(phi, ptr_);
+				return Codegen::createStore(phi, ptr_);
 				if_rets.second.clear();
 				if_rets_bb.clear();
 			}
 			else { // May be string
-				return builder.CreateStore(val, ptr_);
+				return Codegen::createStore(val, ptr_);
 			}
 		}
 	}

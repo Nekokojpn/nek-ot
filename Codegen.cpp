@@ -682,3 +682,10 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t) 
 	builder.SetInsertPoint(fa);
 	return builder.CreateLoad(v_copy);
 }
+Value* Codegen::createStore(Value* val, Value* ptr) {
+	if(auto c = dyn_cast<Constant>(val))
+		if (auto cp = dyn_cast<ConstantPointerNull>(c)) {
+			return builder.CreateStore(ConstantPointerNull::get(ptr->getType()->getPointerElementType()->getPointerTo()), ptr);
+		}
+	return builder.CreateStore(val, ptr);
+}

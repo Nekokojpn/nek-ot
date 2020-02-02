@@ -2,10 +2,7 @@
 
 Value* ASTValue::codegen() {
 	if (this->isNullptr) {
-		if (this->isLongLong)
-			return ConstantPointerNull::get(builder.getIntNTy(64)->getPointerTo());
-		else if (this->isDouble)
-			return ConstantPointerNull::get(builder.getDoubleTy()->getPointerTo());
+		return ConstantPointerNull::get(builder.getDoubleTy()->getPointerTo());
 	}
 	if (this->isLongLong == true)
 		return builder.getInt64(value);

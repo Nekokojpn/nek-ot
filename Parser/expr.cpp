@@ -8,6 +8,7 @@ AST* Parser::expr() {
 		auto ast = new ASTValue(0);
 		ast->isNullptr = true;
 		ast->loc = curtok.loc;
+		getNextToken();
 		return ast;
 	}
 

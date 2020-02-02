@@ -842,4 +842,5 @@ public:
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Value*> idx_list, Location_t& t);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t);
 	static std::string* getNameFromAST(AST* ast, Location_t& t);
+	static Value* createStore(Value* val, Value* ptr);
 };

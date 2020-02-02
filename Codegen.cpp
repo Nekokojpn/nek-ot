@@ -371,8 +371,12 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		}
 		//List
 		else {
+			
 			if (ac && name == "add") {
+				//get last element of the list.
 				auto stct = Codegen::getListfromIndex(ty_load, v, t);
+
+				//Change param of the list
 				builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(stct, 3));
 
 				auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
@@ -385,6 +389,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				//TODO: typecheck
 				builder.CreateStore(stct, builder.CreateStructGEP(aloc, 0));
 				builder.CreateStore(types[0], builder.CreateStructGEP(aloc, 1));
+				builder.CreateStore(builder.getIntN(2, 2), builder.CreateStructGEP(aloc, 3));
 				return nullptr; //Void
 			}
 			else if (ac && name == "end") {
@@ -393,6 +398,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 
 				return builder.CreateStructGEP(Codegen::getListfromIndex(ty_load, v, t), 1);
 			}
+			
 		}
 	}
 	else if(ty_load->isArrayTy()) {
@@ -534,6 +540,7 @@ std::tuple<Value*, Value*> Codegen::doMatchType(Value* l, Value* r) {
 std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
 	std::vector<Value*> types;
 	for (int i = 0; i < ac->args_expr.size(); i++, current_inst = nullptr, isPtr = false) {
+
 		auto ty = ac->args_expr[i]->codegen();
 		//auto curArg = module->getFunction(this->name)->getArg(i);
 		//if (!curArg)

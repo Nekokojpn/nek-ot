@@ -51,6 +51,7 @@ Value* ASTBinOp::codegen() {
 			else
 				ret = builder.CreateFAdd(l, r);
 		}
+		/*
 		auto ll = Codegen::getNameFromAST(lhs, this->loc);
 		if (ll) {
 			auto var = varops[std::make_pair(*ll, Op::Plus)];
@@ -65,6 +66,7 @@ Value* ASTBinOp::codegen() {
 			if (var)
 				var->codegen();
 		}
+		*/
 		return ret;
 	}
 	case Op::Minus:

@@ -1,0 +1,8 @@
+import "io";
+
+fn main(){
+	for(i in 1..214764876){
+		x := 100LL;
+	}
+	ret;
+}

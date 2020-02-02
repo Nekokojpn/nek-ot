@@ -154,6 +154,7 @@ TK Tokenizer::gettoken() {
 		else if (cs == "unsafe") { addToloc(cs.length()); return TK::tok_unsafe; }
 		else if (cs == "op") { addToloc(cs.length()); return TK::tok_op; }
 		else if(cs == "where") { addToloc(cs.length()); return TK::tok_where; }
+		else if(cs == "nullptr") { addToloc(cs.length()); return TK::tok_nullptr; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

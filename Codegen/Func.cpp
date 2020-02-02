@@ -15,10 +15,16 @@ Value* ASTFunc::codegen() {
 	auto retbb = BasicBlock::Create(context, "", builder.GetInsertBlock()->getParent());
 	builder.SetInsertPoint(retbb);
 	if (retvalue) {
-		builder.CreateRet(builder.CreateLoad(retvalue));
+		if (retvalue->getAllocatedType() == ((Function*)pr)->getReturnType())
+			builder.CreateRet(builder.CreateLoad(retvalue));
+		else
+			error_codegen("return type is invalid for the function!", this->loc);
 	}
 	else { //retun type is void
-		builder.CreateRetVoid();
+		if(((Function*)pr)->getReturnType() == builder.getVoidTy())
+			builder.CreateRetVoid();
+		else
+			error_codegen("return type is invalid for the function!", this->loc);
 	}
 	for (auto bb : retbbs) {
 		builder.SetInsertPoint(bb);

@@ -97,6 +97,7 @@ enum class TK {
 	tok_num_long,
 	tok_num_long_long,
 	tok_str_string,
+	tok_nullptr,
 
 	tok_semi, // ;
 	tok_equal, // =
@@ -455,6 +456,7 @@ public:
 	double value_d;
 	bool isDouble;
 	bool isLongLong;
+	bool isNullptr;
 	ASTValue(long long  _value) : value(_value),isDouble(false) {};
 	ASTValue(double  _value, bool _isDouble) : value_d(_value), isDouble(true) {};
 	ASTValue(long long  _value, bool _isLongLong) : value(_value), isLongLong(true) {};
@@ -558,7 +560,7 @@ public:
 	Type_t ret_type;
 	AST* expr_p;
 	ASTRet(Type_t _ret_type, AST* _expr_p) : ret_type(_ret_type), expr_p(_expr_p) {};
-	Value* codegen();
+	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;
 };

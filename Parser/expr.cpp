@@ -1,6 +1,15 @@
 #include "../nek-ot.hpp"
 
 AST* Parser::expr() {
+	//Top level parser of the expr
+
+	if (consume(TK::tok_nullptr)) {
+		//TODO: cast type to match elements which  ..
+		auto ast = new ASTValue(0);
+		ast->isNullptr = true;
+		ast->loc = curtok.loc;
+		return ast;
+	}
 
 	AST* ast = bool_expr();
 	return ast;

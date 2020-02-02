@@ -1,0 +1,6 @@
+import "io";
+
+fn main() {
+	i := i32 nullptr;
+	ret;
+}

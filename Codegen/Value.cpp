@@ -1,9 +1,14 @@
 #include "../nek-ot.hpp"
 
 Value* ASTValue::codegen() {
-	if (this->isLongLong == true) {
-		return builder.getInt64(value);
+	if (this->isNullptr) {
+		if (this->isLongLong)
+			return ConstantPointerNull::get(builder.getIntNTy(64)->getPointerTo());
+		else if (this->isDouble)
+			return ConstantPointerNull::get(builder.getDoubleTy()->getPointerTo());
 	}
+	if (this->isLongLong == true)
+		return builder.getInt64(value);
 	if (this->isDouble == true)
 		return ConstantFP::get(context, APFloat(value_d));
 	return builder.getInt32(value);

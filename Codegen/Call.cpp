@@ -23,6 +23,8 @@ Value* ASTCall::codegen() {
 		error_codegen(s, this->loc);
 	}
 	else {
+		//TODO: TypeCheck
+		//for(auto t : functions_global[this->name].getFunctionType()->)
 		auto inst = builder.CreateCall(functions_global[this->name], argsRef, "");
 		return inst;
 	}

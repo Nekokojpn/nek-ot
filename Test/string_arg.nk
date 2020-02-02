@@ -5,6 +5,6 @@ fn StrFunc(str: string) {
 	ret;
 }
 fn main(){
-	StrFunc();
+	StrFunc("ieeei");
 	ret;
 }

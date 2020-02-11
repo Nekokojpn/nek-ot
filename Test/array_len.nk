@@ -1,7 +1,11 @@
 import "io";
+fn aryArg(arr: i32[]) {
+	writefln("%d", arr.len());
+	ret;
+}
 fn main(){
 	ary := i32[5]{1,2,3,4,5};
 	i := i32 input();
-	writefln("%d %d %d %d", ary.len(), ary[0], ary[4], ary[i]);
+	writefln("%d %d %d %d %d", ary.len(), ary[0], ary[4], ary[i], aryArg(ary));
 	ret;
 }

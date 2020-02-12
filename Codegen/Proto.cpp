@@ -5,10 +5,22 @@ Value* ASTProto::codegen() {
 
 	for (int i = 0; i < args.size(); i++) {
 		Type* ty;
-		if (args[i].isArr == true && args[i].arrsize.size() > 0)
-			ty = Codegen::getTypebyType(args[i])->getArrayElementType()->getPointerTo();
-		else if (args[i].isArr == true && args[i].arrsize.size() == 0)
-			ty = Codegen::getTypebyType(args[i]);
+		
+		if (args[i].isArr == true && args[i].arrsize.size() > 0) {
+			std::vector<Type*> elems;
+			auto ary = Codegen::getTypebyType(args[i]);
+			elems.push_back(ary->getArrayElementType()->getPointerTo());
+			elems.push_back(builder.getInt64Ty());
+			ty = StructType::create(context, elems);
+		}
+		else if (args[i].isArr == true && args[i].arrsize.size() == 0) {
+			//ty = Codegen::getTypebyType(args[i]);
+			std::vector<Type*> elems;
+			auto ary = Codegen::getTypebyType(args[i]);
+			elems.push_back(ary);
+			elems.push_back(builder.getInt64Ty());
+			ty = StructType::create(context, elems);
+		}
 		else if (args[i].kind == TypeKind::Pointer)
 			ty = Codegen::getTypebyType(args[i])->getPointerTo();
 		else
@@ -44,7 +56,6 @@ Value* ASTProto::codegen() {
 	mainFunc->setDSOLocal(true);
 	//mainFunc->setCallingConv(CallingConv::X86_StdCall);
 	functions_global[name] = mainFunc;
-
 	return mainFunc;
 }
 

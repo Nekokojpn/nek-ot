@@ -398,16 +398,29 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 
 				return builder.CreateStructGEP(Codegen::getListfromIndex(ty_load, v, t), 1);
 			}
-			
+			else if (ac && name == "len") {
+				return builder.CreateStructGEP(v, 1);
+			}
+			else  if (ac && name == "print") {
+				if (ac->args_expr.size() != 0) 
+					error_codegen("Syntax: <array>.print();", t);
+				/*
+				std::vector<AST*> body;
+				std::vector<AST*> arg;
+				arg.push_back("%d");
+				arg.push_back(builder.CreateInBoundsGEP)
+				body.push_back(new ASTCall("writef"))
+				*/
+			}
 		}
 	}
 	else if(ty_load->isArrayTy()) {
 		if (ac && name == "len") {
-			return builder.getInt32(ty_load->getArrayNumElements());
+			return builder.CreateStructGEP(v, 1);
 		}
 		else  if (ac && name == "print") {
-			if (ac->args_expr.size() != 0) 
-				error_codegen("Syntax: <array>.print();", t);
+		if (ac->args_expr.size() != 0)
+			error_codegen("Syntax: <array>.print();", t);
 			/*
 			std::vector<AST*> body;
 			std::vector<AST*> arg;
@@ -574,7 +587,15 @@ std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
 				gep = builder.CreateConstGEP2_64(gep, 0, 0);
 				array_ty = array_ty->getArrayElementType();
 			}
-			types.push_back(gep);
+			std::vector<Type*> elems;
+			elems.push_back(ty_load->getArrayElementType()->getPointerTo());
+			elems.push_back(builder.getInt64Ty());
+			
+			auto stty = StructType::create(context, elems);
+			auto alloc = builder.CreateAlloca(stty);
+			builder.CreateStore(gep, builder.CreateStructGEP(alloc, 0));
+			builder.CreateStore(builder.getInt64(ty_load->getArrayNumElements()), builder.CreateStructGEP(alloc, 1));
+			types.push_back(builder.CreateLoad(alloc));
 			continue;
 		}
 		else if (!isPtr) {

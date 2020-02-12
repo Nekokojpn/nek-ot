@@ -457,9 +457,9 @@ public:
 	bool isDouble;
 	bool isLongLong;
 	bool isNullptr;
-	ASTValue(long long  _value) : value(_value),isDouble(false) {};
-	ASTValue(double  _value, bool _isDouble) : value_d(_value), isDouble(true) {};
-	ASTValue(long long  _value, bool _isLongLong) : value(_value), isLongLong(true) {};
+	ASTValue(long long  _value) : value(_value),isDouble(false), isNullptr(false) {};
+	ASTValue(double  _value, bool _isDouble) : value_d(_value), isDouble(true), isNullptr(false) {};
+	ASTValue(long long  _value, bool _isLongLong) : value(_value), isLongLong(true), isNullptr(false) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;

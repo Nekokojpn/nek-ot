@@ -16,6 +16,7 @@ std::map<std::string, AllocaInst*> namedvalues_local;
 std::map<std::string, bool> namedvalues_local_isinitialized;
 std::map<std::string, Value*> namedvalues_str;
 std::map<Type*, StructType*> list_struct;
+std::map<Type*, StructType*> ary_struct;
 Value* underscore;
 std::map<std::string, BasicBlock*> jmp_labels;
 std::map<std::string, std::vector<BasicBlock*>> jmp_bbs;
@@ -588,10 +589,14 @@ std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
 				array_ty = array_ty->getArrayElementType();
 			}
 			std::vector<Type*> elems;
-			elems.push_back(ty_load->getArrayElementType()->getPointerTo());
-			elems.push_back(builder.getInt64Ty());
-			
-			auto stty = StructType::create(context, elems);
+			StructType* stty;
+			if (stty = Codegen::getAryStruct(ty_load->getArrayElementType()->getPointerTo()));
+			else {
+				elems.push_back(ty_load->getArrayElementType()->getPointerTo());
+				elems.push_back(builder.getInt64Ty());
+				stty = StructType::create(context, elems);
+				ary_struct[ty_load->getArrayElementType()->getPointerTo()] = stty;
+			}
 			auto alloc = builder.CreateAlloca(stty);
 			builder.CreateStore(gep, builder.CreateStructGEP(alloc, 0));
 			builder.CreateStore(builder.getInt64(ty_load->getArrayNumElements()), builder.CreateStructGEP(alloc, 1));
@@ -709,4 +714,11 @@ Value* Codegen::createStore(Value* val, Value* ptr) {
 			return builder.CreateStore(ConstantPointerNull::get(ptr->getType()->getPointerElementType()->getPointerTo()), ptr);
 		}
 	return builder.CreateStore(val, ptr);
+}
+
+StructType* Codegen::getAryStruct(Type* elm_ty) {
+	if (ary_struct.find(elm_ty) != ary_struct.end())
+		return ary_struct[elm_ty];
+	else
+		nullptr;
 }

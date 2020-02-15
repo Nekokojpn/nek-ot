@@ -9,17 +9,28 @@ Value* ASTProto::codegen() {
 		if (args[i].isArr == true && args[i].arrsize.size() > 0) {
 			std::vector<Type*> elems;
 			auto ary = Codegen::getTypebyType(args[i]);
-			elems.push_back(ary->getArrayElementType()->getPointerTo());
-			elems.push_back(builder.getInt64Ty());
-			ty = StructType::create(context, elems);
+			if (auto stct = Codegen::getAryStruct(ary->getArrayElementType()->getPointerTo())) {
+				ty = stct;
+			}
+			else {
+				elems.push_back(ary->getArrayElementType()->getPointerTo());
+				elems.push_back(builder.getInt64Ty());
+				ty = StructType::create(context, elems);
+				ary_struct[ary->getArrayElementType()->getPointerTo()] = (StructType*)ty;
+			}
 		}
 		else if (args[i].isArr == true && args[i].arrsize.size() == 0) {
-			//ty = Codegen::getTypebyType(args[i]);
 			std::vector<Type*> elems;
 			auto ary = Codegen::getTypebyType(args[i]);
-			elems.push_back(ary);
-			elems.push_back(builder.getInt64Ty());
-			ty = StructType::create(context, elems);
+			if (auto stct = Codegen::getAryStruct(ary)) {
+				ty = stct;
+			}
+			else {
+				elems.push_back(ary);
+				elems.push_back(builder.getInt64Ty());
+				ty = StructType::create(context, elems);
+				ary_struct[ary] = (StructType*)ty;
+			}
 		}
 		else if (args[i].kind == TypeKind::Pointer)
 			ty = Codegen::getTypebyType(args[i])->getPointerTo();

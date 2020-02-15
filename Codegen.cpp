@@ -400,7 +400,9 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				return builder.CreateStructGEP(Codegen::getListfromIndex(ty_load, v, t), 1);
 			}
 			else if (ac && name == "len") {
-				return builder.CreateStructGEP(v, 1);
+				if(v->getType()->getPointerElementType()->isStructTy())
+					return builder.CreateStructGEP(v, 1);
+				return nullptr;
 			}
 			else  if (ac && name == "print") {
 				if (ac->args_expr.size() != 0) 
@@ -417,7 +419,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	}
 	else if(ty_load->isArrayTy()) {
 		if (ac && name == "len") {
-			return builder.CreateStructGEP(v, 1);
+			return builder.getInt64(ty_load->getArrayNumElements());
 		}
 		else  if (ac && name == "print") {
 		if (ac->args_expr.size() != 0)
@@ -435,7 +437,6 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		auto bb = builder.GetInsertBlock();
 		auto ft = Function::Create(FunctionType::get(builder.getVoidTy(), false), GlobalValue::LinkageTypes::ExternalLinkage);
 		ft->setName(avo->name + ".operator");
-		module->dump();
 	}
 	else {
 

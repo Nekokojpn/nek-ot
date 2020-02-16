@@ -14,7 +14,6 @@ Value* ASTIdentifierBase::codegen() {
 	if (isSubst || namedvalues_local_isinitialized[this->name] == true) {
 		current_inst = value;
 		if (isSubst)namedvalues_local_isinitialized[this->name] = true;
-		value->dump();
 		return value;
 	}
 	else {

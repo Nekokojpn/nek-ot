@@ -13,6 +13,8 @@ void Parser::def_import() {
 	getNextToken();
 	if (!curtokIs(TK::tok_semi))error_expected(";", curtok);
 	getNextToken();
+	if (imports[str])
+		error("'" + str + "' is already imported!", curtok);
 	if (str == "io") {
 		imports["io"] = true;
 		Sys::IO::Printf::CreateFunc();
@@ -30,6 +32,11 @@ void Parser::def_import() {
 	else if (str == "sleep") {
 		imports["sleep"] = true;
 		Sys::Sleep::CreateFunc();
+	}
+	else if (str == "algo") {
+		imports["algo"] = true;
+		compile("StandardLib/" + str + ".nk", isDumpllvm, isDumpollvm);
+		cur_filename.pop();
 	}
 	else {
 		compile(str, isDumpllvm, isDumpollvm);

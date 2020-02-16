@@ -1,9 +1,8 @@
 fn sort_bubble(ary: i32[], isDesc: bool) {
-unsafe{
 	len := i64 ary.len()-1;
 	if(isDesc) {
-		for(i in 0 .. len) {
-			for(j in i .. len) {
+		for(i in 0..len) {
+			for(j in i..len) {
 				if(ary[i] < ary[j]) {
 					tmp := ary[i];
 					ary[i] = ary[j];
@@ -13,8 +12,8 @@ unsafe{
 		}
 	}
 	else {
-		for(i in 0 .. len) {
-			for(j in i .. len) {
+		for(i in 0..len) {
+			for(j in i..len) {
 				if(ary[i] > ary[j]) {
 					tmp := ary[i];
 					ary[i] = ary[j];
@@ -23,5 +22,5 @@ unsafe{
 			}
 		}
 	}
-	ret;}
+	ret;
 }

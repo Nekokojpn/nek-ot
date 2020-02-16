@@ -1,0 +1,20 @@
+import "io";
+import "algo";
+
+fn main() {
+	ary := {10,50,20,3,9,100};
+
+	writef("Before sort: ");
+	for(i in 0 .. ary.len() - 1)
+		writef("%d ", ary[i]);
+
+	writefln(" ");
+
+	sort_bubble(ary, false);
+
+	writef("Sorted: ");
+	for(i in 0 .. ary.len() - 1)
+		writef("%d ", ary[i]);
+
+	ret;
+}

@@ -323,7 +323,7 @@ Type* Codegen::getTypebyType(Type_t& t) {
 				tys.push_back(st->getPointerTo());	//Prev
 				tys.push_back(ty);					//elem
 				tys.push_back(st->getPointerTo());	//Forw
-				tys.push_back(builder.getIntNTy(2));
+				tys.push_back(builder.getIntNTy(3));
 				ArrayRef<Type*> tyss(tys);
 				st->setBody(tyss);
 				list_struct[ty] = st;
@@ -378,7 +378,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				auto stct = Codegen::getListfromIndex(ty_load, v, t);
 
 				//Change param of the list
-				builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(stct, 3));
+				builder.CreateStore(builder.getIntN(3, 0), builder.CreateStructGEP(stct, 3));
 
 				auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
 				auto types = Codegen::genArgValues(ac);
@@ -390,8 +390,8 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				//TODO: typecheck
 				builder.CreateStore(stct, builder.CreateStructGEP(aloc, 0));
 				builder.CreateStore(types[0], builder.CreateStructGEP(aloc, 1));
-				builder.CreateStore(builder.getIntN(2, 2), builder.CreateStructGEP(aloc, 3));
-				return nullptr; //Void
+				builder.CreateStore(builder.getIntN(3, 1), builder.CreateStructGEP(aloc, 3));
+				return nullptr; //return Void
 			}
 			else if (ac && name == "end") {
 				if (Codegen::genArgValues(ac).size() != 0)
@@ -478,24 +478,30 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 	if (ast->getASTType() != TypeAST::ListElements)
 		error_codegen("Invalid list elements.", t);
 	auto elems = (ASTListElements*)ast;
-	Value* prev = nullptr;
+	
 	auto val = builder.CreateAlloca(stct);
-	namedvalues_local[name] = val;
+	builder.CreateStore(ConstantPointerNull::get(val->getType()), builder.CreateStructGEP(val, 0));
+	builder.CreateStore(elems->elems[0]->codegen(), builder.CreateStructGEP(val, 1));
 
+	builder.CreateStore(builder.getIntN(3, 0), builder.CreateStructGEP(val, 3));
+
+	namedvalues_local[name] = val;
+	Value* prev = val;
 	auto top = val;
-	for (int i = 0; i < elems->elems.size(); i++) {
-		if (prev) {
-			builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
-			builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(prev, 3));
-		}
-		else
-			builder.CreateStore(builder.getIntN(2, 0), builder.CreateStructGEP(val, 3));
-		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
-		prev = val;
+	for (int i = 1; i < elems->elems.size(); i++) {
 		val = builder.CreateAlloca(stct);
+
+		builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
+
 		builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
+
+		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
+		if(elems->elems.size()-1 != i)
+			builder.CreateStore(builder.getIntN(3, 0), builder.CreateStructGEP(val, 3));
+		else
+			builder.CreateStore(builder.getIntN(3, 1), builder.CreateStructGEP(val, 3));
+		prev = val;
 	}
-	builder.CreateStore(builder.getIntN(2, 1), builder.CreateStructGEP(val, 3));
 	return top;
 }
 
@@ -652,7 +658,7 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Val
 	builder.SetInsertPoint(tr);
 
 	//pstct = pstct->next;
-	Codegen::createRuntimeError("List index out of range!", builder.CreateICmpEQ(builder.getIntN(2, 0), builder.CreateLoad(builder.CreateStructGEP(builder.CreateLoad(v_copy), 3))), t);
+	Codegen::createRuntimeError("List index out of range!", builder.CreateICmpEQ(builder.getIntN(3, 0), builder.CreateLoad(builder.CreateStructGEP(builder.CreateLoad(v_copy), 3))), t);
 	auto gep = builder.CreateStructGEP(builder.CreateLoad(v_copy), 2);
 	builder.CreateStore(builder.CreateLoad(gep), v_copy);
 
@@ -694,9 +700,10 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t) 
 	builder.CreateBr(bb);
 	builder.SetInsertPoint(bb);
 
-	//for(int i = 0; i < idx[0];
+	//for(int i = 0; 1sys.list[3] != 1;
 	//               ^^^^^^^^^^
-	builder.CreateCondBr(builder.CreateICmpNE(builder.getIntN(2, 2), builder.CreateLoad(builder.CreateStructGEP(ptr_stct, 3))), tr, fa);
+
+	builder.CreateCondBr(builder.CreateICmpEQ(builder.getIntN(3, 0), builder.CreateLoad(builder.CreateStructGEP(ptr_stct, 3))), tr, fa);
 	builder.SetInsertPoint(tr);
 
 	//pstct = pstct->next;

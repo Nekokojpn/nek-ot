@@ -1,0 +1,8 @@
+import "io";
+
+fn main(){
+	str := "unko";
+	for(i in str .. str.len()-1)
+		writefln("%c", str[i]);
+	ret;
+}

@@ -51,17 +51,25 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	else {
 		auto ptr = builder.CreateLoad(builder.CreateStructGEP(value, 0));
 		
-		return builder.CreateLoad(builder.CreateConstGEP1_32(ptr, 0));
+		return builder.CreateConstGEP1_32(ptr, 0);
 	}
 }
 
 Type* ASTIdentifierArrayElementBase::getType() {
-	auto value = Codegen::getLocalVal(name, this->loc);
-	if (value)
-		return value->getAllocatedType()->getArrayElementType();
-	auto global = Codegen::getGlobalVal(name, this->loc);
-	if (global)
-		return global->getType()->getArrayElementType();
+	auto value = Codegen::getDefinedValue(name, this->loc);
+	auto ty_load = value->getType()->getPointerElementType();
+	if (ty_load->isArrayTy())
+		return ty_load->getArrayElementType();
+	else if (ty_load->getStructName().startswith("1sys.list")) {
+		auto idx_list = Codegen::getIndices(this->indexes, true, this->loc);
+		return builder.CreateLoad(Codegen::getListfromIndex(ty_load, value, idx_list, this->loc))->getType();
+	}
+	else {
+		auto ptr = builder.CreateLoad(builder.CreateStructGEP(value, 0));
+
+		return builder.CreateLoad(builder.CreateConstGEP1_32(ptr, 0))->getType();
+	}
+	return nullptr;
 }
 
 TypeAST ASTIdentifierArrayElementBase::getASTType() {

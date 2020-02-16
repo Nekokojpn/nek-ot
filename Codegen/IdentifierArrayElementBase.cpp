@@ -44,10 +44,14 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 		return gep;
 	}
 	//List
-	else {
-		auto v_load = value->getType()->isPointerTy() ? builder.CreateLoad(value) : value;
+	else if(ty_load->getStructName().startswith("1sys.list")) {
 		auto idx_list = Codegen::getIndices(this->indexes, true, this->loc);
-		return Codegen::getListfromIndex(v_load->getType(), value, idx_list, this->loc);
+		return Codegen::getListfromIndex(ty_load, value, idx_list, this->loc);
+	}
+	else {
+		auto ptr = builder.CreateLoad(builder.CreateStructGEP(value, 0));
+		
+		return builder.CreateLoad(builder.CreateConstGEP1_32(ptr, 0));
 	}
 }
 

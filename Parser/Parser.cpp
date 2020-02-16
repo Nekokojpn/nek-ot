@@ -428,7 +428,7 @@ ASTFor* Parser::for_statement() {
 			error_expected("in", curtok);
 		getNextToken();
 		auto start = expr();
-		if (curtokIs(TK::tok_dtdt))
+		if (!curtokIs(TK::tok_dtdt))
 			error_expected("..", curtok);
 		getNextToken();
 		auto end = expr();

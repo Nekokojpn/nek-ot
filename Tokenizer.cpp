@@ -167,17 +167,16 @@ TK Tokenizer::gettoken() {
 			if (cc == '.') {
 				get_char();
 				if (cc == '.') {
+					//undo_char();
 					break;
 				}
 				undo_char();
 				point = true;
 			}
-			if (cc == 'L') {
+			else if (cc == 'L') {
 				if (!isLong)isLong = true;
 				else isLongLong = true;
 			}
-			if (cc == '_')
-				continue;
 			cs += cc;
 			get_char();
 		}

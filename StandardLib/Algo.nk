@@ -1,4 +1,5 @@
 fn sort_bubble(ary: i32[], isDesc: bool) {
+unsafe{
 	len := i64 ary.len()-1;
 	if(isDesc) {
 		for(i in 0 .. len) {
@@ -22,5 +23,5 @@ fn sort_bubble(ary: i32[], isDesc: bool) {
 			}
 		}
 	}
-	ret;
+	ret;}
 }

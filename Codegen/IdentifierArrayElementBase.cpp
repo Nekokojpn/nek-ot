@@ -50,8 +50,11 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	}
 	else {
 		auto ptr = builder.CreateLoad(builder.CreateStructGEP(value, 0));
-		
-		return builder.CreateConstGEP1_32(ptr, 0);
+		auto value = ((ASTArrayIndexes*)this->indexes)->lhs->codegen();
+		if (value->getType()->isPointerTy())
+			value = builder.CreateLoad(value);
+
+		return builder.CreateGEP(ptr, value);
 	}
 }
 

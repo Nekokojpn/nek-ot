@@ -1,6 +1,7 @@
 #include "../nek-ot.hpp"
 
 std::map<std::string, bool> imports;
+std::map<std::string, bool> oth_imports;
 
 void Parser::def_import() {
 	getNextToken();
@@ -13,8 +14,8 @@ void Parser::def_import() {
 	getNextToken();
 	if (!curtokIs(TK::tok_semi))error_expected(";", curtok);
 	getNextToken();
-	if (imports[str])
-		error("'" + str + "' is already imported!", curtok);
+	//if (imports[str] || oth_imports["StandardLib/" + str + ".nk"])
+	//	error("'" + str + "' is already imported!", curtok);
 	if (str == "io") {
 		imports["io"] = true;
 		Sys::IO::Printf::CreateFunc();
@@ -34,7 +35,7 @@ void Parser::def_import() {
 		Sys::Sleep::CreateFunc();
 	}
 	else if (str == "algo") {
-		imports["algo"] = true;
+		oth_imports["StandardLib/" + str + ".nk"] = true;
 		compile("StandardLib/" + str + ".nk", isDumpllvm, isDumpollvm);
 		cur_filename.pop();
 	}

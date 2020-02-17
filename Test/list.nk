@@ -1,7 +1,8 @@
 fn main(){
 	li := i32 list[1, 2];
+	writefln("%d", li[1]);
+	li.add(6);
 	writefln("%d", li[2]);
-	//li.add(6);
-	//writefln("%d", li[1]);
+	writefln("%d", li[3]); //error
 	ret;
 }

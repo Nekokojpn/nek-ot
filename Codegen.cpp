@@ -337,9 +337,6 @@ Type* Codegen::getTypebyType(Type_t& t) {
 		if (t.ty == AType::UserdefinedType) {
 			if(userdefined_stcts.find(t.name) != userdefined_stcts.end())
 				return userdefined_stcts[t.name];
-			else {
-
-			}
 		}
 		return nullptr;
 	}
@@ -375,7 +372,6 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 			if (ac && name == "add") {
 				//get last element of the list.
 				auto end = Codegen::getListfromIndex(ty_load, v, t);
-
 				//Change param of the list
 
 				auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
@@ -390,7 +386,7 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 				//TODO: typecheck
 				builder.CreateStore(end, builder.CreateStructGEP(new_stct, 0));
 				builder.CreateStore(types[0], builder.CreateStructGEP(new_stct, 1));
-				builder.CreateStore(ConstantPointerNull::get((PointerType*)new_stct->getType()), new_stct);
+				builder.CreateStore(ConstantPointerNull::get((PointerType*)new_stct->getType()), builder.CreateStructGEP(new_stct, 2));
 				return nullptr; //return Void
 			}
 			else if (ac && name == "end") {
@@ -480,7 +476,9 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 	auto elems = (ASTListElements*)ast;
 	
 	auto val = builder.CreateAlloca(stct);
-	builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getAllocatedType()), builder.CreateStructGEP(val, 0));
+	auto top_prev = builder.CreateStructGEP(val, 0);
+	top_prev->getType()->dump();
+	builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), top_prev);
 	builder.CreateStore(elems->elems[0]->codegen(), builder.CreateStructGEP(val, 1));
 
 
@@ -496,7 +494,7 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 
 		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
 		if(elems->elems.size()-1 == i)
-			builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getAllocatedType()), builder.CreateStructGEP(val, 2));
+			builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), builder.CreateStructGEP(val, 2));
 		prev = val;
 	}
 	return top;
@@ -639,33 +637,34 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Val
 
 	//for(int i = 0;
 	//    ^^^^^^^^^
-	auto aloc = builder.CreateAlloca(builder.getInt32Ty());
-	builder.CreateStore(builder.getInt32(0), aloc);
+	auto i = builder.CreateAlloca(builder.getInt32Ty());
+	builder.CreateStore(builder.getInt32(0), i);
 
 	builder.CreateBr(bb);
 	builder.SetInsertPoint(bb);
 
 	//for(int i = 0; i < idx[0];
 	//               ^^^^^^^^^^
-	Value* cnt = builder.CreateLoad(aloc);
+	Value* cnt = builder.CreateLoad(i);
 	auto tup = Codegen::doMatchType(cnt, idx_list[0]);
 	cnt = std::get<0>(tup);
 	idx_list[0] = std::get<1>(tup);
 	builder.CreateCondBr(builder.CreateICmpSLT(cnt, idx_list[0]), tr, fa);
 	builder.SetInsertPoint(tr);
 
-	//pstct = pstct->next;
 	Codegen::createRuntimeError("List index out of range!",
 		builder.CreateICmpNE(
-			builder.CreateLoad(builder.CreateStructGEP(ptr_stct, 2)),
-			ConstantPointerNull::get((PointerType*)ptr_stct->getType())),
+			builder.CreateLoad(builder.CreateStructGEP(builder.CreateLoad(v_copy), 2)),
+			ConstantPointerNull::get((PointerType*)v_copy->getAllocatedType())),
 		t);
+
+	//pstct = pstct->next;
 	auto gep = builder.CreateStructGEP(builder.CreateLoad(v_copy), 2);
 	builder.CreateStore(builder.CreateLoad(gep), v_copy);
 
 	//for(int i = 0; i < idx[0]; i++
 	//                           ^^^
-	builder.CreateStore(builder.CreateAdd(cnt, builder.getInt32(1)), aloc);
+	builder.CreateStore(builder.CreateAdd(cnt, builder.getInt32(1)), i);
 
 	builder.CreateBr(bb);
 
@@ -707,8 +706,8 @@ Value* Codegen::getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t) 
 	//builder.CreateCondBr(builder.CreateICmpEQ(builder.getIntN(3, 0), builder.CreateLoad(builder.CreateStructGEP(ptr_stct, 3))), tr, fa);
 	builder.CreateCondBr(
 		builder.CreateICmpNE(
-			builder.CreateLoad(builder.CreateStructGEP(ptr_stct, 2)),
-			ConstantPointerNull::get(builder.CreateStructGEP(ptr_stct, 1)->getType()->getPointerTo())),
+			builder.CreateLoad(builder.CreateStructGEP(builder.CreateLoad(v_copy), 2)),
+			ConstantPointerNull::get((PointerType*)v_copy->getAllocatedType())),
 		tr,
 		fa);
 	builder.SetInsertPoint(tr);

@@ -1,0 +1,16 @@
+import "io";
+
+fn main() -> i32 {
+	a := i32; b := i32; c := i32;
+	a = input(); b = input(); c = input();
+
+	ispoor := false;
+	if(a == b && b != c) ispoor = true;
+	if(b == c && c != a) ispoor = true;
+	if(c == a && a != b) ispoor = true;
+	if(ispoor)
+		writefln("Yes");
+	else
+		writefln("No");
+	ret 0;
+}

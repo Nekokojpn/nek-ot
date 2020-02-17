@@ -728,7 +728,7 @@ Value* Codegen::createStore(Value* val, Value* ptr, Location_t& t) {
 			return builder.CreateStore(ConstantPointerNull::get(ptr->getType()->getPointerElementType()->getPointerTo()), ptr);
 		}
 
-	if(val->getType()->getPointerElementType() == ptr->getType())
+	if(ptr->getType()->getPointerElementType() == val->getType())
 		return builder.CreateStore(val, ptr);
 	
 	error_codegen("Type mismatch!", t);

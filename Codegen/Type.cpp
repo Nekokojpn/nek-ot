@@ -22,8 +22,9 @@ fr:
 				if (type->isStructTy() && this->ty.isList) {
 					//Experimental. may cause problems
 					namedvalues_local_isinitialized[this->name] = true;
-					auto ret = Codegen::substList(this->name, type, sub->expr, this->loc);
-					return ret;
+					if(sub)
+						return Codegen::substList(this->name, type, sub->expr, this->loc);
+					return Codegen::substList(this->name, type, nullptr, this->loc);
 				}
 				//definition stct
 				if (type->isStructTy() && sub) {

@@ -371,7 +371,24 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 			
 			if (ac && name == "add") {
 				//get last element of the list.
+				/*
+				auto tr = Codegen::createBB();
+				auto fa = Codegen::createBB();
+				auto cur = builder.GetInsertBlock();
+				//if(top != null)
+				builder.CreateCondBr(
+					builder.CreateICmpNE(v, ConstantPointerNull::get((PointerType*)v->getType())),
+					tr,
+					fa);
+
+				//else
+				builder.SetInsertPoint(fa);
+				builder.CreateStore(builder.CreateAlloca(v->getType()), v);
+				builder.CreateBr(cur);
+				builder.SetInsertPoint(tr);
+				*/
 				auto end = Codegen::getListfromIndex(ty_load, v, t);
+				//builder.CreateBr(cur);
 				//Change param of the list
 
 				auto v_load = v->getType()->isPointerTy() ? builder.CreateLoad(v) : v;
@@ -471,33 +488,41 @@ Value* Codegen::getDefinedValue(std::string name, Location_t& t) {
 	return val ? val : getGlobalVal(name, t);
 }
 Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t) {
-	if (ast->getASTType() != TypeAST::ListElements)
-		error_codegen("Invalid list elements.", t);
-	auto elems = (ASTListElements*)ast;
-	
-	auto val = builder.CreateAlloca(stct);
-	auto top_prev = builder.CreateStructGEP(val, 0);
-	top_prev->getType()->dump();
-	builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), top_prev);
-	builder.CreateStore(elems->elems[0]->codegen(), builder.CreateStructGEP(val, 1));
+	if (ast) {
+		if (ast->getASTType() != TypeAST::ListElements)
+			error_codegen("Invalid list elements.", t);
+		auto elems = (ASTListElements*)ast;
+
+		auto val = builder.CreateAlloca(stct);
+		auto top_prev = builder.CreateStructGEP(val, 0);
+		builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), top_prev);
+		builder.CreateStore(elems->elems[0]->codegen(), builder.CreateStructGEP(val, 1));
 
 
-	namedvalues_local[name] = val;
-	Value* prev = val;
-	auto top = val;
-	for (int i = 1; i < elems->elems.size(); i++) {
-		val = builder.CreateAlloca(stct);
+		namedvalues_local[name] = val;
+		Value* prev = val;
+		auto top = val;
+		for (int i = 1; i < elems->elems.size(); i++) {
+			val = builder.CreateAlloca(stct);
 
-		builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
+			builder.CreateStore(prev, builder.CreateStructGEP(val, 0));
 
-		builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
+			builder.CreateStore(val, builder.CreateStructGEP(prev, 2));
 
-		builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
-		if(elems->elems.size()-1 == i)
-			builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), builder.CreateStructGEP(val, 2));
-		prev = val;
+			builder.CreateStore(elems->elems[i]->codegen(), builder.CreateStructGEP(val, 1));
+			if (elems->elems.size() - 1 == i)
+				builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), builder.CreateStructGEP(val, 2));
+			prev = val;
+		}
+		return nullptr;
 	}
-	return top;
+	else {
+		auto val = builder.CreateAlloca(stct);
+		builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getType()), val);
+		namedvalues_local[name] = val;
+		return nullptr;
+	}
+	
 }
 
 void Codegen::createWritefln(std::string message) {

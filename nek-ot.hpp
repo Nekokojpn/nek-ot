@@ -846,3 +846,8 @@ public:
 	static Value* createStore(Value* val, Value* ptr, Location_t& t);
 	static StructType* getAryStruct(Type* elem_ty);
 };
+
+class Debug {
+public:
+	static void dumpType(Value* v);
+};

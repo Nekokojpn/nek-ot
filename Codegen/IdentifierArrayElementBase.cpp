@@ -1,5 +1,5 @@
 #include "../nek-ot.hpp"
-
+/*
 Value* ASTIdentifierArrayElementBase::codegen() {
 	auto value = Codegen::getDefinedValue(name, this->loc);
 	auto ty_load = value->getType()->isPointerTy() ? value->getType()->getPointerElementType() : value->getType();
@@ -16,6 +16,7 @@ Value* ASTIdentifierArrayElementBase::codegen() {
 	if (!ty_load->isStructTy()) {
 		Value* gep = nullptr;
 		bool isArrTy = false;
+		
 		if (ty_load->isPointerTy())isArrTy = true;
 		else isArrTy = false;
 
@@ -78,3 +79,4 @@ Type* ASTIdentifierArrayElementBase::getType() {
 TypeAST ASTIdentifierArrayElementBase::getASTType() {
 	return TypeAST::IdentifierArrayElementBase;
 }
+*/

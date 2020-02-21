@@ -2,9 +2,11 @@
 
 AST* Parser::expr_identifiers() {
 	//@Build identifier ast (Ex. array, stct.)
+	// identifier [] [] [] . call()
 	auto lhs = expr_var();
-	while (curtokIs(TK::tok_dot)) {
-		getNextToken();
+	while (curtokIs(TK::tok_dot) || curtokIs(TK::tok_lpb)) {
+		if(curtokIs(TK::tok_dot))
+			getNextToken();
 		auto loc = curtok.loc;
 		auto rhs = expr_var();
 		if (lhs->getASTType() == TypeAST::IdentifierBase) {

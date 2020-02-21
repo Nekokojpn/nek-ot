@@ -5,7 +5,7 @@ ASTType* Parser::def_type(AST* ast_id) {
 	std::string stct_name = curtok.val;
 	auto ty = getTypeFromCurtok();
 	if (ty.ty == AType::Struct) {
-		addUserdefinedType(ast_id->getASTType() == TypeAST::IdentifierBase ? ((ASTIdentifierBase*)ast_id)->name : ((ASTIdentifierArrayElementBase*)ast_id)->name);
+		addUserdefinedType(((ASTIdentifierBase*)ast_id)->name);
 	}
 	ASTSubst* expr_ = nullptr;
 	if (curtok.ty == TK::tok_semi) {

@@ -1,18 +1,22 @@
 #include "../nek-ot.hpp"
 
 AST* Parser::expr_var() {
-	if (!curtokIs(TK::tok_identifier) && !curtokIs(TK::tok_op))
+	if (!curtokIs(TK::tok_identifier) && !curtokIs(TK::tok_op) && !curtokIs(TK::tok_lpb))
 		error_unexpected(curtok);
-	auto name = curtok.val;
-	getNextToken();
 	//If array ty
 	if (curtokIs(TK::tok_lpb)) {
+		getNextToken();
 		auto loc = curtok.loc;
-		auto index = expr_array_indexes();
-		auto ast = new ASTIdentifierArrayElementBase(name, index);
+		auto index = expr();
+		if (!curtokIs(TK::tok_rpb))
+			error_expected("]", curtok);
+		getNextToken();
+		auto ast = new ASTArrayIndex(index);
 		ast->loc = loc;
 		return ast;
 	}
+	auto name = curtok.val;
+	getNextToken();
 	//if function call
 	if (curtokIs(TK::tok_lp)) {
 		if (name == "op") {

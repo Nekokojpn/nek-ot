@@ -345,7 +345,6 @@ Type* Codegen::getTypebyType(Type_t& t) {
 Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 	auto ty_load = v->getType()->isPointerTy() ? cast<PointerType>(v->getType())->getElementType() : v->getType();
 	ASTIdentifierBase* aib = nullptr;
-	ASTIdentifierArrayElementBase* aiae = nullptr;
 	ASTCall* ac = nullptr;
 	ASTVarOp* avo = nullptr;
 
@@ -353,12 +352,10 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 		aib = (ASTIdentifierBase*)ast;
 	else if (ast->getASTType() == TypeAST::Call)
 		ac = (ASTCall*)ast;
-	else if (ast->getASTType() == TypeAST::IdentifierArrayElementBase)
-		aiae = (ASTIdentifierArrayElementBase*)ast;
 	else
 		avo = (ASTVarOp*)ast;
 
-	auto name = aib != nullptr ? aib->name : ac != nullptr ? ac->name : aiae != nullptr ? aiae->name : avo->name;
+	auto name = aib != nullptr ? aib->name : ac != nullptr ? ac->name : avo->name;
 	//Listty is declared a struct type which type match elements
 	if (ty_load->isStructTy()) {
 		if (userdefined_stcts_elements.find(ty_load->getStructName()) != userdefined_stcts_elements.end()) {
@@ -466,16 +463,17 @@ Value* Codegen::getIdentifier(Value* v, AST* ast, Location_t& t) {
 
 }
 
-std::vector<Value*> Codegen::getIndices(AST* ast, bool isArrTy, Location_t& t) {
-	std::vector<Value*> ind;
-	auto indices = (ASTArrayIndexes*)ast;
-	if (!isArrTy)
-		ind.push_back(builder.getInt32(0));
-	auto l = indices->lhs->codegen();
-	if (l->getType()->isPointerTy())
-		l = builder.CreateLoad(l);
-	ind.push_back(l);
-	return ind;
+Value* Codegen::createGEP(Value* ptr, AST* index, bool isInsertZero, Location_t& t) {
+	std::vector<Value*> v;
+	if (isInsertZero)
+		v.push_back(builder.getInt32(0));
+	auto exp = index->codegen();
+	auto ci = Codegen::getValueInt(exp);
+	if (ci && ci->getZExtValue() >= ptr->getType()->getPointerElementType()->getArrayNumElements()) {
+		error_codegen("Array index out of range!", t);
+	}
+	v.push_back(exp);
+	return builder.CreateInBoundsGEP(ptr, v);
 }
 
 AllocaInst* Codegen::getLocalVal(std::string name, Location_t& t) {
@@ -762,10 +760,12 @@ Value* Codegen::createStore(Value* val, Value* ptr, Location_t& t) {
 		if (auto cp = dyn_cast<ConstantPointerNull>(c)) {
 			return builder.CreateStore(ConstantPointerNull::get(ptr->getType()->getPointerElementType()->getPointerTo()), ptr);
 		}
-
-	Debug::dumpLine(t);
-	ptr->getType()->getPointerElementType();
-
+	if (isDebug) {
+		Debug::dumpLine(t);
+		ptr->getType()->getPointerElementType()->dump();
+		Debug::dumpLine(t);
+		val->getType()->dump();
+	}
 	if(ptr->getType()->getPointerElementType() == val->getType())
 		return builder.CreateStore(val, ptr);
 	

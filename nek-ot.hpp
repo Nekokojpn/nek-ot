@@ -332,7 +332,7 @@ enum class TypeKind {
 };
 enum class TypeAST {
 	Action,
-	ArrayIndexes,
+	ArrayIndex,
 	ArrElements,
 	BinOp,
 	Bool,
@@ -432,6 +432,7 @@ public:
 	Type* getType() override;
 	TypeAST getASTType() override;
 };
+/*
 class ASTIdentifierArrayElementBase : public AST {
 public:
 	std::string name;
@@ -441,7 +442,7 @@ public:
 	Type* getType() override;
 	TypeAST getASTType() override;
 };
-
+*/
 class ASTIdentifier : public AST {
 public:
 	AST* lhs; //lhs
@@ -701,11 +702,10 @@ public:
 };
 
 // [1][2] etc...
-class ASTArrayIndexes : public AST {
+class ASTArrayIndex : public AST {
 public:
-	AST* lhs;
-	AST* rhs;
-	ASTArrayIndexes(AST* _lhs, AST* _rhs) : lhs(_lhs), rhs(_rhs) {};
+	AST* expr;
+	ASTArrayIndex(AST* _expr) : expr(_expr) {};
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;
@@ -828,7 +828,6 @@ public:
 	//<-----
 	static void declareFunction(std::string func_name, std::string ac_func_name);
 	static Value* getIdentifier(Value* v, AST* ast, Location_t& t);
-	static std::vector<Value*> getIndices(AST* ast, bool isArrTy, Location_t& t);
 	static AllocaInst* getLocalVal(std::string name, Location_t& t);
 	static Value* getGlobalVal(std::string name, Location_t& t);
 	static Value* getDefinedValue(std::string name, Location_t& t);
@@ -843,9 +842,9 @@ public:
 	static std::vector<Value*> genArgValues(ASTCall* ac);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, std::vector<Value*> idx_list, Location_t& t);
 	static Value* getListfromIndex(Type* stct_ty, Value* ptr_stct, Location_t& t);
-	static std::string* getNameFromAST(AST* ast, Location_t& t);
 	static Value* createStore(Value* val, Value* ptr, Location_t& t);
 	static StructType* getAryStruct(Type* elem_ty);
+	static Value* createGEP(Value* ptr, AST* index, bool isInsertZero, Location_t& t);
 };
 
 class Debug {

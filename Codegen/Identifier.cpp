@@ -2,7 +2,7 @@
 
 Value* ASTIdentifier::codegen() {
 	auto value = this->lhs->codegen();
-	if (!this->rhs) { //Is not a stct.
+	if (!this->rhs) { //Identifier
 		if (this->kind == TypeKind::Pointer) {
 			return value;
 		}
@@ -13,8 +13,12 @@ Value* ASTIdentifier::codegen() {
 			return builder.CreateLoad(value);
 		}
 	}
-	else { //Is a stct.
-		auto v = Codegen::getIdentifier(value, this->rhs, this->loc);
+	else { //Array, stct, obj...
+		Value* v = nullptr;
+		if (this->rhs->getASTType() == TypeAST::ArrayIndex)
+			v = Codegen::createGEP(value, this->rhs, value->getType()->getPointerElementType()->isArrayTy() ? true : false, this->loc);
+		else
+			v = Codegen::getIdentifier(value, this->rhs, this->loc);
 		if (this->kind == TypeKind::Pointer) {
 			return v;
 		}

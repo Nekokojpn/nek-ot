@@ -32,7 +32,5 @@ void Debug::dumpLine(Location_t& t) {
 			std::cerr << " ";
 	Console::SetConsoleTextRed();
 	std::cerr << "       ^" << std::endl;
-	Console::SetConsoleTextBlue();
-	printf("      ");
 	Console::SetConsoleTextGray();
 }

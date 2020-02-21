@@ -851,4 +851,5 @@ public:
 class Debug {
 public:
 	static void dumpType(Value* v);
+	static void Debug::dumpLine(Location_t& t);
 };

@@ -3,6 +3,6 @@
 int random(){
     return rand();
 }
-int srandom(unsigned int seed){
-    return srand(seed);
-}
+//int srandom(unsigned int seed){
+//    return srand(seed);
+//}

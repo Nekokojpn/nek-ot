@@ -22,8 +22,8 @@ void Parser::def_import() {
 		
 		Sys::IO::Input::CreateFunc();
 	}
-	else if (str == "random") {
-		imports["random"] = true;
+	else if (str == "rand") {
+		imports["rand"] = true;
 		Sys::Random::CreateFunc();
 	}
 	else if (str == "file") {

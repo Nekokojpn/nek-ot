@@ -4,6 +4,7 @@ bool isDumpllvm = false;
 bool isDumpTime = false;
 bool isDumpollvm = false;
 bool isOpt = true;
+bool isDebug = false;
 
 
 int main(int argc, char** argv) {
@@ -31,6 +32,8 @@ int main(int argc, char** argv) {
 			isDumpTime = true;
 		else if (strcmp(argv[i], "-dollvm") == 0)
 			isDumpollvm = true;
+		else if (strcmp(argv[i], "-debug") == 0)
+			isDebug = true;
 		else {
 			std::string a = argv[i];
 			error_onlymsg("Unkown argument --> " + a);

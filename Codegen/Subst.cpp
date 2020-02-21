@@ -14,10 +14,7 @@ Value* ASTSubst::codegen() {
 			isSubst = false;
 			Value* ptr_ = ptr;
 			if (if_rets.second.size() == 0 && !isStringCodegen) {
-				if (ptr_->getType()->getPointerElementType() == val->getType())
-					return Codegen::createStore(val, ptr_, this->loc);
-				else
-					error_codegen("Does not match the type of the declared variable", this->loc);
+				return Codegen::createStore(val, ptr_, this->loc);
 			}
 			else if (if_rets.second.size() > 0) {
 				if (if_rets.second.size() < 2) {

@@ -371,6 +371,7 @@ extern bool isDumpllvm;
 extern bool isDumpTime;
 extern bool isDumpollvm;
 extern bool isOpt;
+extern bool isDebug;
 extern std::map<std::string, std::vector<std::string>> sources;
 extern std::stack<std::string> cur_filename;
 

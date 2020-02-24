@@ -91,7 +91,11 @@ enum class TK {
 	tok_var,
 	tok_stct, //struct
 	tok_list,
+	tok_macro,
+	tok_line,
+	tok_space,
 
+	//literal
 	tok_num_int,
 	tok_num_double,
 	tok_num_long,
@@ -734,6 +738,7 @@ public:
 	char cc;
 	std::string cs;
 	bool isdq_started = false;
+	bool ismacro = false;
 	std::vector<TK> tokens;
 	std::vector<Token_t> tytokens;
 	std::vector<std::string> literals;
@@ -748,6 +753,7 @@ public:
 	bool compare_cs(const char* str);
 	void addToloc(int len);
 	TK gettoken();
+	bool charIs(std::string str);
 };
 
 class Codegen;
@@ -801,6 +807,7 @@ class Parser {
 
 	AST* expr_identifiers(); //Gen ASTIdentifier
 	void def_import();
+	void def_macro();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:

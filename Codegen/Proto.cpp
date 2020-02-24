@@ -47,6 +47,7 @@ Value* ASTProto::codegen() {
 		Function::Create(FunctionType::get(return_type, argsRef, false),
 			Function::ExternalLinkage, name, module.get());
 	mainFunc->setGC("shadow-stack");
+	
 	if (name == "main") {
 		builder.SetInsertPoint(BasicBlock::Create(context, "entry", mainFunc));
 	}

@@ -18,6 +18,10 @@ Value* ASTCall::codegen() {
 		Codegen::call_writef(argsRef);
 		return nullptr;
 	}
+	if (name == "rand") {
+		auto inst = builder.CreateCall(functions_global[this->name], argsRef, "");
+		return inst;
+	}
 	if (functions_global.find(this->name) == functions_global.end()) {
 		std::string s = "There is no function name --> " + this->name;
 		error_codegen(s, this->loc);

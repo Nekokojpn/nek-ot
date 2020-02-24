@@ -106,7 +106,17 @@ void Sys::Range::CreateFunc() {
 }
 
 void Sys::Random::CreateFunc() {
-	Codegen::declareFunction("random", "?random@@YAHXZ");
+	llvm::Function* func;
+	{
+		std::vector<llvm::Type*> args;
+		//args.push_back(builder.getInt32Ty());
+		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, true);
+		func = llvm::Function::Create(
+			func_type, llvm::Function::ExternalLinkage, "rand", module.get());
+		func->setDSOLocal(true);
+	}
+	functions_global["rand"] = func;
+	return;
 }
 
 void Sys::IO::File::CreateFunc() {
@@ -146,7 +156,7 @@ void Codegen::declareFunction(std::string func_name, std::string ac_func_name) {
 		llvm::FunctionType* func_type = llvm::FunctionType::get(builder.getInt32Ty(), args, false);
 		func = llvm::Function::Create(
 			func_type, llvm::Function::ExternalLinkage, ac_func_name, module.get());
-		func->setCallingConv(llvm::CallingConv::X86_StdCall);
+		//func->setCallingConv(llvm::CallingConv::X86_StdCall);
 	}
 	functions_global[func_name] = func;
 	return;

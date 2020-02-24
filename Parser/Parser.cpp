@@ -594,6 +594,9 @@ std::vector<AST*> Parser::parse() {
 		else if (curtok.ty == TK::tok_import) {
 			def_import();
 		}
+		else if (curtok.ty == TK::tok_macro) {
+			
+		}
 		else getNextToken();
 	}
 	return asts;

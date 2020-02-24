@@ -1,5 +1,6 @@
 #include "nek-ot.hpp"
 
+
 void Tokenizer::tokenize() {
 	TK tok = gettoken();
 	while (tok != TK::tok_eof) {
@@ -56,6 +57,9 @@ void Tokenizer::skip_line() {
 		}
 	}
 }
+bool Tokenizer::charIs(std::string s) {
+
+}
 void Tokenizer::addToliteral() { literals.push_back(cs); }
 bool Tokenizer::compare_cs(const char* str) { return cs == str; }
 void Tokenizer::addToloc(int len) {
@@ -72,12 +76,26 @@ void Tokenizer::addToloc(int len) {
 TK Tokenizer::gettoken() {
 	get_char();
 	cs = "";
+	if (ismacro) {
+		if (cc == '\n') {
+			addToliteral();
+			addToloc(1);
+			ismacro = false;
+			return TK::tok_line;
+		}
+		else if (isspace(cc)) {
+			addToliteral();
+			addToloc(1);
+			return TK::tok_space;
+		}
+	}
 	//skip any spaces.
 	if (!isdq_started) {
 		while (isspace(cc)) {
 			get_char();
 		}
 	}
+	
 	while (cc == '\n') {
 		get_char();
 	}
@@ -155,6 +173,7 @@ TK Tokenizer::gettoken() {
 		else if (cs == "op") { addToloc(cs.length()); return TK::tok_op; }
 		else if (cs == "where") { addToloc(cs.length()); return TK::tok_where; }
 		else if (cs == "nullptr") { addToloc(cs.length()); return TK::tok_nullptr; }
+		else if (cs == "macro") { addToloc(cs.length()); return TK::tok_macro; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

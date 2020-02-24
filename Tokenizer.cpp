@@ -57,9 +57,6 @@ void Tokenizer::skip_line() {
 		}
 	}
 }
-bool Tokenizer::charIs(std::string s) {
-
-}
 void Tokenizer::addToliteral() { literals.push_back(cs); }
 bool Tokenizer::compare_cs(const char* str) { return cs == str; }
 void Tokenizer::addToloc(int len) {

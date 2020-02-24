@@ -753,7 +753,6 @@ public:
 	bool compare_cs(const char* str);
 	void addToloc(int len);
 	TK gettoken();
-	bool charIs(std::string str);
 };
 
 class Codegen;
@@ -814,7 +813,6 @@ public:
 	Parser(std::vector<Token_t>);
 	std::vector<AST*> parse();
 	void codegen(std::vector<AST*>);
-	void dump();
 	AType getATypeByCurtok();
 	Type_t getTypeFromCurtok();
 	bool isExpectedSemi = true;

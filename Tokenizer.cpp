@@ -25,7 +25,7 @@ void Tokenizer::tokenize() {
 //Tokenizer Funcs----->
 void Tokenizer::get_char() {
 	cc = sources[cur_filename.top()][line][column++];
-	if (cc == '\n' || cc == '\r\n' || cc == '\r' || cc == '\n\r') {
+	if (!ismacro && (cc == '\n' || cc == '\r\n' || cc == '\r' || cc == '\n\r')) {
 		line++;
 		column = 0;
 		cc = sources[cur_filename.top()][line][column++];
@@ -79,11 +79,6 @@ TK Tokenizer::gettoken() {
 			addToloc(1);
 			ismacro = false;
 			return TK::tok_line;
-		}
-		else if (isspace(cc)) {
-			addToliteral();
-			addToloc(1);
-			return TK::tok_space;
 		}
 	}
 	//skip any spaces.
@@ -170,7 +165,7 @@ TK Tokenizer::gettoken() {
 		else if (cs == "op") { addToloc(cs.length()); return TK::tok_op; }
 		else if (cs == "where") { addToloc(cs.length()); return TK::tok_where; }
 		else if (cs == "nullptr") { addToloc(cs.length()); return TK::tok_nullptr; }
-		else if (cs == "macro") { addToloc(cs.length()); return TK::tok_macro; }
+		else if (cs == "macro") { addToloc(cs.length()); ismacro = true;  return TK::tok_macro; }
 		else { addToloc(cs.length()); return TK::tok_identifier; }
 	}
 	else if (isdigit(cc)) { //[0-9]+([0-9]|.)*[0-9]+

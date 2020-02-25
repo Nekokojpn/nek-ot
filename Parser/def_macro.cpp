@@ -1,19 +1,18 @@
 #include "../nek-ot.hpp"
-//map<name, <args, literal>>
-std::map<std::string, std::pair<std::vector<std::string>, std::vector<std::string>>> macros;
 
 void Parser::def_macro() {
 	getNextToken();
 	if (!curtokIs(TK::tok_identifier))
 		error_unexpected(curtok);
 	auto mac_name = curtok.val;
-	std::vector<std::string> args;
+	getNextToken();
+	std::vector<Token_t> args;
 	if (curtokIs(TK::tok_lp)) {
 		getNextToken();
 		for (;;) {
 			if (!curtokIs(TK::tok_identifier))
 				error_expected("identifier", curtok);
-			args.push_back(curtok.val);
+			args.push_back(curtok);
 			getNextToken();
 			if (!curtokIs(TK::tok_colon))
 				break;
@@ -26,14 +25,29 @@ void Parser::def_macro() {
 	if (!curtokIs(TK::tok_arrow))
 		error_expected("->", curtok);
 	getNextToken();
-	std::vector<std::string> mac_lit;
+	std::vector<Token_t> mac_lit;
 	while (!curtokIs(TK::tok_line)) {
-		mac_lit.push_back(curtok.val);
+		mac_lit.push_back(curtok);
 		getNextToken();
 	}
-	for (auto a : sources) {
-		
+	auto cnt = 0;
+	for (int i = this->index; i < tokens.size(); i++) {
+		auto t = tokens[i];
+		if (t.ty == TK::tok_identifier && t.val == mac_name) {
+			for (auto& tkn : mac_lit) {
+				if (tkn.ty == TK::tok_identifier) {
+					for (auto& c : args) {
+						if (c.val == tkn.val) {
+
+						}
+					}
+				}
+				else {
+					tokens[i] = tkn;
+				}
+			}
+			t.val = mac_name;
+		}
 	}
-	macros[mac_name] = std::make_pair(args, mac_lit);
 	return;
 }

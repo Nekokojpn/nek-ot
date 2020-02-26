@@ -1,0 +1,9 @@
+import "io";
+macro rep(s, n) -> for(i in s..n-1)
+
+fn main(){
+	rep(0, 5) {
+		writefln("Hello");
+	}
+	ret;
+}

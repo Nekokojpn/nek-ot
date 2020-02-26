@@ -39,6 +39,11 @@ void Parser::def_import() {
 		compile("StandardLib/" + str + ".nk", isDumpllvm, isDumpollvm);
 		cur_filename.pop();
 	}
+	else if (str == "compe") {
+		oth_imports["StandardLib/" + str + ".nk"] = true;
+		compile("StandardLib/" + str + ".nk", isDumpllvm, isDumpollvm);
+		cur_filename.pop();
+	}
 	else {
 		compile(str, isDumpllvm, isDumpollvm);
 		cur_filename.pop();

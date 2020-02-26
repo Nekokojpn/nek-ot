@@ -1,0 +1,7 @@
+import "compe";
+
+fn main() -> i32 {
+	rep(0, 10)
+		writefln("Yay!");
+	ret 0;
+}

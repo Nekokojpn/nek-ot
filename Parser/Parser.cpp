@@ -474,6 +474,7 @@ ASTFor* Parser::for_statement() {
 	getNextToken();
 	isExpectedSemi = false;
 	auto last = expr_identifier();
+	isExpectedSemi = true;
 	if (!curtokIs(TK::tok_rp))
 		error_unexpected(curtok);
 	getNextToken();

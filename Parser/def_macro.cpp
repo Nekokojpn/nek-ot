@@ -30,19 +30,29 @@ void Parser::def_macro() {
 		mac_lit.push_back(curtok);
 		getNextToken();
 	}
-	auto cnt = 0;
+	//All tokens
 	for (int i = this->index; i < tokens.size(); i++) {
 		auto t = tokens[i];
+		//if curtok is replacable by macro rules.
 		if (t.ty == TK::tok_identifier && t.val == mac_name) {
-			for (auto& tkn : mac_lit) {
-				if (tkn.ty == TK::tok_identifier) {
-					for (auto& c : args) {
-						if (c.val == tkn.val) {
-
+			auto next = tokens[i+1];
+			//if exists argument
+			if (next.ty == TK::tok_lp) {
+				auto cnt = 2;
+				next = tokens[i + cnt++];
+				
+			}
+			else {
+				for (auto& tkn : mac_lit) {
+					/*if (tkn.ty == TK::tok_identifier) {
+						for (auto& c : args) {
+							if (c.val == tkn.val) {
+								//tokens[i++] =
+							}
+							else
+								tokens[i++] = tkn;
 						}
-					}
-				}
-				else {
+					}*/
 					tokens[i] = tkn;
 				}
 			}

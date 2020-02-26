@@ -535,7 +535,6 @@ Value* Codegen::substList(std::string name, Type* stct, AST* ast, Location_t& t)
 	}
 	else {
 		auto val = builder.CreateAlloca(stct);
-		val->getType()->dump();
 		builder.CreateStore(ConstantPointerNull::get((PointerType*)val->getAllocatedType()), val);
 		namedvalues_local[name] = val;
 		return nullptr;

@@ -35,17 +35,18 @@ void Parser::def_macro() {
 		auto t = tokens[i];
 		//if curtok is replacable by macro rules.
 		if (t.ty == TK::tok_identifier && t.val == mac_name) {
-			auto next = tokens[i+1];
+			tokens.erase(tokens.begin() + i);
+			auto next = tokens[i];
 			//if exists argument
 			if (next.ty == TK::tok_lp) {
-				tokens.erase(tokens.begin() + i + 1);
+				tokens.erase(tokens.begin() + i);
 				std::vector<Token_t> real_args;
 				while (true) {
-					next = tokens[i + 1];
+					next = tokens[i];
 					real_args.push_back(next);
-					tokens.erase(tokens.begin() + i + 1);
-					next = tokens[i + 1];
-					tokens.erase(tokens.begin() + i + 1);
+					tokens.erase(tokens.begin() + i);
+					next = tokens[i];
+					tokens.erase(tokens.begin() + i);
 					if (next.ty == TK::tok_comma)
 						continue;
 					else if (next.ty == TK::tok_rp)
@@ -53,55 +54,25 @@ void Parser::def_macro() {
 					else
 						error_unexpected(next);
 				}
-				bool overrideflg = false;
 				for (int j = 0; j < mac_lit.size(); j++) {
-					auto& tkn = mac_lit[j];
-					if (tkn.ty == TK::tok_identifier) {
-						
-						for (int k = 0; k < args.size(); k++) {
-							auto a = args[k];
-							if (a.val == tkn.val) {
-								if (overrideflg) {
-									tokens.insert(tokens.begin() + i + j, real_args[k]);
-								}
-								else {
-									overrideflg = true;
-									tokens[i+j] = real_args[k];
-								}
-							}
-							else {
-								if (overrideflg) {
-									tokens.insert(tokens.begin() + i + j, tkn);
-								}
-								else {
-									overrideflg = true;
-									tokens[i + j] = tkn;
-								}
-							}
+					bool flg = false;
+					for (int k = 0; k < args.size(); k++) {
+						if (args[k].val == mac_lit[j].val) {
+							tokens.insert(tokens.begin() + i + j, real_args[k]);
+							flg = true;
 						}
 					}
-					else {
-						if (overrideflg) {
-							tokens.insert(tokens.begin() + i + j, tkn);
-						}
-						else {
-							overrideflg = true;
-							tokens[i+j] = tkn;
-						}
-					}	
+					if(!flg)
+						tokens.insert(tokens.begin() + i + j, mac_lit[j]);
 				}
 			}
 			else {
-				tokens[i] = mac_lit[0];
-				for (int j = 1; j < mac_lit.size(); j++) {
+				for (int j = 0; j < mac_lit.size(); j++) {
 					tokens.insert(tokens.begin() + i + j, mac_lit[j]);
 				}
-
 			}
 			t.val = mac_name;
 		}
 	}
-	for (auto& t : tokens)
-		std::cout << t.val << std::endl;
 	return;
 }

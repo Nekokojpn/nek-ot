@@ -242,6 +242,7 @@ typedef struct {
 	std::map<std::string, StctElm_t> elems;
 	std::vector<std::string> elem_names;
 } Stct_t;
+
 //<-----
 
 class Parser;
@@ -807,6 +808,7 @@ class Parser {
 	AST* expr_identifiers(); //Gen ASTIdentifier
 	void def_import();
 	void def_macro();
+	void replaceByMacroRules();
 	bool consume(TK tk) noexcept;
 	void Parser::getNextToken() noexcept;
 public:

@@ -48,5 +48,7 @@ void Parser::def_import() {
 		compile(str, isDumpllvm, isDumpollvm);
 		cur_filename.pop();
 	}
+	//define
+	this->replaceByMacroRules();
 	return;
 }

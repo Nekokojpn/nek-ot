@@ -87,4 +87,5 @@ void Parser::replaceByMacroRules() {
 			}
 		}
 	}
+	//for (auto& t : tokens)std::cout << t.val << std::endl;
 }

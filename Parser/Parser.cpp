@@ -579,8 +579,6 @@ void Parser::codegen(std::vector<AST*> _ast) {
 	return;
 }
 std::vector<AST*> Parser::parse() {
-	//define
-	this->replaceByMacroRules();
 	//Top level parser
 	std::vector<AST*> asts;
 	while (curtok.ty != TK::tok_eof) {

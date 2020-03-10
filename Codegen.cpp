@@ -479,8 +479,15 @@ Value* Codegen::createGEP(Value* ptr, AST* index, bool isInsertZero, Location_t&
 		v.push_back(builder.getInt32(0));
 	auto exp = index->codegen();
 	auto ci = Codegen::getValueInt(exp);
-	if (ci && ci->getZExtValue() >= ptr->getType()->getPointerElementType()->getArrayNumElements()) {
-		error_codegen("Array index out of range!", t);
+	//Judges is 'ptr' array type by bool InsertZero
+	if (isInsertZero) {
+		if (ci && ci->getZExtValue() >= ptr->getType()->getPointerElementType()->getArrayNumElements()) {
+			error_codegen("Array index out of range!", t);
+		}
+	}
+	else {
+		//TODO: Runtime handling
+		//if(ci && ci->getZExtValue() >=  )
 	}
 	v.push_back(exp);
 	return builder.CreateInBoundsGEP(ptr, v);

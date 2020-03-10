@@ -1,0 +1,8 @@
+import "io";
+
+macro add_two(n) -> (1+n)
+
+fn main() -> i32 {
+	writefln("%d", add_two(2) * 10);
+	ret 0;
+}

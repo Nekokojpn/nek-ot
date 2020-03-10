@@ -1,7 +1,6 @@
 #include "../nek-ot.hpp"
 
-Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_size_v) {
-	//TODO : Does not supported multidimentional array.
+Value* ASTArrElements::subst(Value* arr) {
 	Value* gep;
 	if (this->elements.size() > 0) {
 		for (int i = 0; i < elements.size(); i++) {
@@ -10,11 +9,13 @@ Value* ASTArrElements::subst(Value* arr, std::vector<unsigned long long> arr_siz
 			p.push_back(builder.getInt64(i));
 			ArrayRef<Value*> pp(p);
 			gep = builder.CreateInBoundsGEP(arr, pp);
-			//gep = builder.CreateInBoundsGEP(builder.CreateAlloca(ArrayType::get(builder.getInt32Ty(),5)), pp);
-			builder.CreateStore(this->elements[i]->codegen(), gep);
+			if (this->elements[i]->getASTType() != TypeAST::ArrElements)
+				builder.CreateStore(this->elements[i]->codegen(), gep);
+			else
+				((ASTArrElements*)this->elements[i])->subst(gep);
 		}
 	}
-	else {
+	else { // List comprehension
 		Value* gep_main;
 		auto arr_child = this->arr_type->codegen();
 		for (auto i = 0ULL; i < arr_type->ty.arrsize[0]; i++) {

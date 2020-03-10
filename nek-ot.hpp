@@ -547,7 +547,7 @@ public:
 	ASTType* arr_type;
 	ASTArrElements(AST* _restraint, ASTType* _arr_type) : restraint(_restraint), arr_type(_arr_type) {};
 	ASTArrElements(std::vector<AST*> _elements) : elements(_elements) {};
-	Value* subst(Value* arr, std::vector<unsigned long long> arr_size_v);
+	Value* subst(Value* arr);
 	Value* codegen() override;
 	Type* getType() override;
 	TypeAST getASTType() override;

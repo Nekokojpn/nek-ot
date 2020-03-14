@@ -1,10 +1,11 @@
 import "io";
-fn func_arr(arr : i32[]) -> i32 {
+fn func_arr(arr : i32[]) {
 	writefln("%d", arr[0]);
 	ret arr[0];
 }
 fn main(){
 	arr := i32[2]{0,1};
+	func_arr(arr);
 	writefln("%d", arr[0]);
 	ret;
 }

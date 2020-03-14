@@ -2,6 +2,6 @@ import "io";
 import "rand";
 fn main(){
 	for(i in 0..100)
-		writefln("%d", random()%23);
+		writefln("%d", rand()%23);
 	ret;
 }

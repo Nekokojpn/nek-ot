@@ -28,7 +28,7 @@ Value* ASTProto::codegen() {
 			else {
 				elems.push_back(ary);
 				elems.push_back(builder.getInt64Ty());
-				ty = StructType::create(context, elems);
+				ty = StructType::create(context, elems, "1sys.array");
 				ary_struct[ary] = (StructType*)ty;
 			}
 		}

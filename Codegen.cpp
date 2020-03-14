@@ -490,6 +490,16 @@ Value* Codegen::createGEP(Value* ptr, AST* index, bool isInsertZero, Location_t&
 		//if(ci && ci->getZExtValue() >=  )
 	}
 	v.push_back(exp);
+	auto ty_load = ptr->getType()->getPointerElementType();
+	if (ty_load->isStructTy()) {
+		auto name = ty_load->getStructName();
+		if (name.startswith("1sys.array")) { //TODO: fix here
+			ptr = builder.CreateConstGEP1_32(ptr, 0);
+		}
+		else if (name.startswith("1sys.list")) {
+			ptr = Codegen::getListfromIndex(ty_load, ptr, v, t);
+		}
+	}
 	return builder.CreateInBoundsGEP(ptr, v);
 }
 
@@ -645,7 +655,7 @@ std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
 			else {
 				elems.push_back(ty_load->getArrayElementType()->getPointerTo());
 				elems.push_back(builder.getInt64Ty());
-				stty = StructType::create(context, elems);
+				stty = StructType::create(context, elems, "1sys.array");
 				ary_struct[ty_load->getArrayElementType()->getPointerTo()] = stty;
 			}
 			auto alloc = builder.CreateAlloca(stty);

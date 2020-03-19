@@ -493,10 +493,7 @@ Value* Codegen::createGEP(Value* ptr, AST* index, bool isInsertZero, Location_t&
 	auto ty_load = ptr->getType()->getPointerElementType();
 	if (ty_load->isStructTy()) {
 		auto name = ty_load->getStructName();
-		if (name.startswith("1sys.array")) { //TODO: fix here
-			ptr = builder.CreateConstGEP1_32(ptr, 0);
-		}
-		else if (name.startswith("1sys.list")) {
+		if (name.startswith("1sys.list")) {
 			ptr = Codegen::getListfromIndex(ty_load, ptr, v, t);
 		}
 	}
@@ -617,9 +614,6 @@ std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
 	for (int i = 0; i < ac->args_expr.size(); i++, current_inst = nullptr, isPtr = false) {
 
 		auto ty = ac->args_expr[i]->codegen();
-		//auto curArg = module->getFunction(this->name)->getArg(i);
-		//if (!curArg)
-		//	error_codegen("Argument out of range.", this->loc);
 		Type* ty_load = nullptr;
 		if (ty->getType()->isPointerTy())
 			ty_load = ty->getType()->getPointerElementType();
@@ -642,26 +636,9 @@ std::vector<Value*> Codegen::genArgValues(ASTCall* ac) {
 			types.push_back(ty);
 		}
 		else if (ty_load->isArrayTy()) {
-
-			auto array_ty = ty_load->getArrayElementType();
-			auto gep = builder.CreateConstGEP2_64(ty, 0, 0);
-			while (array_ty->isArrayTy()) {
-				gep = builder.CreateConstGEP2_64(gep, 0, 0);
-				array_ty = array_ty->getArrayElementType();
-			}
-			std::vector<Type*> elems;
-			StructType* stty;
-			if (stty = Codegen::getAryStruct(ty_load->getArrayElementType()->getPointerTo()));
-			else {
-				elems.push_back(ty_load->getArrayElementType()->getPointerTo());
-				elems.push_back(builder.getInt64Ty());
-				stty = StructType::create(context, elems, "1sys.array");
-				ary_struct[ty_load->getArrayElementType()->getPointerTo()] = stty;
-			}
-			auto alloc = builder.CreateAlloca(stty);
-			builder.CreateStore(gep, builder.CreateStructGEP(alloc, 0));
-			builder.CreateStore(builder.getInt64(ty_load->getArrayNumElements()), builder.CreateStructGEP(alloc, 1));
-			types.push_back(builder.CreateLoad(alloc));
+			auto elm = builder.CreateAlloca(ty_load->getArrayElementType()->getPointerTo());
+			builder.CreateStore(builder.CreateLoad(builder.CreateConstGEP1_32(ty, 0)), elm);
+			types.push_back(elm);
 			continue;
 		}
 		else if (!isPtr) {

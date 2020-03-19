@@ -16,11 +16,6 @@ Value* ASTIdentifier::codegen() {
 	else { //Array, stct, obj...
 		Value* v = nullptr;
 		if (this->rhs->getASTType() == TypeAST::ArrayIndex) {//TODO: Insert code here!! array[].
-			/*if (value->getType()->getPointerElementType()->isStructTy()) {
-				if (value->getType()->getPointerElementType()->getStructName().startswith("1sys.array"))
-
-			}*/
-			//else
 			v = Codegen::createGEP(value, this->rhs, value->getType()->getPointerElementType()->isArrayTy() ? true : false, this->loc);
 		}
 		else
